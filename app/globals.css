@@ -1,26 +1,338 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================================
+   THE HOUSE BOSS — DESIGN TOKENS
+   Direction: Luxury Authority (navy / gold / bone, Fraunces + Inter)
+
+   HARD RULE 23: this is the ONLY place a raw color, size or spacing value may
+   be defined. If a component needs a value that is not here, add it here first.
+   Reference: docs/03-design-system.md
+   ========================================================================= */
+
+@theme {
+  /* ── Palette: ink (navy) ────────────────────────────────────────────── */
+  --color-ink-950: #0a1420;
+  --color-ink-900: #0f1b2d;
+  --color-ink-800: #16263f;
+  --color-ink-700: #1e3552;
+  --color-ink-600: #2c4767;
+
+  /* ── Palette: gold ──────────────────────────────────────────────────── */
+  --color-gold-600: #826713;
+  --color-gold-500: #c9a227;
+  --color-gold-400: #ddbb4c;
+  --color-gold-200: #f0e2ae;
+  --color-gold-50: #fbf6e6;
+
+  /* ── Palette: bone / stone ──────────────────────────────────────────── */
+  --color-bone-50: #fdfcfa;
+  --color-bone-100: #f7f5f0;
+  --color-bone-200: #efebe3;
+  --color-bone-300: #dfd9ce;
+  --color-stone-500: #6e6a62;
+  --color-stone-700: #57544e;
+  --color-stone-900: #26241f;
+
+  /* ── Semantic tokens — components use ONLY these ────────────────────── */
+  --color-background: var(--color-bone-50);
+  --color-surface: #ffffff;
+  --color-surface-sunken: var(--color-bone-100);
+  --color-surface-raised: #ffffff;
+  --color-surface-invert: var(--color-ink-900);
+
+  --color-foreground: var(--color-stone-900);
+  --color-foreground-muted: var(--color-stone-700);
+  --color-foreground-subtle: var(--color-stone-500);
+  --color-foreground-invert: var(--color-bone-50);
+  --color-foreground-invert-muted: #b9c2cd;
+
+  --color-border: var(--color-bone-300);
+  --color-border-strong: #948c7c;
+  --color-border-invert: var(--color-ink-700);
+
+  --color-primary: var(--color-ink-900);
+  --color-primary-hover: var(--color-ink-800);
+  --color-primary-fg: var(--color-bone-50);
+
+  /* accent = gold as a SURFACE. accent-quiet = gold as TEXT on light. */
+  --color-accent: var(--color-gold-500);
+  --color-accent-hover: var(--color-gold-400);
+  --color-accent-fg: var(--color-ink-950);
+  --color-accent-quiet: var(--color-gold-600);
+  --color-accent-wash: var(--color-gold-50);
+
+  --color-ring: var(--color-gold-600);
+  --color-ring-invert: var(--color-gold-400);
+
+  --color-success: #2b6e51;
+  --color-success-bg: #e8f3ee;
+  --color-warning: #8f5a12;
+  --color-warning-bg: #fbf1e2;
+  --color-danger: #a32b2b;
+  --color-danger-bg: #f8ecec;
+  --color-info: #2c5f8a;
+  --color-info-bg: #e9f1f7;
+
+  /* ── Typography ─────────────────────────────────────────────────────── */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-body:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+
+  --text-display: clamp(2.5rem, 1.6rem + 4.5vw, 4.5rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-h1: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+  --text-h1--line-height: 1.08;
+  --text-h1--letter-spacing: -0.015em;
+
+  --text-h2: clamp(1.625rem, 1.25rem + 1.9vw, 2.5rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.01em;
+
+  --text-h3: clamp(1.375rem, 1.15rem + 1.1vw, 1.875rem);
+  --text-h3--line-height: 1.25;
+  --text-h3--letter-spacing: -0.005em;
+
+  --text-h4: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem);
+  --text-h4--line-height: 1.35;
+
+  --text-lead: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  --text-lead--line-height: 1.6;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.7;
+
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.55;
+
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.45;
+
+  --text-overline: 0.75rem;
+  --text-overline--line-height: 1.2;
+  --text-overline--letter-spacing: 0.12em;
+
+  /* ── Radius ─────────────────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+
+  /* ── Elevation — navy-tinted, never neutral gray ────────────────────── */
+  --shadow-xs: 0 1px 2px rgb(15 27 45 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(15 27 45 / 0.07), 0 1px 2px rgb(15 27 45 / 0.04);
+  --shadow-md: 0 4px 12px rgb(15 27 45 / 0.08), 0 2px 4px rgb(15 27 45 / 0.04);
+  --shadow-lg: 0 12px 32px rgb(15 27 45 / 0.1), 0 4px 8px rgb(15 27 45 / 0.05);
+  --shadow-xl: 0 24px 64px rgb(15 27 45 / 0.14);
+
+  /* ── Motion ─────────────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-page: 400ms;
+
+  /* ── Breakpoints ────────────────────────────────────────────────────── */
+  --breakpoint-xs: 22.5rem; /* 360 */
+  --breakpoint-sm: 30rem; /* 480 */
+  --breakpoint-md: 48rem; /* 768 */
+  --breakpoint-lg: 64rem; /* 1024 */
+  --breakpoint-xl: 80rem; /* 1280 */
+  --breakpoint-2xl: 96rem; /* 1536 */
+
+  /* ── Layout constants ───────────────────────────────────────────────── */
+  --container-page: 80rem; /* 1280 */
+  --container-prose: 45rem; /* 720 */
+  --container-wide: 90rem; /* 1440 */
+  --header-h: 4rem; /* 64 mobile */
+  --header-h-lg: 5rem; /* 80 desktop */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ============================================================================
+   BASE
+   ========================================================================= */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    /* offset for the sticky header when jumping to an anchor */
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+  }
+
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-top: calc(var(--header-h-lg) + 1.5rem);
+    }
+  }
+
+  /* HR: never `hidden` on html/body — it breaks position:sticky descendants */
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+    color: var(--color-foreground);
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* HR: visible focus on everything focusable. Never outline:none alone. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background: var(--color-gold-200);
+    color: var(--color-ink-950);
+  }
+
+  /* HR25: 16px minimum on form controls prevents iOS zoom-on-focus */
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    font-size: max(1rem, 1em);
+  }
+
+  button {
+    touch-action: manipulation;
+  }
+
+  /* long addresses, URLs and MLS numbers must never blow out a container */
+  address,
+  .break-anywhere {
+    overflow-wrap: anywhere;
+  }
+
+  [hidden] {
+    display: none !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================================
+   UTILITIES
+   ========================================================================= */
+
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: var(--container-page);
+  padding-inline: 1.25rem;
+
+  @media (min-width: 48rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 80rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility container-prose {
+  width: 100%;
+  margin-inline: auto;
+  max-width: var(--container-prose);
+  padding-inline: 1.25rem;
+
+  @media (min-width: 48rem) {
+    padding-inline: 1.5rem;
+  }
+}
+
+/* section vertical rhythm: 48 → 64 → 96 */
+@utility section-y {
+  padding-block: 3rem;
+
+  @media (min-width: 48rem) {
+    padding-block: 4rem;
+  }
+  @media (min-width: 80rem) {
+    padding-block: 6rem;
+  }
+}
+
+/* scrim for any text placed over photography — never raw text on an image */
+@utility photo-scrim {
+  background: linear-gradient(
+    to top,
+    rgb(10 20 32 / 0.85),
+    rgb(10 20 32 / 0.25) 55%,
+    transparent
+  );
+}
+
+/* horizontal scroll row (filter chips, mobile carousels) with edge fade */
+@utility scroll-row {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* sticky bottom bars must clear the iOS home indicator */
+@utility safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toasts sit one rung above the modal layer (z-50) so a confirmation dialog's
+   failure message is never rendered behind the dialog that caused it. Defined
+   here rather than as an arbitrary z-[60] in the component, per HR23. */
+@utility z-toast {
+  z-index: 60;
+}
+
+/* ============================================================================
+   REDUCED MOTION — global, non-negotiable (docs/03 § 4)
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

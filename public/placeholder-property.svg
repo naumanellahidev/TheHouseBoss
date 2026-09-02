@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="img" aria-label="Photograph coming soon">
+  <rect width="400" height="300" fill="#F7F5F0"/>
+  <g stroke="#DFD9CE" stroke-width="1">
+    <path d="M0 60h400M0 120h400M0 180h400M0 240h400M80 0v300M160 0v300M240 0v300M320 0v300"/>
+  </g>
+  <g transform="translate(200 138)">
+    <path d="M-34 4 0-26 34 4" fill="none" stroke="#C9A227" stroke-width="4" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="M-26 4v30h52V4" fill="none" stroke="#9A7B1A" stroke-width="3"/>
+    <rect x="-8" y="16" width="16" height="18" fill="#DFD9CE"/>
+  </g>
+  <text x="200" y="212" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" font-weight="600" letter-spacing="0.08em" fill="#8A867E">THE HOUSE BOSS</text>
+  <text x="200" y="232" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="11" letter-spacing="0.04em" fill="#8A867E">Photograph coming soon</text>
+</svg>
