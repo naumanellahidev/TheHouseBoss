@@ -1,0 +1,64 @@
+# Supabase CLI configuration.
+#
+# `supabase start` (the local stack) needs Docker, which is NOT installed on
+# this machine, so migrations are applied straight to the cloud project.
+#
+# The direct host (db.<ref>.supabase.co) is IPv6-only and unreachable from this
+# machine, so everything goes through the IPv4 session pooler:
+#
+#   supabase db push --db-url "postgresql://postgres.<ref>:<pw>@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
+#   npm run db:seed     # scripts/db-seed.mjs  (psql is not installed either)
+#   npm run db:verify   # schema, triggers, constraints, seed
+#   npm run db:types    # scripts/gen-types.mjs — reads information_schema
+#   npm run test:rls    # anon-key-only policy assertions
+#
+# `supabase gen types` also requires Docker, which is why type generation is a
+# local script rather than the CLI.
+#
+# Live project: us-east-1, PostgreSQL 17.6 — matches the Vercel `iad1` region.
+
+project_id = "the-house-boss"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54323
+
+[storage]
+enabled = true
+# Matches the upload route's cap. Originals are never persisted, so the only
+# objects that ever land here are the 1600/800/400 WebP derivatives.
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/admin"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+# Magic link only. No passwords to leak or reset, and no public signup — the
+# single admin is promoted once by SQL (docs/06-admin-dashboard-spec.md § 1).
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+enable_confirmations = true
+double_confirm_changes = true
+
+[analytics]
+enabled = false
