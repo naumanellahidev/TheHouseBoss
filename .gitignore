@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/shots/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# allow the env template to be committed
+!.env.example
+.db-host
+tests/.auth/
+
+# Claude Code: shared project settings and skills ARE committed;
+# per-machine permission overrides are not.
+.claude/settings.local.json

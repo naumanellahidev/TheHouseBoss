@@ -1,0 +1,49 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Bash(npm run:*)",
+      "Bash(npm ci)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn:*)",
+      "Bash(npx playwright:*)",
+      "Bash(npx tsc:*)",
+      "Bash(supabase gen types:*)",
+      "Bash(supabase migration new:*)",
+      "Bash(supabase db reset)",
+      "Bash(supabase status)",
+      "Bash(supabase start)",
+      "Bash(supabase stop)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(curl -s:*)",
+      "Read(//d/The House Boss/**)",
+      "Glob(//d/The House Boss/**)",
+      "Grep(//d/The House Boss/**)"
+    ],
+    "ask": [
+      "Bash(supabase db push:*)",
+      "Bash(supabase link:*)",
+      "Bash(vercel:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(npm publish:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(supabase db reset --linked:*)",
+      "Read(//d/The House Boss/.env)",
+      "Read(//d/The House Boss/.env.local)",
+      "Read(//d/The House Boss/.env.production)"
+    ]
+  }
+}
