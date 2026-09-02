@@ -1,0 +1,109 @@
+import { notFound } from "next/navigation";
+
+import { AdminPageHeader } from "@/components/admin/page-header";
+import { ListingForm } from "@/components/admin/listings/listing-form";
+import { Badge, listingStatusBadge } from "@/components/ui/badge";
+import { getAdminCities, getAdminCommunities, getAdminListingById, getKnownFeatures } from "@/lib/queries/admin";
+
+import type { ListingInput } from "@/lib/validation/listing";
+
+export const metadata = { title: "Edit listing" };
+
+/**
+ * Edit a listing.
+ *
+ * The row is mapped back into the exact shape `listingSchema` expects, so the
+ * form, the autosave and the server action all speak the same language. Any
+ * divergence here would show up as a validation error on a listing that is
+ * already live, which is the worst place to find it.
+ */
+export default async function EditListingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { id } = await params;
+  const { tab } = await searchParams;
+
+  const [listing, cities, communities, knownFeatures] = await Promise.all([
+    getAdminListingById(id),
+    getAdminCities(),
+    getAdminCommunities(),
+    getKnownFeatures(),
+  ]);
+
+  if (!listing) notFound();
+
+  const initial = {
+    slug: listing.slug,
+    status: listing.status,
+    listingType: listing.listingType,
+    propertyType: listing.propertyType,
+    price: listing.price,
+    hoaFee: listing.hoaFee,
+    taxesAnnual: listing.taxesAnnual,
+    beds: listing.beds,
+    baths: listing.baths,
+    halfBaths: listing.halfBaths,
+    sqft: listing.sqft,
+    lotSize: listing.lotSize,
+    yearBuilt: listing.yearBuilt,
+    garageSpaces: listing.garageSpaces,
+    stories: listing.stories,
+    pool: listing.pool,
+    waterfront: listing.waterfront,
+    features: listing.features,
+    address: listing.address,
+    unit: listing.unit,
+    cityId: listing.city.id,
+    communityId: listing.community?.id ?? null,
+    zip: listing.zip,
+    lat: listing.lat,
+    lng: listing.lng,
+    headline: listing.headline,
+    description: listing.description,
+    contractorsTake: listing.contractorsTake,
+    photos: listing.photos,
+    virtualTour: listing.virtualTour,
+    metaTitle: listing.metaTitle,
+    metaDesc: listing.metaDesc,
+    isFeatured: listing.isFeatured,
+    published: listing.published,
+    soldAt: listing.soldAt ? new Date(listing.soldAt) : null,
+    soldPrice: listing.soldPrice,
+    keepPhotos: listing.keepPhotos,
+  } as unknown as ListingInput;
+
+  const badge = listingStatusBadge[listing.status];
+
+  return (
+    <div className="flex flex-col gap-6">
+      <AdminPageHeader
+        title={listing.address}
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            <Badge tone={badge.tone}>{badge.label}</Badge>
+            <Badge tone={listing.published ? "active" : "neutral"}>
+              {listing.published ? "Live" : "Draft"}
+            </Badge>
+            <span>
+              {listing.city.name}, FL · /listing/{listing.slug}
+            </span>
+          </span>
+        }
+      />
+
+      <ListingForm
+        listingId={listing.id}
+        initial={initial}
+        cities={cities}
+        communities={communities}
+        knownFeatures={knownFeatures}
+        publishedAt={listing.publishedAt}
+        initialTab={tab}
+      />
+    </div>
+  );
+}
