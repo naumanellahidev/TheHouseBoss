@@ -1,0 +1,17 @@
+# Keeps the deployment upload to what actually runs in production.
+# Next.js only bundles what it imports, but every file here is still uploaded
+# and counted against the build, so excluding them makes deploys faster and
+# keeps developer tooling off the production filesystem.
+
+tests/
+playwright.config.ts
+playwright-report/
+test-results/
+docs/
+scripts/
+supabase/
+backups/
+lighthouse-results.json
+PROGRESS.md
+.claude/
+.github/

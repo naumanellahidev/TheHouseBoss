@@ -967,4 +967,57 @@ rather than a defect list. Do not treat it as precedent.
 
 ---
 
+### 2026-09-03 — Vercel deployment readiness
+
+**Shipped**
+
+- **`/api/health`** — the route `docs/17` § 2 promised for UptimeRobot but that
+  did not exist. It queries through the cookie-free public client, so it takes
+  the same path an anonymous visitor does, through RLS, rather than a privileged
+  shortcut that would still pass if the public policies were broken. Public and
+  unauthenticated, so it returns `ok`, a duration and the deployment
+  environment — no table contents, no environment values, no Postgres error
+  strings. Returns **503**, not 500, so an uptime monitor alerts instead of
+  recording a slow success.
+- `vercel.json` — added `framework: "nextjs"` and pinned **`regions: ["iad1"]`**.
+  The Supabase project was confirmed to be in **us-east-1** (resolved from the
+  session pooler host, `aws-0-us-east-1.pooler.supabase.com`), so this removes a
+  cross-region round trip from every query. Crons were already correct.
+- `.vercelignore` — keeps `tests/`, `docs/`, `scripts/`, `supabase/`, backups and
+  the Playwright config out of the deployment upload. Verified safe first: no
+  file under `app/`, `lib/` or `components/` reads the filesystem or imports from
+  any excluded directory.
+- `engines.node >= 22.0.0` pinned, matching the Node version `docs/12` § 2
+  specifies.
+- `docs/12` § 2 gained a **first-deploy runbook**: the eight environment
+  variables that must be set or the build fails, the four more that are needed
+  for the site to actually function, the post-deploy verification commands, and
+  a warning that `NEXT_PUBLIC_SITE_URL` must be the real domain *before* the
+  first production deploy because it is baked into canonicals, the sitemap,
+  `llms.txt` and every JSON-LD `@id` at build time.
+- The cron schedules in `docs/12` disagreed with `vercel.json`. `vercel.json` is
+  now stated to be authoritative and the doc matches it.
+
+**Verified**
+
+- `/api/health` returns `{"ok":true,...}` / 200 against the live project.
+- **The failure path was actually tested**, not assumed: a build pointed at a
+  dead Supabase host returns `{"ok":false,"database":"unreachable"}` with
+  **HTTP 503** in 7.2 s, inside UptimeRobot's 30 s timeout. The first attempt at
+  this test was invalid — `NEXT_PUBLIC_*` variables are inlined at build time,
+  so overriding one at runtime changed nothing and the route reported healthy.
+  Worth remembering before writing any similar test.
+- typecheck, lint, build, tokens, contrast, bundle, seo and compliance all
+  clean. Playwright **357 passed, 0 failed**.
+
+**Next session must know**
+
+- Deployment configuration is complete and committed; Vercel needs no dashboard
+  setup beyond environment variables. The runbook is `docs/12` § 2.
+- `.github/workflows/backup.yml` **still cannot be pushed from here** — the
+  `workflow` OAuth scope is missing on both authenticated accounts. Unchanged
+  from the previous session, and still the largest operational gap.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

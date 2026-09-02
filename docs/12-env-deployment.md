@@ -107,16 +107,75 @@ if (process.env.VERCEL_ENV !== 'production') {
 }
 ```
 
+### First deploy — the actual sequence
+
+`vercel.json`, `.vercelignore` and `engines.node` are committed, so Vercel needs
+no dashboard configuration beyond the environment variables.
+
+1. **Import the repository** at vercel.com/new. Framework, build command and
+   install command are all detected; `vercel.json` pins `regions: ["iad1"]` and
+   `framework: "nextjs"`.
+
+2. **Set the environment variables**, Production scope. These eight are required
+   and the build fails without them (`lib/env.ts` validates at startup, by
+   design — see § 1 rule 3):
+
+   ```
+   NEXT_PUBLIC_SITE_URL          https://thehousebossfl.com
+   NEXT_PUBLIC_SUPABASE_URL      https://<ref>.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY <anon key>
+   SUPABASE_SERVICE_ROLE_KEY     <service role key>   ← never NEXT_PUBLIC_
+   NEXT_PUBLIC_MEDIA_URL         https://<ref>.supabase.co/storage/v1/object/public/media
+   STORAGE_DRIVER                supabase
+   CRON_SECRET                   openssl rand -hex 32
+   REVALIDATE_SECRET             openssl rand -hex 32
+   ```
+
+   Then these, which are optional to build but required to actually function:
+
+   ```
+   RESEND_API_KEY                re_...      leads stop being emailed without it
+   LEAD_NOTIFY_EMAIL             krisi@...
+   EMAIL_FROM                    The House Boss <hello@thehousebossfl.com>
+   DRAFT_PREVIEW_SECRET          openssl rand -hex 32
+   ```
+
+   **`NEXT_PUBLIC_SITE_URL` must be the real domain before the first production
+   deploy**, not a `*.vercel.app` URL. It is baked into canonicals, the sitemap,
+   `llms.txt` and every JSON-LD `@id` at build time. Setting it late means
+   re-deploying to correct URLs that a crawler may already have taken.
+
+3. **Deploy**, then verify against the deployment rather than assuming:
+
+   ```bash
+   curl https://thehousebossfl.com/api/health     # {"ok":true,...}
+   BASE_URL=https://thehousebossfl.com npm run check:seo
+   BASE_URL=https://thehousebossfl.com npm run check:compliance
+   BASE_URL=https://thehousebossfl.com npm run check:lighthouse
+   ```
+
+   The last one is the open Phase 7 item — see `docs/17` § 3. Mobile Performance
+   measured on a developer machine is not the launch number.
+
+4. **Add the domain** (§ 4), then set `NEXT_PUBLIC_SITE_URL` to it if it was not
+   already, and redeploy.
+
+5. **Trigger each cron once by hand** from the Vercel dashboard rather than
+   waiting a day to discover one is misconfigured. A 401 means `CRON_SECRET`
+   does not match; the routes fail closed on purpose.
+
 ### Cron jobs
 
-`vercel.json`:
+**`vercel.json` in the repository is authoritative.** The schedules below are
+what ships; they are staggered so the purge finishes before the orphan sweep
+looks for unreferenced objects.
 
 ```json
 {
   "crons": [
-    { "path": "/api/cron/purge-sold-photos", "schedule": "0 4 * * *" },
-    { "path": "/api/cron/orphan-media",      "schedule": "30 4 * * *" },
-    { "path": "/api/cron/keepalive",         "schedule": "0 12 * * *" }
+    { "path": "/api/cron/keepalive",         "schedule": "0 6 * * *" },
+    { "path": "/api/cron/purge-sold-photos", "schedule": "15 7 * * *" },
+    { "path": "/api/cron/orphan-media",      "schedule": "45 7 * * *" }
   ]
 }
 ```
