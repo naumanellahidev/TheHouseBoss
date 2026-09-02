@@ -163,6 +163,7 @@ export type City = {
   inSearch: boolean;
   isFlagship: boolean;
   heroKey: string | null;
+  heroAlt: string | null;
   introMd: string | null;
   bodyMd: string | null;
   stats: CityStats;
@@ -177,6 +178,7 @@ export type Community = {
   name: string;
   city: PlaceRef;
   heroKey: string | null;
+  heroAlt: string | null;
   introMd: string | null;
   bodyMd: string | null;
   hoaInfo: string | null;

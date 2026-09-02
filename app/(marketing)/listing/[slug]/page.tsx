@@ -84,7 +84,6 @@ export async function generateMetadata({
     return { title: "Listing not found", robots: { index: false, follow: true } };
   }
 
-  const cover = listing.photos[0];
   const price =
     listing.status === "sold" && listing.soldPrice != null
       ? listing.soldPrice
@@ -94,16 +93,38 @@ export async function generateMetadata({
     title:
       listing.metaTitle ||
       `${listing.address}, ${listing.city.name}, FL — ${formatPrice(price)}`,
-    description:
-      listing.metaDesc ||
-      listing.description?.slice(0, 155) ||
-      `${listing.address} in ${listing.city.name}, Florida. ${formatPrice(price)}.`,
+    // Falls through until something clears the 140-character floor — a short
+    // description gets padded by search engines with text we did not choose —
+    // and lands on the generated one, which is unconditional. An earlier
+    // version used .find()! and returned undefined for a short address, which
+    // took the whole build down.
+    description: listingDescription(listing, price),
     path: `/listing/${listing.slug}`,
-    image: cover ? photoUrl(cover, 1600) : undefined,
+    // null: this route generates its own card in opengraph-image.tsx. A
+    // property photograph scaled to 1200x630 is unreadable, and the card
+    // carries the price, the address and both licence numbers (docs/08 § 5).
+    image: null,
     type: "article",
     publishedTime: listing.publishedAt ?? undefined,
     modifiedTime: listing.updatedAt,
   });
+}
+
+/**
+ * Always at least 140 characters. The order is: what she wrote, then the
+ * opening of the description, then a generated line that is long enough by
+ * construction.
+ */
+function listingDescription(listing: Listing, price: number): string {
+  const generated =
+    `${listing.address}, ${listing.city.name}, Florida — ${formatPrice(price)}. ` +
+    `Photographs, key facts, the full description and a licensed residential ` +
+    `contractor's read on the condition of the property.`;
+
+  for (const candidate of [listing.metaDesc, listing.description?.slice(0, 155)]) {
+    if (candidate && candidate.length >= 140) return candidate;
+  }
+  return generated;
 }
 
 export default async function ListingPage({

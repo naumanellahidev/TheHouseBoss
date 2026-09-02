@@ -27,12 +27,35 @@ export default function NotFound() {
             or start from a city guide.
           </p>
 
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <Button variant="accent" size="lg" asChild>
-              <Link href="/search">Search homes</Link>
+          {/*
+            A real search box rather than a link to one (docs/08 § 9). Someone
+            who landed on a dead listing URL usually knows what they were
+            looking for; making them arrive at /search and start again loses
+            them. A plain GET form needs no JavaScript and works before
+            hydration.
+          */}
+          <form action="/search" method="get" className="flex w-full max-w-lg flex-col gap-3 pt-2 sm:flex-row">
+            <label htmlFor="nf-search" className="sr-only">
+              Search homes by address, city or keyword
+            </label>
+            <input
+              id="nf-search"
+              name="q"
+              type="search"
+              placeholder="Address, city or keyword"
+              className="h-13 w-full min-w-0 flex-1 rounded-md border border-border-strong bg-surface px-4 text-body text-foreground placeholder:text-foreground-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            />
+            <Button type="submit" variant="accent" size="lg">
+              Search homes
             </Button>
+          </form>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
             <Button variant="outline" size="lg" asChild>
               <Link href="/">Back to home</Link>
+            </Button>
+            <Button variant="ghost" size="lg" asChild>
+              <Link href="/contact">Ask me directly</Link>
             </Button>
           </div>
 

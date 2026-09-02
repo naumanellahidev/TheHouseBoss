@@ -14,7 +14,7 @@ import type { City, Community } from "@/types/domain";
  */
 
 const CITY_COLUMNS =
-  "id, slug, name, county, state, in_search, is_flagship, hero_key, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc";
+  "id, slug, name, county, state, in_search, is_flagship, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc";
 
 export async function getCities(): Promise<City[]> {
   const db = createSupabasePublicClient();
@@ -58,7 +58,7 @@ export async function getCitySlugsForStaticParams(): Promise<string[]> {
 }
 
 const COMMUNITY_COLUMNS =
-  "id, slug, name, city_id, hero_key, intro_md, body_md, hoa_info, amenities, price_range, faq_json, meta_title, meta_desc, cities(id, slug, name)";
+  "id, slug, name, city_id, hero_key, hero_alt, intro_md, body_md, hoa_info, amenities, price_range, faq_json, meta_title, meta_desc, cities(id, slug, name)";
 
 export async function getCommunities(citySlug?: string): Promise<Community[]> {
   const db = createSupabasePublicClient();

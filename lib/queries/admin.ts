@@ -1,8 +1,9 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { toCity, toCommunity, toListing, toPhotos } from "@/lib/queries/mappers";
+import { toCity, toCommunity, toListing, toPhotos, toReview } from "@/lib/queries/mappers";
 import { getStorageUsage, getUpcomingPurge } from "@/lib/queries/media";
 import type {
+  ArticleKind,
   AttentionItem,
   City,
   Community,
@@ -11,6 +12,7 @@ import type {
   ListingType,
   MediaItem,
   Photo,
+  Review,
   StorageUsage,
 } from "@/types/domain";
 
@@ -478,28 +480,213 @@ export async function getMediaReferences(
  * The listing editor has to be able to file a listing under a city that has not
  * been published yet, so it reads through the session client instead.
  */
-export async function getAdminCities(): Promise<City[]> {
+export async function getAdminCities(): Promise<(City & { published: boolean })[]> {
   const db = await createSupabaseServerClient();
   const { data, error } = await db
     .from("cities")
     .select(
-      "id, slug, name, county, state, in_search, is_flagship, hero_key, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc",
+      "id, slug, name, county, state, in_search, is_flagship, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc, published",
     )
     .order("sort_order", { ascending: true });
 
   if (error) throw new Error(`getAdminCities: ${error.message}`);
-  return (data ?? []).map(toCity);
+  return (data ?? []).map((row) => ({ ...toCity(row), published: Boolean(row.published) }));
 }
 
-export async function getAdminCommunities(): Promise<Community[]> {
+export async function getAdminCommunities(): Promise<(Community & { published: boolean })[]> {
   const db = await createSupabaseServerClient();
   const { data, error } = await db
     .from("communities")
     .select(
-      "id, slug, name, city_id, hero_key, intro_md, body_md, hoa_info, amenities, price_range, faq_json, meta_title, meta_desc, cities(id, slug, name)",
+      "id, slug, name, city_id, hero_key, hero_alt, intro_md, body_md, hoa_info, amenities, price_range, faq_json, meta_title, meta_desc, published, cities(id, slug, name)",
     )
     .order("sort_order", { ascending: true });
 
   if (error) throw new Error(`getAdminCommunities: ${error.message}`);
-  return (data ?? []).map(toCommunity);
+  return (data ?? []).map((row) => ({
+    ...toCommunity(row),
+    published: Boolean(row.published),
+  }));
+}
+
+/* ── Articles, admin view ───────────────────────────────────────────────── */
+
+const ADMIN_ARTICLE_COLUMNS =
+  "id, slug, title, excerpt, kind, status, city_id, community_id, tags, cover_key, cover_alt, meta_title, meta_desc, og_key, published_at, reading_min, updated_at, created_at, cities(id, slug, name)";
+
+export type AdminArticleRow = {
+  id: string;
+  slug: string;
+  title: string;
+  kind: ArticleKind;
+  status: "draft" | "published" | "archived";
+  cityName: string | null;
+  tags: string[];
+  publishedAt: string | null;
+  readingMin: number | null;
+  updatedAt: string;
+  createdAt: string;
+};
+
+export async function getAdminArticles(opts: {
+  kind?: ArticleKind;
+  status?: "draft" | "published" | "archived";
+  search?: string;
+  page?: number;
+} = {}): Promise<{
+  rows: AdminArticleRow[];
+  total: number;
+  page: number;
+  pageCount: number;
+}> {
+  const db = await createSupabaseServerClient();
+  const page = Math.max(1, opts.page ?? 1);
+
+  let q = db.from("articles").select(ADMIN_ARTICLE_COLUMNS, { count: "exact" });
+
+  if (opts.kind) q = q.eq("kind", opts.kind);
+  if (opts.status) q = q.eq("status", opts.status);
+  if (opts.search) {
+    const term = opts.search.replace(/[%,()]/g, " ").trim();
+    if (term) q = q.ilike("title", `%${term}%`);
+  }
+
+  q = q.order("updated_at", { ascending: false });
+
+  const from = (page - 1) * ADMIN_PAGE_SIZE;
+  const { data, count, error } = await q.range(from, from + ADMIN_PAGE_SIZE - 1);
+  if (error) throw new Error(`getAdminArticles: ${error.message}`);
+
+  const total = count ?? 0;
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rows: (data ?? []).map((row: Record<string, any>) => {
+      const city = Array.isArray(row.cities) ? row.cities[0] : row.cities;
+      return {
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+        kind: row.kind,
+        status: row.status,
+        cityName: city?.name ?? null,
+        tags: row.tags ?? [],
+        publishedAt: row.published_at ?? null,
+        readingMin: row.reading_min ?? null,
+        updatedAt: row.updated_at,
+        createdAt: row.created_at,
+      };
+    }),
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE)),
+  };
+}
+
+/** The editor's initial values. Includes drafts; RLS gates it on admin. */
+export async function getAdminArticleById(id: string) {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("articles")
+    .select(`${ADMIN_ARTICLE_COLUMNS}, body_json, body_text`)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`getAdminArticleById(${id}): ${error.message}`);
+  return data ?? null;
+}
+
+/** Autocomplete source for the article tag input. */
+export async function getKnownTags(): Promise<string[]> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db.from("articles").select("tags").limit(500);
+  if (error) throw new Error(`getKnownTags: ${error.message}`);
+
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    for (const tag of (row.tags ?? []) as string[]) {
+      const clean = tag.trim();
+      if (clean) counts.set(clean, (counts.get(clean) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([tag]) => tag);
+}
+
+/* ── Places and reviews, admin view ─────────────────────────────────────── */
+
+export async function getAdminCityById(
+  id: string,
+): Promise<(City & { published: boolean }) | null> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("cities")
+    .select(
+      "id, slug, name, county, state, in_search, is_flagship, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc, published",
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`getAdminCityById(${id}): ${error.message}`);
+  return data ? { ...toCity(data), published: Boolean(data.published) } : null;
+}
+
+export async function getAdminCommunityById(
+  id: string,
+): Promise<(Community & { published: boolean }) | null> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("communities")
+    .select(
+      "id, slug, name, city_id, hero_key, hero_alt, intro_md, body_md, hoa_info, amenities, price_range, faq_json, meta_title, meta_desc, published, cities(id, slug, name)",
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`getAdminCommunityById(${id}): ${error.message}`);
+  return data ? { ...toCommunity(data), published: Boolean(data.published) } : null;
+}
+
+/** Reviews INCLUDING unpublished ones, in display order. */
+export async function getAdminReviews(): Promise<(Review & {
+  published: boolean;
+  sortOrder: number;
+})[]> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("reviews")
+    .select(
+      "id, author_name, author_role, rating, body, source, source_url, reviewed_at, published, sort_order",
+    )
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(`getAdminReviews: ${error.message}`);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((row: Record<string, any>) => ({
+    ...toReview(row),
+    published: Boolean(row.published),
+    sortOrder: Number(row.sort_order ?? 0),
+  }));
+}
+
+/** Autocomplete source for the community amenities tag input. */
+export async function getKnownAmenities(): Promise<string[]> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db.from("communities").select("amenities").limit(200);
+  if (error) throw new Error(`getKnownAmenities: ${error.message}`);
+
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    for (const amenity of (row.amenities ?? []) as string[]) {
+      const clean = amenity.trim();
+      if (clean) counts.set(clean, (counts.get(clean) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([amenity]) => amenity);
 }

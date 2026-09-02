@@ -1,7 +1,7 @@
 import { absolute } from "@/lib/seo/metadata";
 import { allCities, isPending, siteConfig } from "@/lib/site-config";
 import type { Crumb } from "@/components/site/breadcrumbs";
-import type { FaqItem, Listing } from "@/types/domain";
+import type { FaqItem, Listing, SiteSettings } from "@/types/domain";
 
 /**
  * Structured data builders — docs/08-seo-ai-visibility.md § 6.
@@ -22,20 +22,36 @@ export const WEBSITE_ID = `${siteConfig.url}/#website`;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type JsonLdObject = Record<string, any>;
 
-/** Live profile URLs only — a `sameAs` full of placeholders is worse than none. */
-function sameAs(): string[] {
-  return Object.values(siteConfig.profiles).filter((u) => !isPending(u));
+/**
+ * Live profile URLs only — a `sameAs` full of placeholders is worse than none.
+ *
+ * Profiles edited in Admin → Settings win over the compile-time fallback, so
+ * adding a Zillow link takes effect without a deploy. `sameAs` is how a search
+ * engine or an assistant connects this site to her Google and Zillow presence,
+ * which makes it one of the higher-value things on the Settings screen.
+ */
+function sameAs(overrides?: Record<string, string>): string[] {
+  const merged = { ...siteConfig.profiles, ...(overrides ?? {}) };
+  return Object.values(merged).filter((url) => url && !isPending(url));
 }
 
-function postalAddress(): JsonLdObject | undefined {
+function postalAddress(settings?: SiteSettings): JsonLdObject | undefined {
   const a = siteConfig.contact.address;
-  if (isPending(a.street) || isPending(a.postalCode)) return undefined;
+
+  const street = settings?.address.street ?? (isPending(a.street) ? null : a.street);
+  const postalCode =
+    settings?.address.postalCode ?? (isPending(a.postalCode) ? null : a.postalCode);
+
+  // A partial address is worse than none: an incomplete PostalAddress makes the
+  // business look unverifiable rather than simply undisclosed.
+  if (!street || !postalCode) return undefined;
+
   return {
     "@type": "PostalAddress",
-    streetAddress: a.street,
-    addressLocality: a.locality,
-    addressRegion: a.region,
-    postalCode: a.postalCode,
+    streetAddress: street,
+    addressLocality: settings?.address.locality ?? a.locality,
+    addressRegion: settings?.address.region ?? a.region,
+    postalCode,
     addressCountry: a.country,
   };
 }
@@ -54,9 +70,9 @@ const KNOWS_ABOUT = [
 
 /* ── RealEstateAgent — root layout ──────────────────────────────────────── */
 
-export function agentJsonLd(): JsonLdObject {
-  const address = postalAddress();
-  const links = sameAs();
+export function agentJsonLd(settings?: SiteSettings): JsonLdObject {
+  const address = postalAddress(settings);
+  const links = sameAs(settings?.profiles);
 
   return {
     "@context": "https://schema.org",
@@ -68,12 +84,12 @@ export function agentJsonLd(): JsonLdObject {
     url: siteConfig.url,
     logo: absolute("/icon.svg"),
     priceRange: "$$",
-    ...(isPending(siteConfig.contact.phone)
-      ? {}
-      : { telephone: siteConfig.contact.phone }),
-    ...(isPending(siteConfig.contact.email)
-      ? {}
-      : { email: siteConfig.contact.email }),
+    ...(settings?.phone ?? !isPending(siteConfig.contact.phone)
+      ? { telephone: settings?.phone ?? siteConfig.contact.phone }
+      : {}),
+    ...(settings?.email ?? !isPending(siteConfig.contact.email)
+      ? { email: settings?.email ?? siteConfig.contact.email }
+      : {}),
     ...(address ? { address } : {}),
     areaServed: allCities.map((c) => ({
       "@type": "City",
@@ -95,8 +111,8 @@ export function agentJsonLd(): JsonLdObject {
 
 /* ── Person — /about, the entity page ───────────────────────────────────── */
 
-export function personJsonLd(): JsonLdObject {
-  const links = sameAs();
+export function personJsonLd(settings?: SiteSettings): JsonLdObject {
+  const links = sameAs(settings?.profiles);
   const { realEstate, contractor } = siteConfig.licenses;
 
   return {
@@ -368,5 +384,50 @@ export function listingItemListJsonLd(
       name: item.address,
       url: absolute(`/listing/${item.slug}`),
     })),
+  };
+}
+
+/* ── Place — city and community pages ───────────────────────────────────── */
+
+/**
+ * A city or community page describes a PLACE, and the agent serves it.
+ *
+ * `Place` rather than `City`: schema.org's City is for the municipality itself,
+ * and this page is a guide to it written by an agent — conflating the two would
+ * claim the site is an authority on the city rather than on its property market.
+ * The `areaServed` link back to the agent is what carries that relationship.
+ */
+export function placeJsonLd(place: {
+  name: string;
+  slug: string;
+  county?: string;
+  metaDesc?: string | null;
+  introMd?: string | null;
+}): JsonLdObject {
+  const description =
+    place.metaDesc ??
+    place.introMd?.replace(/[#*_>[\]()]/g, "").split("\n")[0]?.slice(0, 300) ??
+    undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    name: place.name,
+    url: absolute(`/${place.slug}`),
+    ...(description ? { description } : {}),
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: place.name,
+      addressRegion: "FL",
+      addressCountry: "US",
+    },
+    ...(place.county
+      ? {
+          containedInPlace: {
+            "@type": "AdministrativeArea",
+            name: `${place.county} County, Florida`,
+          },
+        }
+      : {}),
   };
 }

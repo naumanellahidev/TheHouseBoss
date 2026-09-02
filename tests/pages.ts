@@ -35,20 +35,25 @@ export const PAGES: TestPage[] = [
   { path: "/lake-mary/homes-for-sale", name: "lake-mary-homes" },
 
   // Phase 4
-  // { path: "/lake-mary", name: "lake-mary" },
-  // { path: "/lake-mary/communities", name: "lake-mary-communities" },
-  // { path: "/communities/heathrow", name: "heathrow" },
-  // { path: "/longwood", name: "longwood" },
-  // { path: "/market-updates", name: "market-updates" },
+  { path: "/lake-mary", name: "lake-mary" },
+  { path: "/lake-mary/communities", name: "lake-mary-communities" },
+  { path: "/lake-mary/blog", name: "lake-mary-blog" },
+  { path: "/communities/heathrow", name: "heathrow" },
+  { path: "/longwood", name: "longwood" },
+  { path: "/market-updates", name: "market-updates" },
 
   // Phase 5
   { path: "/about", name: "about" },
+  { path: "/guides", name: "guides-index" },
   { path: "/guides/va-home-buyer", name: "va-guide" },
-  // { path: "/assumable-mortgage-homes", name: "assumable" },
-  // { path: "/new-construction-representation", name: "new-construction" },
-  // { path: "/sell-your-central-florida-home", name: "sell" },
-  // { path: "/reviews", name: "reviews" },
-  // { path: "/contact", name: "contact" },
+  { path: "/assumable-mortgage-homes", name: "assumable" },
+  { path: "/new-construction-representation", name: "new-construction" },
+  { path: "/sell-your-central-florida-home", name: "sell" },
+  { path: "/reviews", name: "reviews" },
+  { path: "/contact", name: "contact" },
+  { path: "/legal/privacy", name: "privacy" },
+  { path: "/legal/terms", name: "terms" },
+  { path: "/legal/accessibility", name: "accessibility" },
 ];
 
 /** 360 is the hard floor — docs/04-responsive-spec.md § 1. */

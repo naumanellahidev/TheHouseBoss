@@ -23,8 +23,14 @@ export type BuildMetadataArgs = {
   description: string;
   /** Absolute path, leading slash. */
   path: string;
-  /** Absolute URL or a path under /. Defaults to the site OG image. */
-  image?: string;
+  /**
+   * Absolute URL or a path under /.
+   *
+   *   undefined — use the site-wide card
+   *   null      — this route has its own `opengraph-image.tsx`; leave it alone
+   *   string    — use this exact image
+   */
+  image?: string | null;
   noindex?: boolean;
   type?: "website" | "article" | "profile";
   publishedTime?: string;
@@ -67,11 +73,24 @@ export function buildMetadata({
     );
   }
 
-  const ogImage = image
-    ? image.startsWith("http")
-      ? image
-      : absolute(image)
-    : `${SITE}/opengraph-image`;
+  /**
+   * Which social card this page gets.
+   *
+   * Next resolves `opengraph-image.tsx` for the page in its OWN segment and
+   * does not cascade to descendants the way the docs imply, so this cannot be
+   * left to the file convention alone: routes that have their own card pass
+   * `image: null` to stand aside, and everything else falls back to the
+   * site-wide card explicitly. Relying on the cascade silently left the home
+   * page and every guide with no og:image at all.
+   */
+  const ogImage =
+    image === null
+      ? null
+      : image
+        ? image.startsWith("http")
+          ? image
+          : absolute(image)
+        : `${SITE}/opengraph-image`;
 
   return {
     title: truncateOnWord(title, TITLE_MAX),
@@ -97,14 +116,16 @@ export function buildMetadata({
       description,
       siteName: siteConfig.name,
       locale: siteConfig.locale,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      ...(ogImage
+        ? { images: [{ url: ogImage, width: 1200, height: 630, alt: title }] }
+        : {}),
       ...(type === "article" ? { publishedTime, modifiedTime } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [ogImage],
+      ...(ogImage ? { images: [ogImage] } : {}),
     },
   };
 }

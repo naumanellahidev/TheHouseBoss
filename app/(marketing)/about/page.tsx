@@ -10,6 +10,8 @@ import { Prose } from "@/components/site/prose";
 import { PropertyImage, IMAGE_SIZES } from "@/components/site/property-image";
 import { Button } from "@/components/ui/button";
 import { breadcrumbJsonLd, personJsonLd } from "@/lib/seo/jsonld";
+import { getSiteSettings } from "@/lib/queries/settings";
+import { EMPTY_SETTINGS, safeQuery } from "@/lib/queries/safe";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { allCities, isPending, siteConfig } from "@/lib/site-config";
 
@@ -79,12 +81,20 @@ const services = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // The Person graph carries her contact details and profile links; both are
+  // editable in Admin → Settings.
+  const settings = await safeQuery(
+    () => getSiteSettings(),
+    EMPTY_SETTINGS,
+    "getSiteSettings(about)",
+  );
+
   const hasPortrait = false; // Phase 5 content: client headshot still outstanding
 
   return (
     <>
-      <JsonLd data={[personJsonLd(), breadcrumbJsonLd(crumbs)]} />
+      <JsonLd data={[personJsonLd(settings), breadcrumbJsonLd(crumbs)]} />
 
       <PageHero
         overline="Meet The House Boss"

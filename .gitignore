@@ -55,3 +55,5 @@ tests/.auth/
 # Claude Code: shared project settings and skills ARE committed;
 # per-machine permission overrides are not.
 .claude/settings.local.json
+backups/
+lighthouse-results.json

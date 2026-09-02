@@ -349,3 +349,21 @@ export async function getFacets(): Promise<Facets> {
   };
 }
 
+
+/** Homes for sale inside one community — the community page's grid. */
+export async function getListingsByCommunity(
+  communityId: string,
+  limit = 6,
+): Promise<ListingCard[]> {
+  const db = createSupabasePublicClient();
+  const { data, error } = await db
+    .from("listing_card")
+    .select(CARD_COLUMNS)
+    .eq("community_id", communityId)
+    .in("status", AVAILABLE)
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`getListingsByCommunity: ${error.message}`);
+  return (data ?? []).map(toListingCard);
+}

@@ -5,6 +5,8 @@ import { Container, Section, SectionHeader } from "@/components/site/container";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { siteConfig } from "@/lib/site-config";
+import { buildMetadata } from "@/lib/seo/metadata";
+import type { Metadata } from "next";
 
 /**
  * PHASE 0: hero + trust strip only.
@@ -17,6 +19,16 @@ import { siteConfig } from "@/lib/site-config";
  * Meet Krisi, contractor value props, Lake Mary spotlight, guides teaser,
  * reviews, lead CTA band.
  */
+
+// The home page was the one route still carrying framework-default metadata:
+// no canonical, and a description well under the 140-character floor. Both are
+// asserted by scripts/check-seo.mjs now.
+export const metadata: Metadata = buildMetadata({
+  title: "Lake Mary & Central Florida Homes for Sale",
+  description:
+    "Search homes for sale in Lake Mary, Longwood, Sanford, Casselberry and Orlando with a Realtor who is also a licensed residential contractor — VA buyers, assumable mortgages and new construction.",
+  path: "/",
+});
 
 const trustPoints = [
   {

@@ -34,6 +34,10 @@ const ALLOWLIST = new Map([
     "documents the token hex values in prose — that is the page's job",
   ],
   [
+    "lib/seo/og.tsx",
+    "satori renders the social card with inline styles and cannot read a CSS custom property; each constant names the @theme variable it mirrors",
+  ],
+  [
     "lib/email/templates.ts",
     "email clients cannot read a CSS custom property, so tokens must be inlined; each constant names the @theme variable it mirrors and must be updated with it",
   ],

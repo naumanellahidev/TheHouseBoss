@@ -237,7 +237,23 @@ operational risk in the project.
 
 ### Database
 
-GitHub Actions, nightly:
+**Shipped as `.github/workflows/backup.yml`.** It runs nightly at 05:00 UTC and
+takes two dumps, because they fail differently:
+
+- **`pg_dump`** — carries schema, constraints, triggers and RLS policies. This
+  is what a real restore uses. Needs the `SUPABASE_DB_URL` secret.
+- **`scripts/backup.mjs`** — a paged JSON dump of all 12 application tables plus
+  a media inventory, followed immediately by `--verify`, which re-reads every
+  file and checks the counts against the manifest. It needs no Postgres client
+  and is readable and partially restorable by hand. Needs only the keys the
+  application already uses.
+
+Whichever secret is absent is skipped with a warning rather than failing the
+run, so the workflow is useful from the first commit and gets stronger as
+secrets are added — but the run **fails** if both were skipped. A backup
+workflow that quietly backs up nothing is worse than no workflow at all.
+
+The original sketch, kept because it is the shape of the `pg_dump` half:
 
 ```yaml
 name: db-backup

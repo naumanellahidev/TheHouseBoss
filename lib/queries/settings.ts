@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/service";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import type { AdminSettings, SiteSettings } from "@/types/domain";
 
 /**
@@ -8,8 +8,11 @@ import type { AdminSettings, SiteSettings } from "@/types/domain";
  * Two entry points on purpose:
  *
  *   getSiteSettings()  — reads `site_settings_public`, the reviewed subset of
- *                        columns, through the RLS-respecting client. Safe to
- *                        call from any public page.
+ *                        columns, through the COOKIE-FREE anon client. It is
+ *                        called from the marketing layout, so using the session
+ *                        client here would opt every public page out of static
+ *                        rendering — the same trap the listing queries hit in
+ *                        Phase 3 (lib/supabase/public.ts).
  *   getAdminSettings() — reads the whole row with the service client. Callers
  *                        must have passed requireAdmin() first.
  *
@@ -63,7 +66,7 @@ function toSiteSettings(row: Row | null): SiteSettings {
 export const EMPTY_SETTINGS: SiteSettings = toSiteSettings(null);
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const db = await createSupabaseServerClient();
+  const db = createSupabasePublicClient();
   const { data, error } = await db
     .from("site_settings_public")
     .select("*")

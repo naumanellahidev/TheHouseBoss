@@ -15,12 +15,15 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   // This machine is disk- and memory-constrained; 7 workers against one
-  // `next start` instance stalls requests past the timeout.
-  workers: process.env.CI ? 2 : 3,
+  // `next start` instance stalls requests past the timeout. The suite grew
+  // again in Phases 4 and 5 (26 public pages x 9 widths, plus the admin and
+  // content flows), and at 3 workers individual page loads started tipping
+  // past 45s purely from contention — every one of them passing on its own.
+  workers: process.env.CI ? 2 : 2,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
-  timeout: 45_000,
+  timeout: 60_000,
 
   use: {
     baseURL: BASE_URL,
@@ -37,6 +40,28 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       dependencies: ["setup"],
+      // Everything except the cross-browser file, which runs on all engines.
+      testIgnore: /cross-browser\.spec\.ts/,
+    },
+
+    // Phase 7 task 6. Only tests/cross-browser.spec.ts runs here: duplicating
+    // the whole suite across three engines on this machine costs half an hour
+    // and tells us almost nothing new. WebKit is the one that matters — it is
+    // Safari on macOS and every browser on iOS.
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+      testMatch: /cross-browser\.spec\.ts/,
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      testMatch: /cross-browser\.spec\.ts/,
+    },
+    {
+      name: "chromium-cross",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /cross-browser\.spec\.ts/,
     },
   ],
 

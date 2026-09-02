@@ -1,18 +1,31 @@
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { Footer } from "@/components/site/footer";
 import { Header } from "@/components/site/header";
 import { JsonLd } from "@/components/site/json-ld";
 import { agentJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
+import { getSiteSettings } from "@/lib/queries/settings";
+import { EMPTY_SETTINGS, safeQuery } from "@/lib/queries/safe";
 
 /**
  * Public marketing shell. The compliance footer is rendered inside <Footer />,
  * so every page in this group carries the legally required disclosure
  * (CLAUDE.md hard rule 15).
  */
-export default function MarketingLayout({
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Contact details and profile links come from Admin → Settings, so adding a
+  // Zillow profile updates the sameAs array on every page without a deploy.
+  const settings = await safeQuery(
+    () => getSiteSettings(),
+    EMPTY_SETTINGS,
+    "getSiteSettings(layout)",
+  );
+
   return (
     <>
       {/*
@@ -21,7 +34,7 @@ export default function MarketingLayout({
         Page-level graphs (Person, Article, FAQPage, BreadcrumbList) are added by
         the pages themselves and resolve against these by @id.
       */}
-      <JsonLd data={[agentJsonLd(), websiteJsonLd()]} />
+      <JsonLd data={[agentJsonLd(settings), websiteJsonLd()]} />
 
       {/* WCAG 2.4.1 — must be the first focusable element on the page. */}
       <a
@@ -38,6 +51,31 @@ export default function MarketingLayout({
       </main>
 
       <Footer />
+
+      {/*
+        Cookieless, so no consent banner — which is the reason it was chosen
+        over GA4 rather than an incidental benefit. The reasoning, and what was
+        deliberately NOT installed, is in docs/17-launch-operations.md § 1.
+
+        Mounted in the marketing group only. The admin dashboard is one signed-in
+        person doing her job; measuring her is noise in the numbers and one more
+        place her behaviour is recorded for no purpose.
+
+        Gated on VERCEL_ENV rather than rendered unconditionally, for two
+        reasons. Both scripts are served by Vercel's edge at /_vercel/*, so off
+        Vercel they 404 and log a console error — which is a real Best Practices
+        regression (100 -> 96, measured) and which would otherwise contaminate
+        the Lighthouse record in docs/17 § 3 with a fault that does not exist in
+        production. And excluding preview deployments keeps our own testing out
+        of the client's numbers; a preview build that gets shared and clicked
+        through a dozen times should not look like traffic.
+      */}
+      {process.env.VERCEL_ENV === "production" && (
+        <>
+          <Analytics />
+          <SpeedInsights />
+        </>
+      )}
     </>
   );
 }

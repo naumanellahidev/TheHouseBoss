@@ -29,6 +29,9 @@ wins any conflict with the documents below.
 | 12 | [12-env-deployment.md](12-env-deployment.md) | Env vars, Vercel, Supabase, DNS, backups, CI, runbook |
 | 13 | [13-qa-checklists.md](13-qa-checklists.md) | Per-page, RLS, responsive, a11y, performance, launch checklists |
 | 14 | [14-content-plan.md](14-content-plan.md) | What to write, in what order, and how to write it for AI citation |
+| 15 | [15-client-launch-checklist.md](15-client-launch-checklist.md) | What the client and the broker must supply or decide before launch |
+| 16 | [16-admin-guide.md](16-admin-guide.md) | Using the dashboard — written for Krisi, not for a developer |
+| 17 | [17-launch-operations.md](17-launch-operations.md) | Analytics decision, monitoring, the measured performance record, the 90-day plan |
 
 ## Which docs each phase needs
 

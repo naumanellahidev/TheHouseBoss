@@ -1,5 +1,6 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import type { Facets, SearchResult } from "@/types/domain";
+export { EMPTY_SETTINGS } from "@/lib/queries/settings";
 
 /**
  * Lets content pages be built and shipped before the database exists.

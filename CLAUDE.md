@@ -37,10 +37,18 @@ Original client message, unedited: `docs/client-brief-original.md`.
 | File storage | Supabase Storage (1 GB) behind a storage adapter |
 | Styling | Tailwind CSS v4 + shadcn/ui |
 | Rich text | Tiptap, stored as JSON in Postgres |
+| Markdown | `react-markdown` + `remark-gfm`, server-rendered only |
 | Transactional email | Resend (3,000/mo free) |
 | Search | Postgres full-text search + a facets view. No Algolia, no Elastic. |
 | Forms | react-hook-form + zod |
 | Images | `sharp` server-side, `browser-image-compression` client-side |
+
+**Markdown is not a second rich-text system.** Tiptap owns `articles.body_json`
+— everything the client writes as an article. `react-markdown` renders only the
+`intro_md` / `body_md` columns on `cities` and `communities`, which the schema
+defines as markdown (`docs/02`). It is used in server components only, never
+ships to the browser, and never uses `dangerouslySetInnerHTML`. Added in Phase 4;
+if those columns ever become Tiptap documents, this row goes away with them.
 
 Do not add a dependency that duplicates something in this table. Do not add a
 client state-management library — server components plus URL state cover this

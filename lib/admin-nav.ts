@@ -1,22 +1,23 @@
 import {
   Building2,
+  FileText,
   Image as ImageIcon,
-  LayoutDashboard,
   Inbox,
+  LayoutDashboard,
+  MapPin,
+  MapPinned,
   Settings,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 
 /**
  * Admin sidebar — docs/06-admin-dashboard-spec.md § 2.
  *
- * Only sections that exist are listed. The spec's shell also shows Articles,
- * Cities, Communities and Reviews; those screens are Phase 4 (content system),
- * and a nav entry pointing at a route that does not exist is worse than a nav
- * entry that arrives with its screen. Add them here in P4, in this order:
- *
- *   Dashboard · Listings · Articles · Cities · Communities · Reviews · Leads ·
- *   Media · Settings
+ * The full set from the spec, in the spec's order. Every entry has a screen —
+ * a nav item pointing at a route that does not exist is worse than one that
+ * arrives with its screen, which is why Articles, Cities, Communities and
+ * Reviews were held back until Phase 4 built them.
  */
 export type AdminNavItem = {
   href: string;
@@ -29,6 +30,10 @@ export type AdminNavItem = {
 export const adminNav: AdminNavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/listings", label: "Listings", icon: Building2 },
+  { href: "/admin/articles", label: "Articles", icon: FileText },
+  { href: "/admin/cities", label: "Cities", icon: MapPin },
+  { href: "/admin/communities", label: "Communities", icon: MapPinned },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/leads", label: "Leads", icon: Inbox, badge: "leads" },
   { href: "/admin/media", label: "Media", icon: ImageIcon },
   { href: "/admin/settings", label: "Settings", icon: Settings },

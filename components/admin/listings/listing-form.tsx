@@ -12,7 +12,7 @@ import {
   saveListing,
   suggestSlug,
 } from "@/app/(admin)/admin/(shell)/listings/actions";
-import { FeaturesInput } from "@/components/admin/listings/features-input";
+import { TagInput } from "@/components/admin/tag-input";
 import { PhotoUploader } from "@/components/admin/listings/photo-uploader";
 import { PrePublishChecklist } from "@/components/admin/listings/pre-publish-checklist";
 import {
@@ -697,10 +697,11 @@ export function ListingForm({
 
         <Field error={errorOf("features")}>
           <FieldLabel>Features</FieldLabel>
-          <FeaturesInput
+          <TagInput
             value={values.features ?? []}
             onChange={(next) => setValue("features", next, { shouldDirty: true })}
             suggestions={knownFeatures}
+            placeholder="Type a feature, then Enter"
           />
           <FieldDescription>
             Suggestions come from features you have used before. Reusing the same

@@ -6,29 +6,32 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Tag input for `listings.features`, with autocomplete over what she has
- * already used.
+ * A tag input with autocomplete over values already used — listing features,
+ * article tags, community amenities.
  *
- * The autocomplete is not a convenience — docs/06 § 4 Tab 2 calls it out
- * specifically. Without it the same feature gets typed as "Granite Counters",
- * "granite countertops" and "Granite counter tops", and the GIN index on
- * `features` stops being able to group anything.
+ * The autocomplete is not a convenience. docs/06 § 4 Tab 2 calls it out
+ * specifically for features: without it the same one gets typed as "Granite
+ * Counters", "granite countertops" and "Granite counter tops", and the GIN
+ * index stops being able to group anything. The same applies to article tags,
+ * where three spellings mean three useless tag pages.
  *
  * Keyboard contract: Enter or comma commits, Backspace on an empty field
  * removes the last tag, Down/Up walk the suggestions, Escape closes them.
  */
-export function FeaturesInput({
+export function TagInput({
   value,
   onChange,
   suggestions,
   id,
   max = 60,
+  placeholder,
 }: {
   value: string[];
   onChange: (value: string[]) => void;
   suggestions: string[];
   id?: string;
   max?: number;
+  placeholder?: string;
 }) {
   const [draft, setDraft] = React.useState("");
   const [open, setOpen] = React.useState(false);
@@ -121,7 +124,7 @@ export function FeaturesInput({
           aria-autocomplete="list"
           autoComplete="off"
           placeholder={
-            value.length >= max ? "Feature list is full" : "Type a feature, then Enter"
+            value.length >= max ? "That is the maximum" : (placeholder ?? "Type a value, then Enter")
           }
           disabled={value.length >= max}
           onChange={(event) => {
