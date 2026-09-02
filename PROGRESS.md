@@ -608,10 +608,11 @@ reported as a critical `button-name` violation.
   `PLAYWRIGHT_BROWSERS_PATH=D:\ms-playwright`.
 - `CRON_SECRET` and `REVALIDATE_SECRET` were generated into `.env.local`. Vercel
   needs its own values, and `CRON_SECRET` must match what Vercel Cron sends.
-- **`scripts/db-connect.mjs` contains the database password in plain text and is
-  committed.** It should move to an environment variable before this repository
-  is shared, and the password rotated — alongside the service-role key already
-  tracked as decision 11.
+- ~~`scripts/db-connect.mjs` contains the database password in plain text.~~
+  **Fixed 2026-09-02** before the first push: credentials now come from
+  `SUPABASE_DB_PASSWORD` and `SUPABASE_PROJECT_REF` (or are derived from the
+  public URL). Verified that no credential appears in any commit. The
+  service-role key is a separate matter and is still open as decision 11.
 
 ---
 
@@ -735,6 +736,59 @@ reported as a critical `button-name` violation.
   order is recorded in `lib/admin-nav.ts`.
 - Do not add a `loading.tsx` to any route that can call `notFound()`. See the
   note at the top of `app/(marketing)/listing/[slug]/page.tsx`.
+
+---
+
+### 2026-09-02 — GitHub integration
+
+The project had never been pushed. Everything built in sessions 1–5 existed only
+in the working tree, on one machine, with no backup.
+
+**Repository:** `naumanellahidev/TheHouseBoss` (private), default branch `main`.
+
+**Done**
+
+- Added the remote and **merged the repository's existing history** rather than
+  force-pushing over it. The remote had an initial commit and a placeholder
+  README; that commit is preserved and the placeholder was replaced by the
+  project README.
+- Six commits grouped by layer in dependency order — documentation and
+  toolchain, data layer, design system, admin, public listings, marketing pages
+  and tests — plus the merge. They are an **initial import of already-completed
+  work**, not a reconstruction of per-phase history, and intermediate commits
+  are not individually buildable.
+- Verified the committed tree by cloning it to a separate directory, running
+  `npm ci` and `npm run build` from scratch. It compiles with no untracked file
+  propping it up.
+
+**Security work done before the first push**
+
+- **The database password was hardcoded in `scripts/db-connect.mjs`.** It now
+  reads `SUPABASE_DB_PASSWORD`, and the project ref comes from
+  `SUPABASE_PROJECT_REF` or is derived from `NEXT_PUBLIC_SUPABASE_URL`. Both
+  are documented in `.env.example`. The scripts were re-run to confirm they
+  still work, and that they fail with a readable message when the variables are
+  absent.
+- Scanned every file that would be committed for live secret values — anon key,
+  service-role key, database password, cron secret — and then scanned **every
+  commit in the repository**: no credential appears in the history at any point.
+  Nothing needs rewriting or rotating as a result of this push.
+- `.env.local`, `.db-host` and `tests/.auth/` were already ignored;
+  `.claude/settings.local.json` was added to `.gitignore` (per-machine
+  permission overrides), while the shared `.claude` settings, skills and
+  commands are committed because they are project instructions.
+- The Supabase project ref does appear in `PROGRESS.md`. That is not a secret —
+  it is part of the public Supabase URL that ships in the browser bundle.
+
+**Next session must know**
+
+- The repository is private. Before it is ever made public, re-read
+  `PROGRESS.md` and `docs/` for client details that are fine internally but not
+  for publication.
+- Vercel still needs its own environment variables; `.env.example` is the list.
+  `CRON_SECRET` must match what Vercel Cron sends.
+- Decision 11 stands: **rotate the service-role key before launch.** It was
+  shared over chat, which is independent of anything in this repository.
 
 ---
 
