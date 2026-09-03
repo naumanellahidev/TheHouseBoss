@@ -123,10 +123,15 @@ async function notify(lead: Lead) {
   try {
     const settings = await getAdminSettings().catch(() => null);
 
+    // `||` throughout: a blank LEAD_NOTIFY_EMAIL is not nullish, so `??`
+    // would resolve `to` to "" and stop — skipping the fallback to the
+    // settings address and sending nothing, with the lead saved and nobody
+    // notified. Silent non-delivery is the worst failure this route has.
     const to =
-      settings?.leadNotifyEmail ??
-      process.env.LEAD_NOTIFY_EMAIL ??
-      (settings?.email || null);
+      settings?.leadNotifyEmail ||
+      process.env.LEAD_NOTIFY_EMAIL?.trim() ||
+      settings?.email ||
+      null;
 
     const adminUrl = `${siteConfig.url}/admin/leads?lead=${lead.id}`;
 

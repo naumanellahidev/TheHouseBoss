@@ -48,7 +48,7 @@ export async function GET() {
         ok: true,
         database: "reachable",
         ms: Date.now() - startedAt,
-        deployment: process.env.VERCEL_ENV ?? "local",
+        deployment: process.env.VERCEL_ENV || "local",
       },
       { headers: { "Cache-Control": "no-store" } },
     );
@@ -61,7 +61,7 @@ export async function GET() {
         ok: false,
         database: "unreachable",
         ms: Date.now() - startedAt,
-        deployment: process.env.VERCEL_ENV ?? "local",
+        deployment: process.env.VERCEL_ENV || "local",
       },
       // 503, not 500: this is "dependency down, try again", and it is what
       // makes an uptime monitor alert rather than record a slow success.

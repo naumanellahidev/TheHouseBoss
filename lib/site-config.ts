@@ -28,7 +28,7 @@ export const siteConfig = {
    * genuinely lacked the variable would then claim the live domain's
    * canonicals while serving from somewhere else.
    */
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thehousebossfl.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://thehousebossfl.com",
   locale: "en_US",
   timezone: "America/New_York",
 

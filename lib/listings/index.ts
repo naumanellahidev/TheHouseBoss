@@ -22,7 +22,11 @@ const registry: Partial<Record<ProviderName, ListingReader>> = {
 };
 
 export function getListingReader(): ListingReader {
-  const requested = (process.env.LISTING_SOURCE ?? "manual") as ProviderName;
+  // `||`, not `??`: a variable declared in the Vercel dashboard and left
+  // empty arrives as "", which `??` passes straight through to the registry
+  // lookup and throws. Exactly how STORAGE_DRIVER broke a deploy.
+  const requested = (process.env.LISTING_SOURCE?.trim() ||
+    "manual") as ProviderName;
   const provider = registry[requested];
 
   if (!provider) {

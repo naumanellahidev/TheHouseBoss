@@ -37,7 +37,7 @@ function resolveSiteUrl(): string {
   const deployment = process.env.VERCEL_URL;
   if (deployment) return `https://${deployment}`;
 
-  return `http://localhost:${process.env.PORT ?? 3000}`;
+  return `http://localhost:${process.env.PORT || 3000}`;
 }
 
 const nextConfig: NextConfig = {
