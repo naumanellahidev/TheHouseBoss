@@ -232,13 +232,23 @@ Container max width: **1280px**. Prose container: **720px**. Wide media: **1440p
 ```css
 --radius-sm: 4px;    /* badges, chips */
 --radius-md: 8px;    /* inputs, buttons */
---radius-lg: 12px;   /* cards */
---radius-xl: 20px;   /* hero panels, modals */
+--radius-lg: 12px;   /* cards, and ALL listing photography */
+--radius-xl: 20px;   /* modals, sheets */
+--radius-2xl: 28px;  /* editorial media frames and hero panels ONLY */
 --radius-full: 9999px;
 ```
 
-Photography is never rounded above `--radius-lg`. Round corners on a property
-photo past 12px looks like a social app, not a listing.
+**Listing photography is never rounded above `--radius-lg`.** Round corners on a
+property photo past 12px looks like a social app, not a listing. This is the
+original rule and it still holds without exception for anything showing a
+property that is for sale.
+
+`--radius-2xl` exists for **editorial** imagery, which is a different job: the
+home and city heroes, city tiles, the About portrait, and guide headers. Those
+images sell a place and a person rather than a specific listing, and the larger
+radius is what makes the composition read as designed rather than as a stack of
+rectangles. Apply it only through the `media-frame` utility, so the decision
+stays in one place and cannot drift into listing contexts.
 
 ### Elevation
 
@@ -250,10 +260,17 @@ Shadows are soft and navy-tinted, never neutral gray.
 --shadow-md: 0 4px 12px rgb(15 27 45 / 0.08), 0 2px 4px rgb(15 27 45 / 0.04);
 --shadow-lg: 0 12px 32px rgb(15 27 45 / 0.10), 0 4px 8px rgb(15 27 45 / 0.05);
 --shadow-xl: 0 24px 64px rgb(15 27 45 / 0.14);
+--shadow-float: 0 32px 80px rgb(15 27 45 / 0.18), 0 8px 24px rgb(15 27 45 / 0.08);
 ```
 
 Elevation ladder: page 0 → card `sm` → card hover `md` → dropdown `lg` →
-modal `xl`. Never skip a rung.
+modal `xl` → overlapping card `float`. Never skip a rung.
+
+`--shadow-float` is the top rung and has exactly one use: a card that overlaps
+the media behind it, via the `float-card` utility. The wide soft spread is what
+separates the two planes — with a lesser shadow an overlapping card reads as a
+misalignment rather than as depth. Do not reach for it to make an ordinary card
+look important; that is what the ladder below it is for.
 
 ---
 

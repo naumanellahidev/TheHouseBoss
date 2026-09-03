@@ -119,6 +119,13 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 20px;
+  /*
+    EDITORIAL ONLY — hero panels, city imagery, the About portrait, guide
+    headers. NOT listing photography, which stays at --radius-lg: a property
+    photo rounded past 12px reads as a social app rather than a listing
+    (docs/03 § Radius rule).
+  */
+  --radius-2xl: 28px;
 
   /* ── Elevation — navy-tinted, never neutral gray ────────────────────── */
   --shadow-xs: 0 1px 2px rgb(15 27 45 / 0.05);
@@ -126,6 +133,12 @@
   --shadow-md: 0 4px 12px rgb(15 27 45 / 0.08), 0 2px 4px rgb(15 27 45 / 0.04);
   --shadow-lg: 0 12px 32px rgb(15 27 45 / 0.1), 0 4px 8px rgb(15 27 45 / 0.05);
   --shadow-xl: 0 24px 64px rgb(15 27 45 / 0.14);
+  /*
+    One rung above xl, for a card that overlaps the media behind it. The wide
+    soft spread is what separates the two planes; without it an overlapping
+    card reads as a mistake rather than as depth.
+  */
+  --shadow-float: 0 32px 80px rgb(15 27 45 / 0.18), 0 8px 24px rgb(15 27 45 / 0.08);
 
   /* ── Motion ─────────────────────────────────────────────────────────── */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -303,6 +316,60 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/*
+  Editorial media frame. The single place that decides how non-listing imagery
+  is shaped, so the radius decision lives here rather than in fifteen files.
+
+  `isolation: isolate` matters: these frames carry overlapping FloatCards and a
+  scrim, and without a new stacking context the card's shadow bleeds under the
+  image in WebKit. `overflow: clip` rather than `hidden` for the same reason
+  `html`/`body` use it above — `hidden` would create a scroll container and
+  break any sticky descendant.
+*/
+@utility media-frame {
+  position: relative;
+  overflow: clip;
+  border-radius: var(--radius-2xl);
+  isolation: isolate;
+}
+
+/*
+  A card lifted clear of whatever sits behind it. Surface treatment only —
+  positioning is the caller's job, because every placement is different.
+*/
+@utility float-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+}
+
+/*
+  A scroll-row that bleeds into the page gutter, so cards run off the edge of
+  the screen instead of stopping short of it. The negative margin is paired
+  with matching padding so the first card still lines up with the container.
+*/
+@utility rail {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  margin-inline: calc(var(--rail-gutter, 1.25rem) * -1);
+  padding-inline: var(--rail-gutter, 1.25rem);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (width >= 48rem) {
+    --rail-gutter: 1.5rem;
+  }
+
+  @media (width >= 80rem) {
+    --rail-gutter: 2rem;
   }
 }
 

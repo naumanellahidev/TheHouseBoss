@@ -1106,4 +1106,101 @@ and compliance all pass; Playwright **357 passed, 0 failed**.
 
 ---
 
+### 2026-09-03 — Redesign, part 1: the home page and the shared layer
+
+**The home page was never built, and that is a process failure worth naming.**
+
+`app/(marketing)/page.tsx` was still the Phase 0 demo — hero, trust strip, and a
+card reading *"The rest of this page is built in Phase 3"* linking to
+`/dev/styleguide` from the public site. It was not `async` and made zero database
+calls. `docs/05-page-specs.md` § Home specifies eleven sections; 3–11 did not
+exist.
+
+Root cause: **`docs/10-roadmap.md` Phase 3 lists fifteen tasks and none of them
+is the home page.** No later phase names it either, so `/phase-done 3` passed
+with the placeholder in place and the `phase-review` skill had nothing to catch.
+It was not recorded as a risk, a gap or a deferral anywhere. I reported P3–P7
+complete in this file; that was wrong about the home page, and this entry is the
+correction. **Add a home-page task to `docs/10` before the next phase closes.**
+
+**Shipped**
+
+- **`app/(marketing)/page.tsx` rewritten** as an async server component with all
+  eleven spec sections, and the spec's empty-state strategy actually implemented:
+  featured hides below 3, reviews hides below 3, the hero CTA becomes listing
+  alerts below 5 published listings, and a zero-count city still tiles but links
+  to its guide page rather than to an empty search.
+  Verified against the real database — with today's 6 listings / 0 featured /
+  0 reviews, sections 4 and 10 self-hide and the page still reads as finished.
+- Three queries that existed but were orphaned are now used by the page they
+  were written for: `getFeaturedListings()`, `countPublishedListings()`,
+  `getSearchCities()`.
+- **`components/site/search-bar.tsx`** — the home page had no search on it at
+  all, against the client's own brief ("the main page should focus on property
+  search"). A plain `<form method="get" action="/search">`: it works with
+  JavaScript off, is visible to a crawler, and the browser builds exactly the
+  query string `lib/validation/search-params.ts` already parses, so there is no
+  second serialisation to drift.
+- **`components/site/media-frame.tsx`** (+ `heroPhoto()` helper),
+  **`float-card.tsx`**, **`city-tiles.tsx`**, **`listing/featured-listings.tsx`**.
+
+**Design language — "editorial luxury, modernised"**
+
+Brand identity unchanged: navy, gold, Fraunces, Inter. What changed is the
+composition — asymmetric hero at 7/12 + 5/12 instead of a centred band, large
+editorial media frames, data cards overlapping the imagery.
+
+Two new tokens in `app/globals.css`, and **`docs/03-design-system.md` was amended
+in the same commit** rather than left to disagree:
+
+- `--radius-2xl: 28px`, and three utilities `media-frame` / `float-card` / `rail`.
+  The existing rule "photography is never rounded above `--radius-lg`" now
+  distinguishes **listing** photography (unchanged, 12px — a for-sale photo
+  rounded further reads as a social app) from **editorial** imagery, which is a
+  different job. `--radius-2xl` is reachable only through `media-frame`, so the
+  distinction cannot drift.
+- `--shadow-float`, a new top rung on the elevation ladder with exactly one use.
+
+**Two things I got wrong, and what they cost**
+
+- The new-construction control shipped as a checkbox and failed the 44x44 touch
+  target at every one of the nine widths. `box-content` + padding did not fix it:
+  the browser paints a native checkbox at its intrinsic size and ignores the box
+  given to it — measured in the built CSS, not assumed. Replaced with a **link to
+  `/search/new-construction`**, which is strictly better anyway: that page already
+  exists, carries real content about builder representation, and is indexable,
+  where a checkbox would have produced `?type=new_construction` on the generic
+  search page with none of the ranking value.
+- A JSX comment placed inside a ternary branch broke the build. Moved above it.
+
+**Verified**
+
+typecheck, lint, build clean · `check:tokens`, `check:contrast`, `check:bundle`,
+`check:seo` (23 indexable / 5 noindex / 29 graphs), `check:compliance` all pass ·
+**Playwright 357 passed, 0 failed** · Lighthouse mobile **Accessibility 100,
+Best Practices 100, SEO 100 on all five page types**, **CLS 0.000**.
+
+Mobile Performance: home 71 — unchanged from the 70–77 the three-section stub
+scored, despite the page going from 3 sections to 11. Listing (82) and city (80)
+both improved on their previous 68–72 and 65–79. Still short of the ≥90 target,
+still owned by a measurement against Vercel rather than this machine (docs/17 § 3).
+
+**Next session must know**
+
+- Redesign steps still open: header/footer chrome (pill nav, four-column
+  footer), the listing/search/city-hub restyle, the guides restyle via
+  `guide-layout.tsx` only, and the stock-imagery sourcing. Plan is at
+  `.claude/plans/mossy-meandering-toast.md`.
+- **The new primitives are not yet in `/dev/styleguide`**, which `docs/03` § 11
+  requires for any new primitive. Do that before closing the redesign.
+- **Stock imagery must never stand in for a listing photo.** Hero, city,
+  lifestyle and guide imagery only. A stock exterior representing a home she has
+  actually listed is misrepresentation under FREC advertising rules. Worth
+  writing into `docs/09`.
+- The live Vercel deployment still has **no Supabase environment variables** —
+  `/api/health` returns 503 in 13ms and `/lake-mary` and `/listing/*` return 404.
+  None of this work is visible in production until those are set.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->
