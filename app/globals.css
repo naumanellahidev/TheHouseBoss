@@ -10,59 +10,75 @@
    ========================================================================= */
 
 @theme {
-  /* ── Palette: ink (navy) ────────────────────────────────────────────── */
-  --color-ink-950: #0a1420;
-  --color-ink-900: #0f1b2d;
-  --color-ink-800: #16263f;
-  --color-ink-700: #1e3552;
-  --color-ink-600: #2c4767;
+  /*
+    ── Palette: royal (deep brand blue) ──────────────────────────────────
+    The dark ground. Replaces the previous navy `ink` ramp.
+  */
+  --color-royal-950: #071023;
+  --color-royal-900: #0c1b3a;
+  --color-royal-800: #14295a;
+  --color-royal-700: #1d3a7a;
+  --color-royal-600: #2a4e9e;
 
-  /* ── Palette: gold ──────────────────────────────────────────────────── */
-  --color-gold-600: #826713;
-  --color-gold-500: #c9a227;
-  --color-gold-400: #ddbb4c;
-  --color-gold-200: #f0e2ae;
-  --color-gold-50: #fbf6e6;
+  /*
+    ── Palette: azure (the accent) ───────────────────────────────────────
+    Royal blue as an interactive colour. Unlike the gold it replaces, this
+    ramp is legible as TEXT on white — azure-700 is 6.7:1 — so the old
+    "accent is surfaces-only" trap does not apply. azure-600 is still the
+    surface/fill value and takes WHITE text, not dark.
+  */
+  --color-azure-700: #1d4ed8;
+  --color-azure-600: #2563eb;
+  --color-azure-400: #8ab4f8;
+  --color-azure-200: #c7dbfe;
+  --color-azure-50: #eff5ff;
 
-  /* ── Palette: bone / stone ──────────────────────────────────────────── */
-  --color-bone-50: #fdfcfa;
-  --color-bone-100: #f7f5f0;
-  --color-bone-200: #efebe3;
-  --color-bone-300: #dfd9ce;
-  --color-stone-500: #6e6a62;
-  --color-stone-700: #57544e;
-  --color-stone-900: #26241f;
+  /* ── Palette: porcelain / slate (neutrals) ──────────────────────────── */
+  --color-porcelain-50: #fdfeff;
+  --color-porcelain-100: #f3f7fc;
+  --color-porcelain-200: #e6eef8;
+  --color-porcelain-300: #d2deec;
+  --color-slate-500: #5d6b81;
+  --color-slate-700: #445064;
+  --color-slate-900: #0f172a;
 
   /* ── Semantic tokens — components use ONLY these ────────────────────── */
-  --color-background: var(--color-bone-50);
+  --color-background: var(--color-porcelain-50);
   --color-surface: #ffffff;
-  --color-surface-sunken: var(--color-bone-100);
+  --color-surface-sunken: var(--color-porcelain-100);
   --color-surface-raised: #ffffff;
-  --color-surface-invert: var(--color-ink-900);
+  --color-surface-invert: var(--color-royal-900);
 
-  --color-foreground: var(--color-stone-900);
-  --color-foreground-muted: var(--color-stone-700);
-  --color-foreground-subtle: var(--color-stone-500);
-  --color-foreground-invert: var(--color-bone-50);
-  --color-foreground-invert-muted: #b9c2cd;
+  --color-foreground: var(--color-slate-900);
+  --color-foreground-muted: var(--color-slate-700);
+  --color-foreground-subtle: var(--color-slate-500);
+  --color-foreground-invert: var(--color-porcelain-50);
+  --color-foreground-invert-muted: #b7c6dd;
 
-  --color-border: var(--color-bone-300);
-  --color-border-strong: #948c7c;
-  --color-border-invert: var(--color-ink-700);
+  --color-border: var(--color-porcelain-300);
+  --color-border-strong: #7d8ca4;
+  --color-border-invert: var(--color-royal-700);
 
-  --color-primary: var(--color-ink-900);
-  --color-primary-hover: var(--color-ink-800);
-  --color-primary-fg: var(--color-bone-50);
+  --color-primary: var(--color-royal-900);
+  --color-primary-hover: var(--color-royal-800);
+  --color-primary-fg: var(--color-porcelain-50);
 
-  /* accent = gold as a SURFACE. accent-quiet = gold as TEXT on light. */
-  --color-accent: var(--color-gold-500);
-  --color-accent-hover: var(--color-gold-400);
-  --color-accent-fg: var(--color-ink-950);
-  --color-accent-quiet: var(--color-gold-600);
-  --color-accent-wash: var(--color-gold-50);
+  /* accent = azure as a SURFACE (white label). accent-quiet = azure as TEXT. */
+  --color-accent: var(--color-azure-600);
+  --color-accent-hover: var(--color-azure-700);
+  --color-accent-fg: #ffffff;
+  --color-accent-quiet: var(--color-azure-700);
+  /*
+    Accent as TEXT on a dark ground. --color-accent is only 3.3:1 on royal-900,
+    so it is not legible there; this is 8.1:1. Named rather than left as a raw
+    azure-400 so the rule is expressible in a component without reaching past
+    the semantic layer.
+  */
+  --color-accent-invert: var(--color-azure-400);
+  --color-accent-wash: var(--color-azure-50);
 
-  --color-ring: var(--color-gold-600);
-  --color-ring-invert: var(--color-gold-400);
+  --color-ring: var(--color-azure-600);
+  --color-ring-invert: var(--color-azure-400);
 
   --color-success: #2b6e51;
   --color-success-bg: #e8f3ee;
@@ -128,17 +144,17 @@
   --radius-2xl: 28px;
 
   /* ── Elevation — navy-tinted, never neutral gray ────────────────────── */
-  --shadow-xs: 0 1px 2px rgb(15 27 45 / 0.05);
-  --shadow-sm: 0 1px 3px rgb(15 27 45 / 0.07), 0 1px 2px rgb(15 27 45 / 0.04);
-  --shadow-md: 0 4px 12px rgb(15 27 45 / 0.08), 0 2px 4px rgb(15 27 45 / 0.04);
-  --shadow-lg: 0 12px 32px rgb(15 27 45 / 0.1), 0 4px 8px rgb(15 27 45 / 0.05);
-  --shadow-xl: 0 24px 64px rgb(15 27 45 / 0.14);
+  --shadow-xs: 0 1px 2px rgb(12 27 58 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(12 27 58 / 0.07), 0 1px 2px rgb(12 27 58 / 0.04);
+  --shadow-md: 0 4px 12px rgb(12 27 58 / 0.08), 0 2px 4px rgb(12 27 58 / 0.04);
+  --shadow-lg: 0 12px 32px rgb(12 27 58 / 0.1), 0 4px 8px rgb(12 27 58 / 0.05);
+  --shadow-xl: 0 24px 64px rgb(12 27 58 / 0.14);
   /*
     One rung above xl, for a card that overlaps the media behind it. The wide
     soft spread is what separates the two planes; without it an overlapping
     card reads as a mistake rather than as depth.
   */
-  --shadow-float: 0 32px 80px rgb(15 27 45 / 0.18), 0 8px 24px rgb(15 27 45 / 0.08);
+  --shadow-float: 0 32px 80px rgb(12 27 58 / 0.18), 0 8px 24px rgb(12 27 58 / 0.08);
 
   /*
     ── Glass ──────────────────────────────────────────────────────────────
@@ -155,7 +171,7 @@
     text pairing remains inside the guard's reach. docs/03 § 3.
   */
   --color-glass: rgb(255 255 255 / 0.72);
-  --color-glass-invert: rgb(15 27 45 / 0.55);
+  --color-glass-invert: rgb(12 27 58 / 0.55);
   --color-glass-border: rgb(255 255 255 / 0.18);
 
   /* ── Motion ─────────────────────────────────────────────────────────── */
@@ -245,8 +261,8 @@
   }
 
   ::selection {
-    background: var(--color-gold-200);
-    color: var(--color-ink-950);
+    background: var(--color-azure-200);
+    color: var(--color-royal-950);
   }
 
   /* HR25: 16px minimum on form controls prevents iOS zoom-on-focus */
@@ -318,8 +334,8 @@
 @utility photo-scrim {
   background: linear-gradient(
     to top,
-    rgb(10 20 32 / 0.85),
-    rgb(10 20 32 / 0.25) 55%,
+    rgb(7 16 35 / 0.85),
+    rgb(7 16 35 / 0.25) 55%,
     transparent
   );
 }

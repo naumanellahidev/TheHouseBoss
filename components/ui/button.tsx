@@ -33,7 +33,7 @@ const buttonVariants = cva(
         danger:
           "bg-danger text-white shadow-xs hover:brightness-110 active:translate-y-px",
         invert:
-          "bg-surface text-primary shadow-xs hover:bg-bone-100 active:translate-y-px",
+          "bg-surface text-primary shadow-xs hover:bg-porcelain-100 active:translate-y-px",
         link: "bg-transparent text-accent-quiet underline underline-offset-4 hover:text-foreground",
       },
       size: {

@@ -76,7 +76,7 @@ export function PropertyCard({
           </span>
 
           {listing.photosPurged ? (
-            <span className="absolute right-3 bottom-3 rounded-sm bg-ink-950/80 px-2 py-1 text-overline font-semibold tracking-[0.12em] text-bone-50 uppercase">
+            <span className="absolute right-3 bottom-3 rounded-sm bg-royal-950/80 px-2 py-1 text-overline font-semibold tracking-[0.12em] text-porcelain-50 uppercase">
               Photos archived
             </span>
           ) : null}

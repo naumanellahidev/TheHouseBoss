@@ -16,7 +16,7 @@ const badgeVariants = cva(
         active: "bg-success-bg text-success",
         coming: "bg-info-bg text-info",
         pending: "bg-warning-bg text-warning",
-        sold: "bg-ink-900 text-gold-500",
+        sold: "bg-royal-900 text-accent-invert",
         accent: "bg-accent-wash text-accent-quiet",
         outline: "border border-border-strong text-foreground-muted",
       },

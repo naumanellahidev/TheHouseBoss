@@ -66,7 +66,7 @@ export function Footer() {
                       className={cn(
                         "inline-flex size-11 items-center justify-center rounded-md",
                         "text-foreground-invert-muted transition-colors duration-(--dur-fast)",
-                        "hover:bg-ink-800 hover:text-gold-400",
+                        "hover:bg-royal-800 hover:text-accent-invert",
                         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
                       )}
                     >
@@ -91,7 +91,7 @@ export function Footer() {
         {/* ── Link columns ───────────────────────────────────────────── */}
         {footerNav.map((col) => (
           <nav key={col.heading} aria-label={col.heading}>
-            <h2 className="text-overline font-semibold tracking-[0.12em] text-gold-400 uppercase">
+            <h2 className="text-overline font-semibold tracking-[0.12em] text-accent-invert uppercase">
               {col.heading}
             </h2>
             <ul className="mt-4 flex flex-col gap-1">
@@ -116,14 +116,14 @@ export function Footer() {
 
       {/* ── Contact strip ────────────────────────────────────────────── */}
       {(hasPhone || hasEmail) && (
-        <div className="border-t border-ink-800">
+        <div className="border-t border-royal-800">
           <div className="container-page flex flex-col gap-4 py-6 sm:flex-row sm:flex-wrap sm:items-center sm:gap-8">
             {hasPhone && (
               <a
                 href={contact.phoneHref}
                 className="inline-flex min-h-11 items-center gap-2.5 text-sm transition-colors hover:text-foreground-invert"
               >
-                <Phone className="size-4 text-gold-500" aria-hidden="true" />
+                <Phone className="size-4 text-accent-invert" aria-hidden="true" />
                 {contact.phone}
               </a>
             )}
@@ -132,12 +132,12 @@ export function Footer() {
                 href={`mailto:${contact.email}`}
                 className="break-anywhere inline-flex min-h-11 items-center gap-2.5 text-sm transition-colors hover:text-foreground-invert"
               >
-                <Mail className="size-4 text-gold-500" aria-hidden="true" />
+                <Mail className="size-4 text-accent-invert" aria-hidden="true" />
                 {contact.email}
               </a>
             )}
             <span className="inline-flex min-h-11 items-center gap-2.5 text-sm">
-              <MapPin className="size-4 text-gold-500" aria-hidden="true" />
+              <MapPin className="size-4 text-accent-invert" aria-hidden="true" />
               Serving Lake Mary &amp; Central Florida
             </span>
           </div>
@@ -145,7 +145,7 @@ export function Footer() {
       )}
 
       {/* ── Legal nav ────────────────────────────────────────────────── */}
-      <div className="border-t border-ink-800">
+      <div className="border-t border-royal-800">
         <div className="container-page py-5">
           <ul className="flex flex-wrap gap-x-6 gap-y-1">
             {legalNav.map((item) => (

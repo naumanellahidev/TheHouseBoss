@@ -103,7 +103,7 @@ export function Gallery({
           ))}
         </ul>
 
-        <p className="pointer-events-none absolute right-3 bottom-3 rounded-sm bg-ink-950/80 px-2 py-1 text-xs font-medium text-bone-50 tabular">
+        <p className="pointer-events-none absolute right-3 bottom-3 rounded-sm bg-royal-950/80 px-2 py-1 text-xs font-medium text-porcelain-50 tabular">
           {index + 1} / {count}
         </p>
 
@@ -205,7 +205,7 @@ export function Gallery({
       {/* ── Lightbox ─────────────────────────────────────────────────── */}
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink-950/95" />
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-royal-950/95" />
           <DialogPrimitive.Content
             className="fixed inset-0 z-50 flex flex-col focus:outline-none"
             onCloseAutoFocus={(event) => {
@@ -241,7 +241,7 @@ export function Gallery({
                 aria-label="Close the gallery"
                 className={cn(
                   "inline-flex size-11 items-center justify-center rounded-md text-foreground-invert-muted",
-                  "hover:bg-ink-800 hover:text-foreground-invert",
+                  "hover:bg-royal-800 hover:text-foreground-invert",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
                 )}
               >
@@ -256,7 +256,7 @@ export function Gallery({
                   size={1600}
                   sizes="(max-width: 1023px) 100vw, 1024px"
                   aspect="4/3"
-                  wrapperClassName="rounded-lg bg-ink-900"
+                  wrapperClassName="rounded-lg bg-royal-900"
                   className="object-contain"
                 />
               </div>
@@ -302,8 +302,8 @@ function LightboxArrow({
       aria-label={side === "left" ? "Previous photo" : "Next photo"}
       className={cn(
         "absolute top-1/2 inline-flex size-12 -translate-y-1/2 items-center justify-center rounded-full",
-        "bg-ink-900/80 text-foreground-invert",
-        "transition-colors duration-(--dur-fast) hover:bg-ink-800",
+        "bg-royal-900/80 text-foreground-invert",
+        "transition-colors duration-(--dur-fast) hover:bg-royal-800",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
         side === "left" ? "left-3" : "right-3",
       )}

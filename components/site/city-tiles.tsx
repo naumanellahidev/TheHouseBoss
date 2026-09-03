@@ -80,7 +80,7 @@ export function CityTiles({
 
                   <ArrowUpRight
                     aria-hidden="true"
-                    className="size-5 shrink-0 text-gold-400 transition-transform duration-(--dur-fast) ease-(--ease-out) group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    className="size-5 shrink-0 text-azure-400 transition-transform duration-(--dur-fast) ease-(--ease-out) group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                   />
                 </div>
               </MediaFrame>

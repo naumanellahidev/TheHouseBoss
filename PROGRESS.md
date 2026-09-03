@@ -1298,4 +1298,88 @@ CLS stayed **0.000** throughout.
 
 ---
 
+### 2026-09-03 — Living Architecture, wave 1: the palette
+
+The client supplied a full rebrief ("LIVING ARCHITECTURE") calling for a complete
+visual rearchitecture. **The brief contained a direct self-contradiction on the
+single most visible decision**: its header says "White And Royal Blue only, from
+header to footer", while its §4 explicitly forbids "standard Realtor blue" and
+"corporate navy" and prescribes warm limestone/sand/terracotta. Put to the
+client; they chose **white + royal blue**. Recorded because the rejected §4
+palette is still written in their brief and will look like an oversight later.
+
+Also flagged and resolved before starting:
+
+- The brief is written for a **React/Vite SPA** (SPA fallback, `/property/:listingId`,
+  "no server-only APIs in frontend"). This is Next.js 16 App Router. Adapting the
+  *intent*, not the stack instructions — the brief's own §62 SEO requirements and
+  the project's primary AI-citability goal both depend on server rendering a Vite
+  SPA cannot provide. Same call as the earlier TanStack rebrief.
+- **3D**: desktop-only Three.js with a premium mobile fallback, per the client's
+  choice, because mobile Performance is already 63–79 against a ≥90 DoD target.
+- **Routes**: renamed as the brief specifies, each with a 301 through the
+  `redirects` table (HR11). No published URL will 404.
+
+**Shipped — the palette**
+
+Navy-and-gold "Luxury Authority" is retired. New ramps:
+
+| Old | New | |
+|---|---|---|
+| `ink-*` (navy) | `royal-*` | `#071023` → `#2A4E9E`, the dark ground |
+| `gold-*` | `azure-*` | `#1D4ED8` → `#EFF5FF`, the accent |
+| `bone-*` | `porcelain-*` | near-white grounds |
+| `stone-*` | `slate-*` | text neutrals |
+
+Mechanically renamed across **22 files** (~110 references) with a 1:1 map, so no
+component keeps a token whose name lies about its colour. Semantic token *names*
+are unchanged — components and the contrast guard both depend on them.
+
+**The gold trap is gone.** The old `--color-accent` was 2.36:1 and could never be
+text, which is why `--color-accent-quiet` existed. `azure-600` carries a white
+label at 5.1:1 and `azure-700` is 6.6:1 as text on white, so both roles are safe.
+`--color-accent-fg` flipped from near-black to white, and
+`--color-accent-hover` is now *darker* than the accent, not lighter — a filled
+blue button that lightens on hover loses contrast against its own label.
+
+**Three real defects the guards caught, none of which I would have found by eye:**
+
+1. `check:contrast` failed three pairings on dark grounds. The `sold` badge was
+   `azure-600` on `royal-900` — **3.29:1, genuine unreadable text**, not a
+   theoretical pairing. Now `accent-invert`.
+2. axe caught `.text-accent` on `bg-royal-900` in the styleguide — the page was
+   demonstrating the *old* rule, since `gold-500` was 7.14:1 on navy and safe as
+   text where `azure-600` is not.
+3. That exposed a genuine gap in the semantic layer: there was **no token for
+   "accent as text on a dark ground"**, so every caller reached for the raw
+   `azure-400`, against HR23. Added `--color-accent-invert` and moved the badge,
+   footer and mobile nav onto it.
+
+**The rule that replaces the gold trap:** `azure-600` is 3.3:1 on `royal-900`.
+Accent text on any dark ground uses `--color-accent-invert` (8.1:1). The focus
+ring splits the same way — `--color-ring` on light, `--color-ring-invert` on dark.
+Both halves are now asserted in `check-contrast.mjs`.
+
+**docs/03 § 1 rewritten** to match, with the 27-row contrast table **generated
+from the guard output** rather than typed — a figure written from memory is how a
+palette drifts out of compliance unnoticed.
+
+**Verified:** typecheck, lint, build clean; tokens, contrast, bundle, seo,
+compliance all pass; **Playwright 357 passed, 0 failed**. No old palette token
+remains anywhere in `app/`, `components/`, `lib/` or `scripts/`.
+
+**Next session must know**
+
+- Still to come in this rebrief: Three.js hero (desktop-only), GSAP + ScrollTrigger,
+  custom cursor, page transitions, the route renames with their 301s, `/sell`
+  removal, and the per-route rebuilds.
+- **The live deployment still has no Supabase environment variables.**
+  `/api/health` returns 503 in 7ms and the deployed HTML contains zero
+  occurrences of the Supabase project ref, which means `NEXT_PUBLIC_SUPABASE_URL`
+  was unset at build time. None of this work — palette, imagery, anything — is
+  visible in production until those are set and the project is redeployed without
+  the build cache.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

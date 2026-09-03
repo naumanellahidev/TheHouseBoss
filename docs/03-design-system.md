@@ -21,23 +21,43 @@ separates her from the all-Inter template sites every other agent uses.
 
 | Token | Value | Use |
 |---|---|---|
-| `--color-ink-950` | `#0A1420` | Deepest ground, footer |
-| `--color-ink-900` | `#0F1B2D` | **Primary brand navy** — header, hero overlay |
-| `--color-ink-800` | `#16263F` | Raised surfaces on dark |
-| `--color-ink-700` | `#1E3552` | Borders on dark, hover on dark |
-| `--color-ink-600` | `#2C4767` | Muted text on dark |
-| `--color-gold-600` | `#856A14` | **Gold as text on light** — the only gold that passes AA |
-| `--color-gold-500` | `#C9A227` | **Primary accent** — CTAs, rules, active states |
-| `--color-gold-400` | `#DDBB4C` | Hover on dark |
-| `--color-gold-200` | `#F0E2AE` | Tints, badges |
-| `--color-gold-50` | `#FBF6E6` | Accent wash background |
-| `--color-bone-50` | `#FDFCFA` | Page ground (light) |
-| `--color-bone-100` | `#F7F5F0` | Section alternate |
-| `--color-bone-200` | `#EFEBE3` | Card ground, input ground |
-| `--color-bone-300` | `#DFD9CE` | Borders |
-| `--color-stone-500` | `#6E6A62` | Subtle text on light |
-| `--color-stone-700` | `#57544E` | Secondary text |
-| `--color-stone-900` | `#26241F` | Body text on light |
+| `--color-royal-950` | `#071023` | Deepest ground, compliance footer |
+| `--color-royal-900` | `#0C1B3A` | **Primary brand blue** — header, hero overlay |
+| `--color-royal-800` | `#14295A` | Raised surfaces on dark |
+| `--color-royal-700` | `#1D3A7A` | Borders on dark, hover on dark |
+| `--color-royal-600` | `#2A4E9E` | Muted text on dark |
+| `--color-azure-700` | `#1D4ED8` | **Accent as text on light** — 6.6:1 |
+| `--color-azure-600` | `#2563EB` | **Primary accent** — CTAs, rules, focus ring |
+| `--color-azure-400` | `#8AB4F8` | Accent on dark — text and ring, 8.1:1 |
+| `--color-azure-200` | `#C7DBFE` | Tints, selection |
+| `--color-azure-50` | `#EFF5FF` | Accent wash background |
+| `--color-porcelain-50` | `#FDFEFF` | Page ground (light) |
+| `--color-porcelain-100` | `#F3F7FC` | Section alternate |
+| `--color-porcelain-200` | `#E6EEF8` | Card ground, input ground |
+| `--color-porcelain-300` | `#D2DEEC` | Borders |
+| `--color-slate-500` | `#5D6B81` | Subtle text on light |
+| `--color-slate-700` | `#445064` | Secondary text |
+| `--color-slate-900` | `#0F172A` | Body text on light |
+
+**Direction: white and royal blue.** This replaces the navy-and-gold "Luxury
+Authority" palette the project launched with. White grounds carry the site; royal
+blue is the single brand colour, used as both the dark ground (`royal-*`) and the
+interactive accent (`azure-*`).
+
+**The gold trap is gone, and that is the main practical difference.** The old
+`--color-accent` was 2.36:1 and could never be used for text, which is why
+`--color-accent-quiet` existed as a separate darker token. `azure-600` is
+**5.2:1 with white on it** and `azure-700` is **6.6:1 as text on white**, so the
+accent is legible in both roles. `--color-accent-quiet` is kept — it is the
+correct token for accent-coloured *text*, and `--color-accent` remains the token
+for a filled surface — but a mistake between them is now a style inconsistency
+rather than an accessibility failure.
+
+**The one rule that replaces it:** `azure-600` is only 3.3:1 on `royal-900`, so
+**accent text on a dark ground must use `azure-400`** (8.1:1). The focus ring
+follows the same split — `--color-ring` is `azure-600` for light grounds,
+`--color-ring-invert` is `azure-400` for dark. Both are asserted by
+`npm run check:contrast`.
 
 ### Semantic tokens
 
@@ -45,31 +65,32 @@ Components reference **only** these. Never a raw palette token.
 
 ```css
 @theme {
-  --color-background:        var(--color-bone-50);
+  --color-background:        var(--color-porcelain-50);
   --color-surface:           #FFFFFF;
-  --color-surface-sunken:    var(--color-bone-100);
+  --color-surface-sunken:    var(--color-porcelain-100);
   --color-surface-raised:    #FFFFFF;
+  --color-surface-invert:    var(--color-royal-900);
 
-  --color-foreground:        var(--color-stone-900);
-  --color-foreground-muted:  var(--color-stone-700);
-  --color-foreground-subtle: var(--color-stone-500);
-  --color-foreground-invert: var(--color-bone-50);
+  --color-foreground:        var(--color-slate-900);
+  --color-foreground-muted:  var(--color-slate-700);
+  --color-foreground-subtle: var(--color-slate-500);
+  --color-foreground-invert: var(--color-porcelain-50);
 
-  --color-border:            var(--color-bone-300);
-  --color-border-strong:     #948C7C;   /* 3:1 — control boundaries */
+  --color-border:            var(--color-porcelain-300);
+  --color-border-strong:     #7D8CA4;   /* 3.4:1 — control boundaries */
 
-  --color-primary:           var(--color-ink-900);
-  --color-primary-hover:     var(--color-ink-800);
-  --color-primary-fg:        var(--color-bone-50);
+  --color-primary:           var(--color-royal-900);
+  --color-primary-hover:     var(--color-royal-800);
+  --color-primary-fg:        var(--color-porcelain-50);
 
-  --color-accent:            var(--color-gold-500);
-  --color-accent-hover:      var(--color-gold-400);
-  --color-accent-fg:         var(--color-ink-950);
-  --color-accent-quiet:      var(--color-gold-600);   /* accent as TEXT on light */
-  --color-accent-wash:       var(--color-gold-50);
+  --color-accent:            var(--color-azure-600);  /* takes a WHITE label */
+  --color-accent-hover:      var(--color-azure-700);  /* darker on hover, not lighter */
+  --color-accent-fg:         #FFFFFF;
+  --color-accent-quiet:      var(--color-azure-700);  /* accent as TEXT on light */
+  --color-accent-wash:       var(--color-azure-50);
 
-  --color-ring:              var(--color-gold-600);   /* 3:1 on BOTH grounds */
-  --color-ring-invert:       var(--color-gold-400);   /* stronger on navy */
+  --color-ring:              var(--color-azure-600);  /* light grounds */
+  --color-ring-invert:       var(--color-azure-400);  /* dark grounds */
 
   --color-success:  #2B6E51;  --color-success-bg:  #E8F3EE;
   --color-warning:  #8F5A12;  --color-warning-bg:  #FBF1E2;
@@ -86,37 +107,60 @@ real hex values out of `app/globals.css` and fails the build if any documented
 pairing drops below its threshold. If you change a color token, run it and
 paste the new numbers here.
 
-| Combination | Ratio | Need | Allowed |
+| Combination | Ratio | Need | Purpose |
 |---|---|---|---|
-| `stone-900` on `bone-50` | 15.12:1 | 4.5 | Body text ✅ |
-| `stone-700` on `bone-50` | 7.36:1 | 4.5 | Secondary text ✅ |
-| `stone-500` on `bone-50` | 5.25:1 | 4.5 | Subtle text ✅ |
-| `stone-500` on `bone-100` | 4.94:1 | 4.5 | Subtle text on a sunken section ✅ |
-| `gold-600` on `bone-50` | 5.03:1 | 4.5 | Accent text on light ✅ |
-| `gold-600` on `bone-100` | 4.74:1 | 4.5 | Accent text on sunken ✅ |
-| `gold-600` on `ink-900` | 3.35:1 | 3.0 | Focus ring on navy ✅ |
-| `gold-400` on `ink-900` | 9.29:1 | 4.5 | Accent text on navy ✅ |
-| `gold-500` on `ink-900` | 7.14:1 | 4.5 | Accent text on navy ✅ |
-| `ink-950` on `gold-500` | 7.66:1 | 4.5 | Gold button label ✅ |
-| `bone-50` on `ink-900` | 16.86:1 | 4.5 | Inverted body ✅ |
-| `border-strong` on `bone-50` | 3.25:1 | 3.0 | Input and outline borders ✅ |
-| `gold-500` on `bone-50` | 2.36:1 | 4.5 | ❌ **Never for text** |
+| `slate-900` on `porcelain-50` | 17.68:1 | 4.5 | body text on the page ground |
+| `slate-700` on `porcelain-50` | 8.07:1 | 4.5 | secondary text |
+| `slate-500` on `porcelain-50` | 5.35:1 | 4.5 | subtle text — labels, metadata at 13px |
+| `slate-500` on `porcelain-100` | 5.02:1 | 4.5 | subtle text on a sunken section |
+| `slate-500` on `surface` | 5.40:1 | 4.5 | subtle text on a card |
+| `azure-700` on `porcelain-50` | 6.64:1 | 4.5 | accent-quiet as text on light |
+| `azure-700` on `porcelain-100` | 6.23:1 | 4.5 | accent-quiet on a sunken section |
+| `azure-700` on `surface` | 6.70:1 | 4.5 | accent-quiet on a card |
+| `azure-700` on `accent-wash` | 6.12:1 | 4.5 | accent-quiet on the accent wash |
+| `azure-700` on `danger-bg` | 5.81:1 | 4.5 | accent-quiet inside a danger callout |
+| `azure-700` on `warning-bg` | 5.99:1 | 4.5 | accent-quiet inside a warning callout |
+| `azure-700` on `success-bg` | 5.90:1 | 4.5 | accent-quiet inside a success callout |
+| `azure-700` on `info-bg` | 5.87:1 | 4.5 | accent-quiet inside an info callout |
+| `slate-700` on `porcelain-100` | 7.57:1 | 4.5 | secondary text on a sunken section |
+| `slate-500` on `danger-bg` | 4.68:1 | 4.5 | subtle text inside a callout |
+| `azure-600` on `porcelain-50` | 5.12:1 | 3 | --color-ring on a light ground |
+| `azure-400` on `royal-900` | 8.08:1 | 3 | --color-ring-invert on a dark ground |
+| `azure-400` on `royal-900` | 8.08:1 | 4.5 | accent text on royal blue |
+| `azure-400` on `royal-950` | 9.00:1 | 4.5 | accent text on the compliance footer |
+| `porcelain-50` on `azure-600` | 5.12:1 | 4.5 | white label on a royal-blue button |
+| `porcelain-50` on `royal-900` | 16.86:1 | 4.5 | inverted body text |
+| `porcelain-50` on `royal-950` | 18.78:1 | 4.5 | inverted text on the compliance footer |
+| `border-strong` on `porcelain-50` | 3.38:1 | 3 | input and outline-button borders |
+| `success` on `success-bg` | 5.36:1 | 4.5 | success message |
+| `warning` on `warning-bg` | 5.16:1 | 4.5 | warning message |
+| `danger` on `danger-bg` | 6.20:1 | 4.5 | error message |
+| `info` on `info-bg` | 5.91:1 | 4.5 | info message |
 
-**The one trap in this palette.** `--color-accent` (`gold-500`) is 2.36:1 on the
-page ground — it fails for text. It is for **surfaces and marks**: button fill,
-badge, rule, underline. For accent-colored **text on light**, use
-`--color-accent-quiet` (`gold-600`, 5.03:1). On navy, `gold-500` is 7.14:1 and
-is fine as text.
+Every row above is generated from the guard output. Re-run
+`npm run check:contrast` and paste the result rather than editing a number
+by hand — a figure typed from memory is how a palette drifts out of
+compliance without anyone noticing.
 
-Two consequences that are easy to get wrong:
+**What replaced the gold trap.** The previous accent (`gold-500`) was 2.36:1
+and could never be used as text, which made "accent as a surface" versus
+"accent as text" an accessibility rule rather than a style choice.
+`azure-600` carries a white label at 5.1:1 and `azure-700` is 6.6:1 as text on
+white, so both roles are safe.
 
-- **Input borders.** `--color-border` (`bone-300`) is a decorative divider and
-  is far below 3:1. A form control's border is what identifies it against the
-  page (WCAG 1.4.11), so every input, select and textarea uses
-  `--color-border-strong`.
-- **The focus ring.** `--color-ring` is `gold-600`, not `gold-500`, because the
-  ring must clear 3:1 on **both** grounds. On inverted surfaces use
-  `--color-ring-invert` (`gold-400`, 9.29:1) for a visibly stronger ring.
+**The rule that took its place:** `azure-600` is only 3.3:1 on `royal-900`.
+**Accent text on any dark ground must use `azure-400`** (8.1:1), and the focus
+ring splits the same way — `--color-ring` (`azure-600`) on light,
+`--color-ring-invert` (`azure-400`) on dark. Both halves are asserted above.
+
+Two consequences that are still easy to get wrong:
+
+- **Input borders.** `--color-border` is a decorative divider, below 3:1. A
+  form control's boundary is what identifies it (WCAG 1.4.11), so inputs,
+  selects and textareas use `--color-border-strong` (3.4:1).
+- **Hover direction.** `--color-accent-hover` is *darker* than
+  `--color-accent`, not lighter. A filled blue button that lightens on hover
+  loses contrast against its own white label.
 
 ### Dark mode
 
@@ -396,7 +440,7 @@ Status badge colors:
 | Active | `--color-success-bg` | `--color-success` |
 | Coming Soon | `--color-info-bg` | `--color-info` |
 | Pending | `--color-warning-bg` | `--color-warning` |
-| Sold | `--color-ink-900` | `--color-gold-500` |
+| Sold | `--color-royal-900` | `--color-azure-400` |
 
 ### Filter bar
 

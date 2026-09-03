@@ -107,7 +107,7 @@ function MobileNavRow({ entry }: { entry: NavEntry }) {
       <li className="border-b border-border-invert">
         <Link
           href={entry.href}
-          className="flex min-h-14 items-center text-h4 font-semibold text-foreground-invert transition-colors hover:text-gold-400"
+          className="flex min-h-14 items-center text-h4 font-semibold text-foreground-invert transition-colors hover:text-accent-invert"
         >
           {entry.label}
         </Link>
@@ -121,13 +121,13 @@ function MobileNavRow({ entry }: { entry: NavEntry }) {
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="flex min-h-14 w-full items-center justify-between gap-3 text-left text-h4 font-semibold text-foreground-invert transition-colors hover:text-gold-400"
+        className="flex min-h-14 w-full items-center justify-between gap-3 text-left text-h4 font-semibold text-foreground-invert transition-colors hover:text-accent-invert"
       >
         {entry.label}
         <ChevronDown
           aria-hidden="true"
           className={cn(
-            "size-5 shrink-0 text-gold-500 transition-transform duration-(--dur-base) ease-(--ease-out)",
+            "size-5 shrink-0 text-accent-invert transition-transform duration-(--dur-base) ease-(--ease-out)",
             expanded && "rotate-180",
           )}
         />
@@ -139,7 +139,7 @@ function MobileNavRow({ entry }: { entry: NavEntry }) {
             <li>
               <Link
                 href={entry.href}
-                className="flex min-h-11 items-center text-sm font-medium text-gold-400"
+                className="flex min-h-11 items-center text-sm font-medium text-accent-invert"
               >
                 All {entry.label}
               </Link>

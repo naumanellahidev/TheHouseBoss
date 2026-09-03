@@ -97,13 +97,13 @@ export function CityHub({
         ) : (
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-ink-800),var(--color-ink-950))]"
+            className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"
           />
         )}
 
         <Container className="flex flex-col gap-5 py-16 md:py-24 lg:py-28">
           <Breadcrumbs items={crumbs} invert />
-          <p className="text-overline font-semibold tracking-[0.12em] text-gold-400 uppercase">
+          <p className="text-overline font-semibold tracking-[0.12em] text-azure-400 uppercase">
             {city.county} County, Florida
           </p>
           <h1 className="max-w-[22ch] text-h1 text-foreground-invert">

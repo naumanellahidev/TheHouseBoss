@@ -32,15 +32,15 @@ export function LogoMark({
         width="38"
         height="38"
         rx="3"
-        fill={invert ? "transparent" : "var(--color-ink-900)"}
-        stroke="var(--color-gold-500)"
+        fill={invert ? "transparent" : "var(--color-royal-900)"}
+        stroke="var(--color-azure-600)"
         strokeWidth="2"
       />
       {/* roofline — the "house" in House Boss */}
       <path
         d="M9 19.5 20 11l11 8.5"
         fill="none"
-        stroke="var(--color-gold-500)"
+        stroke="var(--color-azure-600)"
         strokeWidth="2"
         strokeLinecap="square"
         strokeLinejoin="miter"
@@ -49,7 +49,7 @@ export function LogoMark({
         x="20"
         y="30.5"
         textAnchor="middle"
-        fill={invert ? "var(--color-bone-50)" : "var(--color-bone-50)"}
+        fill={invert ? "var(--color-porcelain-50)" : "var(--color-porcelain-50)"}
         style={{
           font: "600 11px var(--font-display)",
           letterSpacing: "0.08em",

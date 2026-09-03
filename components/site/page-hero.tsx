@@ -30,11 +30,11 @@ export function PageHero({
     <section className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert">
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-ink-800),var(--color-ink-950))]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(var(--color-gold-500)_1px,transparent_1px),linear-gradient(90deg,var(--color-gold-500)_1px,transparent_1px)] [background-size:72px_72px]"
+        className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(var(--color-azure-600)_1px,transparent_1px),linear-gradient(90deg,var(--color-azure-600)_1px,transparent_1px)] [background-size:72px_72px]"
       />
 
       <Container
@@ -48,7 +48,7 @@ export function PageHero({
         {crumbs ? <Breadcrumbs items={crumbs} invert /> : null}
 
         {overline ? (
-          <p className="text-overline font-semibold tracking-[0.12em] text-gold-400 uppercase">
+          <p className="text-overline font-semibold tracking-[0.12em] text-azure-400 uppercase">
             {overline}
           </p>
         ) : null}

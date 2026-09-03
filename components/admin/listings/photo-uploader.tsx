@@ -391,7 +391,7 @@ export function PhotoUploader({
                   unoptimized
                 />
                 {index === 0 ? (
-                  <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-sm bg-ink-900 px-2 py-1 text-overline font-semibold tracking-[0.12em] text-gold-400 uppercase">
+                  <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-sm bg-royal-900 px-2 py-1 text-overline font-semibold tracking-[0.12em] text-azure-400 uppercase">
                     <Star className="size-3" aria-hidden="true" />
                     Cover
                   </span>

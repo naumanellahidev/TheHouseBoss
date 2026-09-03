@@ -21,13 +21,13 @@ import type { Lead } from "@/types/domain";
  * client cannot read a CSS custom property, so tokens have to be inlined.
  * These values are copied from the @theme block and must be updated with it.
  */
-const NAVY = "#0f1b2d"; // --color-ink-900
-const GOLD = "#c9a227"; // --color-gold-500
-const GOLD_TEXT = "#826713"; // --color-gold-600, the only gold that passes AA on light
-const BONE = "#fdfcfa"; // --color-bone-50
-const INK = "#26241f"; // --color-stone-900
-const MUTED = "#57544e"; // --color-stone-700
-const RULE = "#dfd9ce"; // --color-bone-300
+const NAVY = "#0f1b2d"; // --color-royal-900
+const GOLD = "#c9a227"; // --color-azure-600
+const GOLD_TEXT = "#826713"; // --color-azure-700, the only gold that passes AA on light
+const BONE = "#fdfcfa"; // --color-porcelain-50
+const INK = "#26241f"; // --color-slate-900
+const MUTED = "#57544e"; // --color-slate-700
+const RULE = "#dfd9ce"; // --color-porcelain-300
 
 const escapeHtml = (value: string) =>
   value

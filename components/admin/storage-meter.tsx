@@ -35,7 +35,7 @@ export function StorageMeter({
         <span
           className={cn(
             "flex items-center gap-1.5 text-overline font-semibold tracking-[0.12em] uppercase",
-            invert ? "text-gold-400" : "text-accent-quiet",
+            invert ? "text-azure-400" : "text-accent-quiet",
           )}
         >
           <HardDrive className="size-3.5" aria-hidden="true" />
@@ -56,7 +56,7 @@ export function StorageMeter({
       <div
         className={cn(
           "h-1.5 w-full overflow-hidden rounded-full",
-          invert ? "bg-ink-800" : "bg-surface-sunken",
+          invert ? "bg-royal-800" : "bg-surface-sunken",
         )}
       >
         <div

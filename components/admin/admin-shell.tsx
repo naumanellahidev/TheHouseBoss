@@ -100,14 +100,14 @@ export function AdminShell({
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
             )}
           >
-            <span className="h-1.5 w-8 overflow-hidden rounded-full bg-ink-800">
+            <span className="h-1.5 w-8 overflow-hidden rounded-full bg-royal-800">
               <span
                 aria-hidden="true"
                 className={cn("block h-full rounded-full", storageBar)}
                 style={{ width: `${Math.max(storagePercent, 4)}%` }}
               />
             </span>
-            <span aria-hidden="true" className="text-overline font-semibold text-gold-400 tabular">
+            <span aria-hidden="true" className="text-overline font-semibold text-azure-400 tabular">
               {storagePercent}%
             </span>
           </Link>
@@ -206,8 +206,8 @@ function NavLink({
         "transition-colors duration-(--dur-fast)",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
         active
-          ? "bg-ink-800 text-foreground-invert"
-          : "text-foreground-invert-muted hover:bg-ink-800 hover:text-foreground-invert",
+          ? "bg-royal-800 text-foreground-invert"
+          : "text-foreground-invert-muted hover:bg-royal-800 hover:text-foreground-invert",
         !forceLabel && "md:justify-center lg:justify-start",
       )}
     >

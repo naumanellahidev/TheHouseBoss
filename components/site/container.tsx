@@ -99,7 +99,7 @@ export function SectionHeader({
         <p
           className={cn(
             "text-overline font-semibold tracking-[0.12em] uppercase",
-            invert ? "text-gold-400" : "text-accent-quiet",
+            invert ? "text-azure-400" : "text-accent-quiet",
           )}
         >
           {overline}

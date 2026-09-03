@@ -229,11 +229,11 @@ export default async function HomePage() {
         */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-ink-800),var(--color-ink-950))]"
+          className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-gold-500)_1px,transparent_1px),linear-gradient(90deg,var(--color-gold-500)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
+          className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-azure-600)_1px,transparent_1px),linear-gradient(90deg,var(--color-azure-600)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
         />
 
         {heroPhoto(settings.heroKey, "") ? (
@@ -251,7 +251,7 @@ export default async function HomePage() {
               Scrim, not optional: docs/03 forbids text over an image without
               one, and the headline sits directly on top of this.
             */}
-            <div className="absolute inset-0 bg-[linear-gradient(105deg,var(--color-ink-950)_18%,rgb(10_20_32/0.78)_52%,rgb(10_20_32/0.55)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(105deg,var(--color-royal-950)_18%,rgb(10_20_32/0.78)_52%,rgb(10_20_32/0.55)_100%)]" />
           </div>
         ) : null}
 
@@ -262,7 +262,7 @@ export default async function HomePage() {
           */}
           <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
             <div className="flex flex-col items-start gap-6 lg:col-span-7">
-              <Badge tone="accent" className="bg-ink-800 text-gold-400">
+              <Badge tone="accent" className="bg-royal-800 text-azure-400">
                 Lake Mary · Seminole &amp; Orange County
               </Badge>
 
@@ -283,7 +283,7 @@ export default async function HomePage() {
 
               <p className="max-w-[56ch] text-body text-foreground-invert-muted">
                 I&rsquo;m Krisi Kakarova — a licensed Realtor{" "}
-                <em className="text-gold-400 not-italic">and</em> a Certified
+                <em className="text-azure-400 not-italic">and</em> a Certified
                 Residential Building Contractor. I read a property the way a
                 builder does, so you can look past the finishes and make a
                 decision you will still be happy with in five years.

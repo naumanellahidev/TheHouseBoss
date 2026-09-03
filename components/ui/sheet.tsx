@@ -33,7 +33,7 @@ export function SheetContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
         className={cn(
-          "fixed inset-0 z-50 bg-ink-950/60 backdrop-blur-xs",
+          "fixed inset-0 z-50 bg-royal-950/60 backdrop-blur-xs",
           "data-[state=open]:animate-in data-[state=open]:fade-in",
         )}
       />
@@ -63,7 +63,7 @@ export function SheetContent({
               "-mr-2 inline-flex size-11 items-center justify-center rounded-md",
               "transition-colors duration-(--dur-fast)",
               side === "right"
-                ? "text-foreground-invert-muted hover:bg-ink-800 hover:text-foreground-invert"
+                ? "text-foreground-invert-muted hover:bg-royal-800 hover:text-foreground-invert"
                 : "text-foreground-muted hover:bg-surface-sunken hover:text-foreground",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
             )}

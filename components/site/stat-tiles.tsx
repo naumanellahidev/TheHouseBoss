@@ -43,14 +43,14 @@ export function StatTiles({
             className={cn(
               "flex flex-col gap-1 rounded-lg border p-4 md:p-5",
               invert
-                ? "border-ink-700 bg-ink-800"
+                ? "border-royal-700 bg-royal-800"
                 : "border-border bg-surface shadow-xs",
             )}
           >
             <dt
               className={cn(
                 "text-overline font-semibold tracking-[0.12em] uppercase",
-                invert ? "text-gold-400" : "text-accent-quiet",
+                invert ? "text-azure-400" : "text-accent-quiet",
               )}
             >
               {stat.label}

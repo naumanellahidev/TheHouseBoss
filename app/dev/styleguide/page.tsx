@@ -159,15 +159,15 @@ export default function StyleguidePage() {
           <div>
             <h3 className="mb-4 text-h4">Palette — ink</h3>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-              <Swatch token="ink-950" value="--color-ink-950" />
+              <Swatch token="royal-950" value="--color-royal-950" />
               <Swatch
-                token="ink-900"
-                value="--color-ink-900"
+                token="royal-900"
+                value="--color-royal-900"
                 note="Primary brand navy"
               />
-              <Swatch token="ink-800" value="--color-ink-800" />
-              <Swatch token="ink-700" value="--color-ink-700" />
-              <Swatch token="ink-600" value="--color-ink-600" />
+              <Swatch token="royal-800" value="--color-royal-800" />
+              <Swatch token="royal-700" value="--color-royal-700" />
+              <Swatch token="royal-600" value="--color-royal-600" />
             </div>
           </div>
 
@@ -175,19 +175,19 @@ export default function StyleguidePage() {
             <h3 className="mb-4 text-h4">Palette — gold</h3>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               <Swatch
-                token="gold-600"
-                value="--color-gold-600"
+                token="azure-700"
+                value="--color-azure-700"
                 note="Gold as TEXT on light — 4.7:1"
               />
               <Swatch
-                token="gold-500"
-                value="--color-gold-500"
+                token="azure-600"
+                value="--color-azure-600"
                 note="Accent SURFACE only — 2.3:1 as text"
                 dark
               />
-              <Swatch token="gold-400" value="--color-gold-400" />
-              <Swatch token="gold-200" value="--color-gold-200" />
-              <Swatch token="gold-50" value="--color-gold-50" />
+              <Swatch token="azure-400" value="--color-azure-400" />
+              <Swatch token="azure-200" value="--color-azure-200" />
+              <Swatch token="azure-50" value="--color-azure-50" />
             </div>
           </div>
 
@@ -195,22 +195,22 @@ export default function StyleguidePage() {
             <h3 className="mb-4 text-h4">Palette — bone &amp; stone</h3>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               <Swatch
-                token="bone-50"
-                value="--color-bone-50"
+                token="porcelain-50"
+                value="--color-porcelain-50"
                 note="Page ground"
               />
-              <Swatch token="bone-100" value="--color-bone-100" />
-              <Swatch token="bone-200" value="--color-bone-200" />
+              <Swatch token="porcelain-100" value="--color-porcelain-100" />
+              <Swatch token="porcelain-200" value="--color-porcelain-200" />
               <Swatch
-                token="bone-300"
-                value="--color-bone-300"
+                token="porcelain-300"
+                value="--color-porcelain-300"
                 note="Borders"
               />
-              <Swatch token="stone-500" value="--color-stone-500" />
-              <Swatch token="stone-700" value="--color-stone-700" />
+              <Swatch token="slate-500" value="--color-slate-500" />
+              <Swatch token="slate-700" value="--color-slate-700" />
               <Swatch
-                token="stone-900"
-                value="--color-stone-900"
+                token="slate-900"
+                value="--color-slate-900"
                 note="Body text"
               />
             </div>
@@ -237,7 +237,7 @@ export default function StyleguidePage() {
               <span className="rounded-sm bg-accent px-3 py-1.5 text-sm font-semibold text-accent-fg">
                 accent as surface — correct
               </span>
-              <span className="rounded-sm bg-ink-900 px-3 py-1.5 text-sm font-semibold text-accent">
+              <span className="rounded-sm bg-royal-900 px-3 py-1.5 text-sm font-semibold text-accent-invert">
                 accent text on navy — correct
               </span>
             </div>
@@ -736,13 +736,13 @@ export default function StyleguidePage() {
             <table className="w-full min-w-2xl border-collapse text-left text-sm text-foreground-invert-muted">
               <caption className="sr-only">Grid columns by breakpoint</caption>
               <thead>
-                <tr className="border-b border-ink-700">
+                <tr className="border-b border-royal-700">
                   {["Component", "360", "480", "768", "1024", "1280+"].map(
                     (h) => (
                       <th
                         key={h}
                         scope="col"
-                        className="px-3 py-2 text-xs font-semibold tracking-[0.08em] text-gold-400 uppercase"
+                        className="px-3 py-2 text-xs font-semibold tracking-[0.08em] text-azure-400 uppercase"
                       >
                         {h}
                       </th>
@@ -760,7 +760,7 @@ export default function StyleguidePage() {
                 ].map((row) => (
                   <tr
                     key={row[0]}
-                    className="border-b border-ink-800 last:border-b-0"
+                    className="border-b border-royal-800 last:border-b-0"
                   >
                     {row.map((cell, i) => (
                       <td

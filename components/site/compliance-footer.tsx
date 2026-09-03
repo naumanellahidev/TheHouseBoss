@@ -50,7 +50,7 @@ export function ComplianceFooter({ className }: { className?: string }) {
 
   return (
     <div
-      className={cn("bg-ink-950 text-foreground-invert-muted", className)}
+      className={cn("bg-royal-950 text-foreground-invert-muted", className)}
       data-compliance-footer=""
     >
       <div className="container-page flex flex-col gap-6 py-8 md:flex-row md:items-start md:justify-between">
@@ -91,7 +91,7 @@ export function ComplianceFooter({ className }: { className?: string }) {
         </div>
       </div>
 
-      <div className="border-t border-ink-800">
+      <div className="border-t border-royal-800">
         <div className="container-page flex flex-col gap-2 py-5 text-xs leading-relaxed">
           <p>
             All information is deemed reliable but is not guaranteed and should
