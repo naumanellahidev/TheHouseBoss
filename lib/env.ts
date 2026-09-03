@@ -40,9 +40,32 @@ function format(issues: z.ZodIssue[]) {
  */
 const CONFIGURED = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
 
+/**
+ * Read explicitly, key by key, rather than handing the whole `process.env`
+ * object to zod.
+ *
+ * Next.js inlines a `NEXT_PUBLIC_*` variable only where it appears as a literal
+ * `process.env.THE_NAME` expression — it is a textual substitution, not a
+ * runtime lookup. Passing `process.env` wholesale defeats it: the object that
+ * arrives at build time does not contain the inlined values, so validation sees
+ * `undefined` and throws even though the variable is correctly configured.
+ *
+ * That is not hypothetical. `next.config.ts` resolves `NEXT_PUBLIC_SITE_URL`
+ * from the Vercel deployment URL and re-exports it through `env`, and this
+ * function is what decided whether that worked. With the wholesale parse, a
+ * deployment that had no explicit site URL failed the build with
+ * "Invalid public environment" while the value was in fact present.
+ */
+const publicEnv = () => ({
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  NEXT_PUBLIC_MEDIA_URL: process.env.NEXT_PUBLIC_MEDIA_URL,
+});
+
 export const clientEnv = (() => {
   if (!CONFIGURED) return null;
-  const parsed = clientSchema.safeParse(process.env);
+  const parsed = clientSchema.safeParse(publicEnv());
   if (!parsed.success) {
     throw new Error(
       `Invalid public environment:\n${format(parsed.error.issues)}\n` +

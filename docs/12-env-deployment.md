@@ -121,7 +121,7 @@ no dashboard configuration beyond the environment variables.
    design — see § 1 rule 3):
 
    ```
-   NEXT_PUBLIC_SITE_URL          https://thehousebossfl.com
+   NEXT_PUBLIC_SITE_URL          https://thehousebossfl.com   ← optional, see below
    NEXT_PUBLIC_SUPABASE_URL      https://<ref>.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY <anon key>
    SUPABASE_SERVICE_ROLE_KEY     <service role key>   ← never NEXT_PUBLIC_
@@ -140,10 +140,18 @@ no dashboard configuration beyond the environment variables.
    DRAFT_PREVIEW_SECRET          openssl rand -hex 32
    ```
 
-   **`NEXT_PUBLIC_SITE_URL` must be the real domain before the first production
-   deploy**, not a `*.vercel.app` URL. It is baked into canonicals, the sitemap,
-   `llms.txt` and every JSON-LD `@id` at build time. Setting it late means
-   re-deploying to correct URLs that a crawler may already have taken.
+   **`NEXT_PUBLIC_SITE_URL` is optional.** When it is unset, `next.config.ts`
+   resolves the site URL from `VERCEL_PROJECT_PRODUCTION_URL` on a production
+   deployment and from `VERCEL_URL` on a preview, so the project deploys to a
+   bare `*.vercel.app` with correct canonicals, sitemap, `llms.txt` and JSON-LD
+   `@id`s and no configuration at all. Verified by building with the variable
+   empty: every absolute URL came out as the `*.vercel.app` host.
+
+   **Set it as soon as the real domain is live**, because these values are baked
+   in at build time. An explicit value always wins over the Vercel fallback, and
+   changing it requires a redeploy — so a site that runs on the custom domain
+   while still emitting `*.vercel.app` canonicals is teaching crawlers the wrong
+   URL for as long as it goes unnoticed.
 
 3. **Deploy**, then verify against the deployment rather than assuming:
 
@@ -254,10 +262,26 @@ Move to Supabase Pro ($25/mo) when any of these is true:
 ### Auth configuration
 
 - Email provider on, magic link only, confirmations required
-- Site URL: `https://thehousebossfl.com`
-- Redirect allowlist: production and preview URLs
 - JWT expiry 3600s, refresh rotation on
 - **Signup disabled** in the dashboard after the admin account is created
+
+**URL configuration — this is what makes the admin dashboard work on a
+deployment, and it is the step that is easy to miss.** The sign-in flow builds
+its callback from `window.location.origin` and the callback route redirects
+using `request.nextUrl.origin`, so the application itself needs no
+configuration and works on any hostname. Supabase, however, refuses to send a
+magic link to an origin it does not recognise. In **Authentication → URL
+Configuration**, set:
+
+| Field | Value |
+|---|---|
+| Site URL | the production URL — `https://thehousebossfl.com`, or the `*.vercel.app` domain until the real one is live |
+| Redirect URLs | `https://thehousebossfl.com/**`, `https://<project>.vercel.app/**`, `http://localhost:3000/**` |
+
+The wildcards matter: the callback lands on `/admin/auth/callback` with query
+parameters, so an entry without `/**` will not match. If a sign-in link opens
+the login screen saying the link is invalid, this list is the first thing to
+check — not the code.
 
 ---
 

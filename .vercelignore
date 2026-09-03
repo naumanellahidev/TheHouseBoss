@@ -1,17 +1,21 @@
 # Keeps the deployment upload to what actually runs in production.
-# Next.js only bundles what it imports, but every file here is still uploaded
-# and counted against the build, so excluding them makes deploys faster and
-# keeps developer tooling off the production filesystem.
+#
+# EVERY PATTERN IS ANCHORED WITH A LEADING SLASH, and must stay that way.
+# This file uses .gitignore matching semantics, where an unanchored `supabase/`
+# matches a directory of that name at ANY depth — which silently deleted
+# `lib/supabase/` (all four clients) from the deployment and failed the build
+# with 33 unresolved-module errors. A leading slash restricts the pattern to the
+# repository root, which is the only thing intended here.
 
-tests/
-playwright.config.ts
-playwright-report/
-test-results/
-docs/
-scripts/
-supabase/
-backups/
-lighthouse-results.json
-PROGRESS.md
-.claude/
-.github/
+/tests/
+/playwright.config.ts
+/playwright-report/
+/test-results/
+/docs/
+/scripts/
+/supabase/
+/backups/
+/lighthouse-results.json
+/PROGRESS.md
+/.claude/
+/.github/

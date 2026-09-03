@@ -19,6 +19,15 @@ export const siteConfig = {
   brokerage: "World Properties Group",
   lockup: "The House Boss — Powered by World Properties Group",
 
+  /**
+   * Always set: `next.config.ts` resolves this at build time and re-exports it
+   * through `env`, falling back to the Vercel deployment URL and then to
+   * localhost. The literal below is therefore unreachable in any real build and
+   * exists only so a bare `tsx`/`vitest` import outside Next has something
+   * sane. Do NOT rely on it as the production default — a deployment that
+   * genuinely lacked the variable would then claim the live domain's
+   * canonicals while serving from somewhere else.
+   */
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thehousebossfl.com",
   locale: "en_US",
   timezone: "America/New_York",

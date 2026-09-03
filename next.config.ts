@@ -1,7 +1,57 @@
 import type { NextConfig } from "next";
 
+/**
+ * Resolve the site's own public URL at build time.
+ *
+ * This value is baked into canonicals, the sitemap, `llms.txt`, every JSON-LD
+ * `@id` and every absolute OG image URL, so it has to be correct at BUILD time,
+ * not request time — which is why it is resolved here and re-exported through
+ * `env` below rather than read from `process.env` at each call site.
+ *
+ * The order matters:
+ *
+ *   1. `NEXT_PUBLIC_SITE_URL` — an explicit setting always wins. This is what
+ *      the real domain uses, and `docs/12` § 2 says to set it before the first
+ *      production deploy.
+ *   2. `VERCEL_PROJECT_PRODUCTION_URL` — the project's stable production
+ *      domain, e.g. `the-house-boss.vercel.app`. Used only for production
+ *      deployments, so a production build without a custom domain still emits
+ *      correct, stable absolute URLs instead of a per-deploy hash.
+ *   3. `VERCEL_URL` — the per-deployment hostname. Previews only, where a URL
+ *      unique to the deployment is exactly what is wanted; middleware marks
+ *      those `noindex`, so nothing here can be crawled.
+ *   4. localhost, for `next dev` and `next start`.
+ *
+ * The effect is that the project deploys to a bare `*.vercel.app` with no
+ * configuration at all, and switches to the real domain by setting one variable.
+ */
+function resolveSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+
+  const production = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (process.env.VERCEL_ENV === "production" && production) {
+    return `https://${production}`;
+  }
+
+  const deployment = process.env.VERCEL_URL;
+  if (deployment) return `https://${deployment}`;
+
+  return `http://localhost:${process.env.PORT ?? 3000}`;
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  /**
+   * Re-exported so it is inlined into both the server and the client bundle.
+   * `VERCEL_URL` and `VERCEL_PROJECT_PRODUCTION_URL` are not `NEXT_PUBLIC_`
+   * variables and are therefore invisible to client components, several of
+   * which read `siteConfig.url`.
+   */
+  env: {
+    NEXT_PUBLIC_SITE_URL: resolveSiteUrl(),
+  },
 
   images: {
     /**

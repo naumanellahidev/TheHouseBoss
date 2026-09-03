@@ -2,7 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Middleware does three things and no more:
+ * Formerly `middleware.ts`. Next.js 16 deprecates that file convention in
+ * favour of `proxy.ts` and warns on every build; the behaviour, the matcher and
+ * the execution point are unchanged, only the file and export names differ.
+ *
+ * This proxy does three things and no more:
  *
  *   1. refreshes the Supabase session cookie
  *   2. guards /admin (layer 1 of 3 — the server layout checks the role, RLS
@@ -15,7 +19,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * miss-path concern, so it is handled in the route's not-found branch instead —
  * zero cost on the 99.9% of requests that resolve normally.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -79,8 +83,8 @@ export const config = {
   matcher: [
     /*
      * Everything except static assets and image files. Keeping the matcher
-     * tight matters: middleware runs on every matched request, and a session
-     * refresh is not free.
+     * tight matters: this runs on every matched request, and a session refresh
+     * is not free.
      */
     "/((?!_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|placeholder-property.svg|robots.txt|sitemap.xml|llms.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],

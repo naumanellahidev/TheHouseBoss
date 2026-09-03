@@ -1020,4 +1020,90 @@ rather than a defect list. Do not treat it as precedent.
 
 ---
 
+### 2026-09-03 — Vercel build failure and fix
+
+The first Vercel deploy failed. Recorded in full because the cause was a change
+made in the previous entry and the lesson is reusable.
+
+**What broke**
+
+`Turbopack build failed with 33 errors`, all `Module not found` on
+`@/lib/supabase/browser`, `/server`, `/service` and `/public`. The files exist
+and the build was green locally.
+
+**Cause: the `.vercelignore` I added.** It uses `.gitignore` matching semantics,
+where an unanchored `supabase/` matches a directory of that name **at any
+depth** — so it silently removed `lib/supabase/` along with the root
+`supabase/` migrations directory. Vercel's log said `Removed 86 ignored files`
+and I did not check what they were.
+
+Proven rather than assumed, with `git check-ignore` against both pattern sets:
+
+```
+lib/supabase/server.ts    old=EXCLUDED  new=kept
+lib/supabase/public.ts    old=EXCLUDED  new=kept
+lib/supabase/browser.ts   old=EXCLUDED  new=kept
+lib/supabase/service.ts   old=EXCLUDED  new=kept
+supabase/seed.sql         old=EXCLUDED  new=EXCLUDED
+docs/README.md            old=EXCLUDED  new=EXCLUDED
+```
+
+**Fixed:** every pattern in `.vercelignore` is now anchored with a leading `/`,
+with a comment saying why it must stay that way. `lib/supabase` was the only
+collateral damage — checked by searching `app`, `lib`, `components` and `types`
+for directories matching any ignored name.
+
+**A second, latent bug this surfaced**
+
+`lib/env.ts` validated with `clientSchema.safeParse(process.env)`. Next.js
+inlines a `NEXT_PUBLIC_*` variable only where it appears as a literal
+`process.env.THE_NAME` expression — it is textual substitution, not a runtime
+lookup — so handing zod the whole object defeats it. This never showed up while
+every variable happened to be present in `.env.local`, and appeared the moment a
+value came from `next.config.ts` instead: the build failed with
+`Invalid public environment` while the value was in fact correctly resolved.
+Now read key by key.
+
+**Also fixed in the same pass**
+
+- **`*.vercel.app` deploys now work with no configuration.** `next.config.ts`
+  resolves the site URL — explicit `NEXT_PUBLIC_SITE_URL` first, then
+  `VERCEL_PROJECT_PRODUCTION_URL` on production, then `VERCEL_URL` on previews,
+  then localhost — and re-exports it through `env` so client components that
+  read `siteConfig.url` get it too. Verified by building with the variable
+  empty: canonicals, sitemap, `og:url` and `llms.txt` all came out as
+  `https://the-house-boss.vercel.app`.
+- **`middleware.ts` → `proxy.ts`.** Next.js 16 deprecates the middleware file
+  convention and warned on every build. Behaviour, matcher and execution point
+  are unchanged; only the file and export names differ. The 357-test suite,
+  which covers the session refresh and the `/admin` guard, still passes.
+- **`engines.node` pinned to `22.x`** rather than `>=22.0.0`. Vercel warned that
+  an open range silently upgrades on the next Node major.
+- `lib/site-config.ts` — the `?? "https://thehousebossfl.com"` fallback is now
+  documented as unreachable and explicitly not the production default. A
+  deployment that genuinely lacked the variable would otherwise claim the live
+  domain's canonicals while serving from somewhere else.
+- `docs/12` § 3 gained the **Supabase Auth URL configuration** the dashboard
+  needs on a deployment. The application needs none — sign-in builds its
+  callback from `window.location.origin` and the callback redirects using
+  `request.nextUrl.origin`, so it works on any hostname — but Supabase refuses
+  to send a magic link to an origin not on its redirect allowlist, and the
+  entries need a `/**` wildcard or the callback's query parameters will not
+  match.
+
+**The lesson worth keeping**
+
+The local build passed because it builds the working tree. Vercel builds the
+*checkout minus `.vercelignore`*, which is a different set of files. Any change
+to `.vercelignore` needs verifying against the file list it actually produces,
+not against a local build.
+
+**Verified after the fix**
+
+typecheck, lint and build clean; a simulated bare `*.vercel.app` production
+build clean and emitting the right absolute URLs; tokens, contrast, bundle, seo
+and compliance all pass; Playwright **357 passed, 0 failed**.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->
