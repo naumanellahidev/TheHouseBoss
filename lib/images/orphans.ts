@@ -34,36 +34,64 @@ export type OrphanReport = {
   skippedRecent: number;
 };
 
-/** Every base key currently referenced by a listing's photos array. */
+/**
+ * Every base key any row currently points at.
+ *
+ * THIS SET IS A DELETE-LIST INVERSE. Anything stored but missing from here is
+ * deleted by the nightly cron once it is 24 hours old, so a column omitted here
+ * is not a missed optimisation — it is data loss on a timer.
+ *
+ * `site_settings` and `profiles.avatar_key` were both missing, which meant the
+ * site-wide hero, the OG image and the admin's avatar were all scheduled for
+ * deletion the day after they were set. Found while planning the image seeding;
+ * nothing had been uploaded to those columns yet, so nothing was actually lost.
+ *
+ * The full list of key-bearing columns, verified against the migrations:
+ *   listings.photos[].key, listings.floorplan_key
+ *   articles.cover_key, articles.og_key
+ *   cities.hero_key, communities.hero_key
+ *   site_settings.hero_key, site_settings.og_key
+ *   profiles.avatar_key
+ *
+ * If a migration adds another, add it here in the same commit.
+ */
 async function referencedKeys(): Promise<Set<string>> {
   const db = createServiceClient();
   const keys = new Set<string>();
+  const add = (value: unknown) => {
+    if (typeof value === "string" && value.length > 0) keys.add(value);
+  };
 
   const { data, error } = await db.from("listings").select("photos, floorplan_key");
   if (error) throw new Error(`referencedKeys(listings): ${error.message}`);
 
   for (const row of data ?? []) {
     for (const photo of (row.photos ?? []) as { kind?: string; key?: string }[]) {
-      if (photo?.key) keys.add(photo.key);
+      add(photo?.key);
     }
-    if (row.floorplan_key) keys.add(row.floorplan_key as string);
+    add(row.floorplan_key);
   }
 
   const { data: articles } = await db.from("articles").select("cover_key, og_key");
   for (const row of articles ?? []) {
-    if (row.cover_key) keys.add(row.cover_key as string);
-    if (row.og_key) keys.add(row.og_key as string);
+    add(row.cover_key);
+    add(row.og_key);
   }
 
   const { data: cities } = await db.from("cities").select("hero_key");
-  for (const row of cities ?? []) {
-    if (row.hero_key) keys.add(row.hero_key as string);
-  }
+  for (const row of cities ?? []) add(row.hero_key);
 
   const { data: communities } = await db.from("communities").select("hero_key");
-  for (const row of communities ?? []) {
-    if (row.hero_key) keys.add(row.hero_key as string);
+  for (const row of communities ?? []) add(row.hero_key);
+
+  const { data: settings } = await db.from("site_settings").select("hero_key, og_key");
+  for (const row of settings ?? []) {
+    add(row.hero_key);
+    add(row.og_key);
   }
+
+  const { data: profiles } = await db.from("profiles").select("avatar_key");
+  for (const row of profiles ?? []) add(row.avatar_key);
 
   return keys;
 }
@@ -82,9 +110,30 @@ export async function findOrphans(): Promise<OrphanReport> {
   const knownKeys = new Set(rows.map((row) => row.key as string));
 
   // ── Direction 1: objects with no row ─────────────────────────────────────
-  const objects = await storage.list("listings").catch(() => [] as string[]);
-  const articleObjects = await storage.list("articles").catch(() => [] as string[]);
-  const allObjects = [...objects, ...articleObjects];
+  //
+  // Every prefix `buildKey` can produce (lib/images/store.ts). Only `listings`
+  // and `articles` were listed before, so a failed upload under `cities/`,
+  // `communities/`, `profile/` or `site/` was never reclaimed — the opposite
+  // failure to the one above, and a leak rather than data loss, but still wrong.
+  //
+  // A prefix that has never been written to returns an empty list, so listing
+  // all six costs nothing until they are used.
+  const PREFIXES = [
+    "listings",
+    "articles",
+    "cities",
+    "communities",
+    "profile",
+    "site",
+  ] as const;
+
+  const allObjects = (
+    await Promise.all(
+      PREFIXES.map((prefix) =>
+        storage.list(prefix).catch(() => [] as string[]),
+      ),
+    )
+  ).flat();
 
   const strayObjects: string[] = [];
   for (const path of allObjects) {

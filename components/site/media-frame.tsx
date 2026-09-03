@@ -41,7 +41,20 @@ export function heroPhoto(
 
 export function MediaFrame({
   photo,
-  size = 1600,
+  /**
+   * 800 by default, NOT 1600.
+   *
+   * `next.config.ts` sets `images.unoptimized: true` (HR5), which means
+   * next/image emits no srcset — so whichever variant this names is downloaded
+   * by every device, and the `sizes` string below is inert for selection. We
+   * pre-generate 400/800/1600 and can only serve one of them.
+   *
+   * Measured: two 1600w heroes cost 509 kB on a 412px viewport and pushed the
+   * home page's mobile LCP to 6.1s. At 412px x 1.75 DPR the browser wants
+   * ~720px, so 800 is the honest default and 1600 is an opt-in for images that
+   * are genuinely displayed large on desktop.
+   */
+  size = 800,
   sizes,
   priority = false,
   aspect = "4/5",

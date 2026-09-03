@@ -1203,4 +1203,99 @@ still owned by a measurement against Vercel rather than this machine (docs/17 §
 
 ---
 
+### 2026-09-03 — Redesign, part 2a: real imagery, glass, motion foundations
+
+**Two latent bugs found and fixed before they could bite**
+
+- **`referencedKeys()` in `lib/images/orphans.ts` was missing two tables.** It
+  read listings, articles, cities and communities — but not
+  `site_settings.hero_key`/`og_key` or `profiles.avatar_key`. That set is a
+  DELETE-LIST INVERSE: anything stored but absent from it is deleted by the
+  nightly cron once it is 24 hours old. So the site-wide hero, the OG image and
+  the admin's avatar were all on a timer from the moment they were set. Nothing
+  had been uploaded to those columns yet, so nothing was lost. Proved the fix by
+  querying the reference set directly rather than trusting the 24h safety window
+  that was masking it.
+- **`findOrphans()` only listed the `listings` and `articles` storage
+  prefixes**, so a failed upload under `cities/`, `communities/`, `profile/` or
+  `site/` was never reclaimed. The opposite failure — a leak rather than data
+  loss — but still wrong. All six prefixes now.
+
+**Shipped**
+
+- **`scripts/seed-images.mts` + `scripts/image-manifest.json`** — 11 licence-free
+  images (Unsplash, commercial use, no attribution required) pushed through
+  `storeImage()`, the same function the admin upload route calls. Routing through
+  it rather than talking to storage directly is what buys HR1, HR2, HR7 and HR9
+  without the script re-implementing any of them. Upload and reference are
+  written in the same pass, because an image attached tomorrow is an image the
+  orphan cron deletes tonight. Provenance is committed so licensing is auditable.
+  **Verified: 11 media rows, 3 variants each, w/h on all, 8/8 cities with hero +
+  alt, 3.3 MB of a 1024 MB budget.**
+- **No listing gets stock photography.** A stock image standing in for a home a
+  buyer can go and view is misrepresentation under FREC advertising rules. This
+  is the one place the "no placeholders anywhere" instruction is deliberately not
+  followed, and it is a licence-risk decision rather than an aesthetic one.
+- Glass tokens (`--color-glass`, `-invert`, `-border`) and `glass` /
+  `glass-invert` utilities, applied to `FloatCard` and the hero search card.
+  Both carry an opaque `@supports` fallback — without `backdrop-filter` the
+  translucency alone is a contrast failure, not a degraded look.
+- **The motion system did not exist.** `app/globals.css` had zero `@keyframes`
+  and no animate plugin, which meant `sheet.tsx` and the header dropdown carried
+  `animate-in fade-in` classes that **compiled to nothing** — those panels have
+  always opened instantly. Added the keyframes, plus a `ken-burns` drift now
+  running on the home hero.
+- **Fixed a real accessibility defect in the reduced-motion block**: it reset
+  durations but not `transition-delay`/`animation-delay`, so a staggered reveal
+  would still stagger for someone who asked for reduced motion — appearing as
+  content popping in one piece at a time. Delays are now zeroed and `.reveal` is
+  forced visible.
+- `components/site/reveal.tsx` — scroll-reveal on one shared IntersectionObserver
+  rather than one per instance, fires once, and reveals immediately if the
+  element is already in view on load.
+- The home hero now has a real photographic background with a scrim; the navy
+  gradient and gold grid stay underneath as the designed fallback.
+
+**The performance finding that matters**
+
+Adding imagery cost the home page 14 points (71 → 65) and pushed LCP to 6.1s.
+The cause is architectural: **`images.unoptimized: true` (HR5) means next/image
+emits no srcset**, so the three variants we pre-generate are useless for
+selection — whichever one the `size` prop names is downloaded by every device,
+and `sizes` is inert. Measured: two 1600w heroes = 509 kB delivered to a 412px
+viewport.
+
+Serving the 800w variant for hero positions (412 x 1.75 DPR wants ~720px)
+recovered it and then some:
+
+| | before imagery | with imagery @1600 | with imagery @800 |
+|---|---|---|---|
+| home | 71 | 65 | **79** |
+| home LCP | 3.0s | 6.1s | **4.7s** |
+| home TBT | 1103ms | 473ms | **225ms** |
+
+CLS stayed **0.000** throughout.
+
+**Open / deferred**
+
+- **The real fix is a proper srcset.** We generate 400/800/1600 and can only ever
+  serve one. Emitting a true srcset needs either a custom next/image loader —
+  which would mean revisiting HR5, and getting that wrong means 402s in
+  production when Vercel's transform quota is consumed — or a hand-rolled `<img>`
+  inside `PropertyImage`. Not attempted here because the risk is asymmetric;
+  worth doing deliberately, with the HR5 implications written down first.
+- City page is the weakest at 63 (LCP 4.3s) — it carries the largest hero.
+- Still to come from the approved plan: parallax, the advanced client-side hero
+  search, header/footer chrome, the guides and listing restyle, and the
+  `/dev/styleguide` additions that docs/03 § 11 requires.
+
+**Next session must know**
+
+- `.next` must be cleared after seeding images. The ISR cache served pre-seed
+  HTML twice and made it look as though the seeding had failed when it had not.
+- `npm run seed:images -- --dry` downloads and reports without writing; `--force`
+  replaces images already set.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

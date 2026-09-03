@@ -83,7 +83,7 @@ export function CityHub({
                   h: 900,
                   alt: city.heroAlt ?? "",
                 }}
-                size={1600}
+                size={800}
                 sizes={IMAGE_SIZES.fullBleed}
                 priority
                 aspect="none"

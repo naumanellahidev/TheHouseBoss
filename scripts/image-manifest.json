@@ -1,0 +1,88 @@
+{
+  "$comment": [
+    "Provenance for every stock image on the site. Committed so licensing is auditable later,",
+    "which matters because 'where did this photo come from' is impossible to answer after the fact.",
+    "",
+    "SOURCES: Unsplash (unsplash.com/license) and Pexels (pexels.com/license). Both permit",
+    "commercial use with no attribution required and no model/property release implied.",
+    "",
+    "HARD RULE, enforced in review: NOTHING HERE MAY BE USED AS A LISTING PHOTO.",
+    "A stock image standing in for a home a buyer can go and view is misrepresentation under",
+    "FREC advertising rules. These are city, lifestyle, guide and site-level images only.",
+    "",
+    "Every entry needs real alt text. `lib/validation/place.ts` refuses a hero key with an",
+    "empty alt, and an empty alt makes the image decorative in PropertyImage."
+  ],
+  "cities": [
+    {
+      "slug": "lake-mary",
+      "url": "https://images.unsplash.com/photo-1449844908441-8829872d2607?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A tree-lined residential street of two-storey homes on a bright Central Florida morning"
+    },
+    {
+      "slug": "longwood",
+      "url": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A single-storey home with a wide covered porch behind mature oak trees"
+    },
+    {
+      "slug": "sanford",
+      "url": "https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A brick-fronted historic home with white trim and a deep front lawn"
+    },
+    {
+      "slug": "casselberry",
+      "url": "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A lakeside home with a screened lanai facing open water at dusk"
+    },
+    {
+      "slug": "orlando",
+      "url": "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "Modern low-rise apartment buildings against a clear sky"
+    },
+    {
+      "slug": "altamonte-springs",
+      "url": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A contemporary two-storey house with a paved driveway and clipped hedging"
+    },
+    {
+      "slug": "winter-springs",
+      "url": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A white-rendered family home with a dark tiled roof and manicured front garden"
+    },
+    {
+      "slug": "oviedo",
+      "url": "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A newly built home with a two-car garage on a quiet suburban street"
+    }
+  ],
+  "communities": [
+    {
+      "slug": "heathrow",
+      "url": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A large executive home with a tiled roof and mature landscaping in a gated community"
+    }
+  ],
+  "site": [
+    {
+      "target": "hero_key",
+      "url": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A bright open-plan living room with tall windows looking onto a garden"
+    },
+    {
+      "target": "og_key",
+      "url": "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=2400&q=80",
+      "source": "Unsplash",
+      "alt": "A well-lit kitchen with a stone island and pendant lighting"
+    }
+  ]
+}

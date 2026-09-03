@@ -140,6 +140,24 @@
   */
   --shadow-float: 0 32px 80px rgb(15 27 45 / 0.18), 0 8px 24px rgb(15 27 45 / 0.08);
 
+  /*
+    ── Glass ──────────────────────────────────────────────────────────────
+    An OVERLAY treatment, never a content surface.
+
+    scripts/check-contrast.mjs extracts `#rrggbb` only and has no alpha
+    compositing step, so it cannot evaluate text on a translucent ground — the
+    pairing would simply go unpoliced against a hard WCAG AA requirement
+    (HR18). Glass is therefore restricted to short, large, high-contrast labels
+    over backdrops we control: the hero search card, FloatCard, the sticky
+    header, the mobile nav, image overlays.
+
+    Body text never sits on glass. Content cards stay opaque so every
+    text pairing remains inside the guard's reach. docs/03 § 3.
+  */
+  --color-glass: rgb(255 255 255 / 0.72);
+  --color-glass-invert: rgb(15 27 45 / 0.55);
+  --color-glass-border: rgb(255 255 255 / 0.18);
+
   /* ── Motion ─────────────────────────────────────────────────────────── */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -373,6 +391,59 @@
   }
 }
 
+/*
+  Frosted glass, light. Overlay layers only — see the token comment above.
+
+  The @supports fallback is not politeness: without backdrop-filter the
+  translucent background alone puts text over whatever is behind it, which is a
+  contrast failure rather than a degraded look. Falling back to opaque is the
+  correct behaviour, not a nicety.
+*/
+@utility glass {
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background: var(--color-surface);
+  }
+}
+
+/* The same treatment over dark grounds — hero overlays, inverted sections. */
+@utility glass-invert {
+  background: var(--color-glass-invert);
+  border: 1px solid var(--color-border-invert);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background: var(--color-surface-invert);
+  }
+}
+
+/*
+  Scroll-reveal target. The component sets data-revealed once the element has
+  intersected; until then it is offset and transparent.
+
+  `will-change` is deliberately absent — on a page with a dozen reveals it
+  promotes a dozen layers and costs more than it saves.
+*/
+@utility reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+
+  &[data-revealed="true"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* sticky bottom bars must clear the iOS home indicator */
 @utility safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
@@ -393,6 +464,63 @@
    REDUCED MOTION — global, non-negotiable (docs/03 § 4)
    ========================================================================= */
 
+/*
+  Enter/exit keyframes.
+
+  These did not exist. `components/ui/sheet.tsx` and `components/site/header.tsx`
+  both carried `animate-in fade-in` classes, and with no @keyframes and no
+  tailwindcss-animate plugin installed those compiled to NOTHING — the sheet and
+  the nav dropdown have always opened instantly. Defining them here fixes two
+  silent no-ops rather than adding decoration.
+
+  Transform and opacity only, per docs/03 § 4. Radix's
+  --radix-accordion-content-height is deliberately not used: it animates height.
+*/
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: none; }
+}
+
+@keyframes slide-out-right {
+  from { transform: none; }
+  to { transform: translateX(100%); }
+}
+
+@keyframes slide-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@keyframes slide-out-bottom {
+  from { transform: none; }
+  to { transform: translateY(100%); }
+}
+
+/*
+  A very slow drift on hero photography. 24s and 4% of travel: at that rate it
+  reads as depth rather than as movement, which is the difference between
+  editorial and a screensaver.
+*/
+@keyframes ken-burns {
+  from { transform: scale(1) translate3d(0, 0, 0); }
+  to { transform: scale(1.04) translate3d(0, -1%, 0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -401,5 +529,23 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+
+    /*
+      Delays, not just durations.
+
+      Without these a staggered reveal built on transition-delay still staggers
+      for someone who asked for reduced motion: each item's transition completes
+      instantly but starts late, so content appears to pop in one piece at a
+      time. Zeroing the delay is what actually honours the preference, and it is
+      why stagger is safe to use elsewhere in this file.
+    */
+    transition-delay: 0ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  /* A reveal must never leave content invisible when motion is off. */
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

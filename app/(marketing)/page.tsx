@@ -22,7 +22,7 @@ import { Container, Section, SectionHeader } from "@/components/site/container";
 import { FloatCard } from "@/components/site/float-card";
 import { LeadForm } from "@/components/site/lead-form";
 import { MediaFrame, heroPhoto } from "@/components/site/media-frame";
-import { IMAGE_SIZES } from "@/components/site/property-image";
+import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
 import { SearchBar } from "@/components/site/search-bar";
 import { StatTiles } from "@/components/site/stat-tiles";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,8 @@ import {
   getFeaturedListings,
 } from "@/lib/queries/listings";
 import { getReviews } from "@/lib/queries/articles";
-import { safeQuery } from "@/lib/queries/safe";
+import { EMPTY_SETTINGS, safeQuery } from "@/lib/queries/safe";
+import { getSiteSettings } from "@/lib/queries/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/site-config";
 import { formatPrice } from "@/lib/utils";
@@ -171,7 +172,7 @@ export default async function HomePage() {
     degrades its own section rather than 500-ing the site's front door — the
     same discipline the marketing layout uses for settings.
   */
-  const [cities, facets, featured, published, lakeMary, reviews] =
+  const [cities, facets, featured, published, lakeMary, reviews, settings] =
     await Promise.all([
       safeQuery(() => getSearchCities(), [], "getSearchCities(home)"),
       safeQuery(
@@ -192,6 +193,7 @@ export default async function HomePage() {
       safeQuery(() => countPublishedListings(), 0, "countPublishedListings(home)"),
       safeQuery(() => getCityBySlug("lake-mary"), null, "getCityBySlug(home)"),
       safeQuery(() => getReviews(3), [], "getReviews(home)"),
+      safeQuery(() => getSiteSettings(), EMPTY_SETTINGS, "getSiteSettings(home)"),
     ]);
 
   /** Spec: swap the primary CTA rather than advertise an empty search. */
@@ -220,14 +222,38 @@ export default async function HomePage() {
     <>
       {/* ── 1. Hero + search ─────────────────────────────────────────── */}
       <section className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert">
+        {/*
+          The navy gradient and gold grid stay as the base layer. They are not
+          dead weight: if the hero photograph is ever missing the section still
+          reads as designed rather than as a black box.
+        */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-ink-800),var(--color-ink-950))]"
+          className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-ink-800),var(--color-ink-950))]"
         />
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 [background-image:linear-gradient(var(--color-gold-500)_1px,transparent_1px),linear-gradient(90deg,var(--color-gold-500)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
+          className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-gold-500)_1px,transparent_1px),linear-gradient(90deg,var(--color-gold-500)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
         />
+
+        {heroPhoto(settings.heroKey, "") ? (
+          <div aria-hidden="true" className="absolute inset-0 -z-10">
+            <PropertyImage
+              photo={heroPhoto(settings.heroKey, "")}
+              size={800}
+              sizes={IMAGE_SIZES.fullBleed}
+              priority
+              aspect="none"
+              wrapperClassName="h-full w-full"
+              className="h-full w-full object-cover motion-safe:animate-[ken-burns_24s_var(--ease-in-out)_infinite_alternate]"
+            />
+            {/*
+              Scrim, not optional: docs/03 forbids text over an image without
+              one, and the headline sits directly on top of this.
+            */}
+            <div className="absolute inset-0 bg-[linear-gradient(105deg,var(--color-ink-950)_18%,rgb(10_20_32/0.78)_52%,rgb(10_20_32/0.55)_100%)]" />
+          </div>
+        ) : null}
 
         <Container className="py-16 md:py-24 xl:py-32">
           {/*
@@ -294,7 +320,6 @@ export default async function HomePage() {
             <div className="relative hidden lg:col-span-5 lg:block">
               <MediaFrame
                 photo={heroPhoto(lakeMary?.heroKey, lakeMary?.heroAlt, 1200, 1500)}
-                size={1600}
                 sizes="(max-width: 1023px) 0px, 40vw"
                 priority
                 aspect="4/5"
@@ -528,7 +553,6 @@ export default async function HomePage() {
               <div className="lg:col-span-6">
                 <MediaFrame
                   photo={heroPhoto(lakeMary.heroKey, lakeMary.heroAlt, 1600, 1200)}
-                  size={1600}
                   sizes="(max-width: 1023px) 100vw, 50vw"
                   aspect="4/3"
                 />

@@ -34,7 +34,8 @@
     "check:seo": "node scripts/check-seo.mjs",
     "check:compliance": "node scripts/check-compliance.mjs",
     "backup": "node --env-file=.env.local scripts/backup.mjs",
-    "check:lighthouse": "node scripts/lighthouse.mjs"
+    "check:lighthouse": "node scripts/lighthouse.mjs",
+    "seed:images": "tsx --env-file=.env.local scripts/seed-images.mts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

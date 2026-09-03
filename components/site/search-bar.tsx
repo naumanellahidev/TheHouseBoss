@@ -57,7 +57,7 @@ export function SearchBar({
       aria-label="Search homes"
       className={cn(
         hero
-          ? "float-card grid w-full gap-3 p-4 sm:p-5 md:grid-cols-[1fr_1fr_auto_auto] md:items-end"
+          ? "glass grid w-full gap-3 rounded-lg p-4 sm:p-5 md:grid-cols-[1fr_1fr_auto_auto] md:items-end"
           : "flex w-full flex-wrap items-end gap-2",
         className,
       )}

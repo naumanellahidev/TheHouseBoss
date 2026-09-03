@@ -10,8 +10,10 @@ import { cn } from "@/lib/utils";
  * puts a credential or a live figure physically on top of the photograph, which
  * is what separates an editorial layout from a stack of rectangles.
  *
- * Surface treatment comes from the `float-card` utility; **positioning is the
- * caller's job**, because every placement differs. Callers should position with
+ * Surface treatment comes from the `glass` utility; **positioning is the
+ * caller's job**, because every placement differs. Glass is legitimate here
+ * because everything in this card is a short, large, high-contrast label over a
+ * backdrop we chose — never body text (docs/03 § 3). Callers should position with
  * `absolute` inside a `MediaFrame`, and must check 360px — an overlapping card
  * is the easiest way to introduce horizontal overflow. The usual pattern is to
  * stack these below the image on mobile and only overlap from `md` up.
@@ -36,7 +38,7 @@ export function FloatCard({
   className?: string;
 }) {
   return (
-    <div className={cn("float-card flex items-start gap-3 p-4", className)}>
+    <div className={cn("glass flex items-start gap-3 rounded-lg p-4", className)}>
       {Icon ? (
         <span
           aria-hidden="true"
