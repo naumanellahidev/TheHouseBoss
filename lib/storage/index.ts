@@ -17,7 +17,13 @@ import type { StorageProvider } from "@/lib/storage/types";
  * (hard rule 1). That is the entire return on this indirection.
  */
 
-const driver = process.env.STORAGE_DRIVER ?? "supabase";
+/**
+ * `??` only catches undefined, and an environment variable that exists but is
+ * blank is a real case: Vercel injects a declared-but-empty variable as "",
+ * which broke the first deploy with `Unknown STORAGE_DRIVER ""`. Trim and treat
+ * empty as unset.
+ */
+const driver = process.env.STORAGE_DRIVER?.trim() || "supabase";
 
 function unimplemented(name: "r2" | "local"): never {
   throw new Error(

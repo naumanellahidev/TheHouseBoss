@@ -18,15 +18,33 @@ const clientSchema = z.object({
   NEXT_PUBLIC_MEDIA_URL: z.string().url(),
 });
 
+/**
+ * An environment variable that is declared but blank arrives as "", which is
+ * not the same as absent to zod: `.optional()` still runs the string checks and
+ * `.default()` never fires. On Vercel a variable added to the dashboard and
+ * left empty behaves exactly this way, so every optional or defaulted value
+ * here is normalised first.
+ */
+const blankAsUndefined = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), schema);
+
 const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
-  STORAGE_DRIVER: z.enum(["supabase", "r2", "local"]).default("supabase"),
-  RESEND_API_KEY: z.string().startsWith("re_").optional(),
-  LEAD_NOTIFY_EMAIL: z.string().email().optional(),
-  EMAIL_FROM: z.string().min(3).optional(),
-  CRON_SECRET: z.string().min(32).optional(),
-  REVALIDATE_SECRET: z.string().min(32).optional(),
-  LISTING_SOURCE: z.enum(["manual", "stellar", "simplyrets"]).default("manual"),
+  // Preprocessed because zod's .default() also only fires on undefined, and a
+  // blank Vercel variable arrives as "". Same cause as lib/storage/index.ts.
+  STORAGE_DRIVER: z
+    .preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.enum(["supabase", "r2", "local"]))
+    .default("supabase"),
+  RESEND_API_KEY: blankAsUndefined(z.string().startsWith("re_").optional()),
+  LEAD_NOTIFY_EMAIL: blankAsUndefined(z.string().email().optional()),
+  EMAIL_FROM: blankAsUndefined(z.string().min(3).optional()),
+  CRON_SECRET: blankAsUndefined(z.string().min(32).optional()),
+  REVALIDATE_SECRET: blankAsUndefined(z.string().min(32).optional()),
+  LISTING_SOURCE: z
+    .preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.enum(["manual", "stellar", "simplyrets"]))
+    .default("manual"),
 });
 
 function format(issues: z.ZodIssue[]) {
