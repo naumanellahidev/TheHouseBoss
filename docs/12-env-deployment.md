@@ -26,7 +26,6 @@ EMAIL_FROM="The House Boss <hello@thehousebossfl.com>"
 
 # ── Security ────────────────────────────────────────────
 CRON_SECRET=<openssl rand -hex 32>
-REVALIDATE_SECRET=<openssl rand -hex 32>
 DRAFT_PREVIEW_SECRET=<openssl rand -hex 32>
 
 # ── Future: Cloudflare R2 (unset today) ─────────────────
@@ -51,8 +50,8 @@ DRAFT_PREVIEW_SECRET=<openssl rand -hex 32>
    which throws if it is loaded in a browser context.
 3. Every variable is validated at startup by a zod schema in `lib/env.ts`. A
    missing variable fails the build, not the first request.
-4. Rotate `CRON_SECRET` and `REVALIDATE_SECRET` if a repository ever becomes
-   public.
+4. Rotate `CRON_SECRET` and `DRAFT_PREVIEW_SECRET` if a repository ever
+   becomes public.
 
 ```ts
 // lib/env.ts — fail fast, fail loud
@@ -128,7 +127,6 @@ no dashboard configuration beyond the environment variables.
    NEXT_PUBLIC_MEDIA_URL         https://<ref>.supabase.co/storage/v1/object/public/media
    STORAGE_DRIVER                supabase
    CRON_SECRET                   openssl rand -hex 32
-   REVALIDATE_SECRET             openssl rand -hex 32
    ```
 
    Then these, which are optional to build but required to actually function:

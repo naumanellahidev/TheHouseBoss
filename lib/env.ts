@@ -40,7 +40,6 @@ const serverSchema = z.object({
   LEAD_NOTIFY_EMAIL: blankAsUndefined(z.string().email().optional()),
   EMAIL_FROM: blankAsUndefined(z.string().min(3).optional()),
   CRON_SECRET: blankAsUndefined(z.string().min(32).optional()),
-  REVALIDATE_SECRET: blankAsUndefined(z.string().min(32).optional()),
   LISTING_SOURCE: z
     .preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
       z.enum(["manual", "stellar", "simplyrets"]))
