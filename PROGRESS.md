@@ -1382,4 +1382,97 @@ remains anywhere in `app/`, `components/`, `lib/` or `scripts/`.
 
 ---
 
+### 2026-09-03 — Living Architecture, wave 2: the 3D hero
+
+The client re-issued the rebrief, this time correctly targeting Next.js rather
+than Vite. The four decisions from wave 1 still stand: white + royal blue
+(shipped), desktop-only 3D, route renames with 301s, delivery in waves.
+
+**Shipped**
+
+- `three` 0.185, `@react-three/fiber` 9.7 (React 19-compatible), `@react-three/drei`,
+  `gsap`, `@types/three`.
+- `lib/three/palette.ts` — the brand colours as Three numeric literals. **The one
+  sanctioned exception to HR23**, because Three takes `0x2563eb`, not a CSS custom
+  property. Written as `0x` rather than `#` on purpose: `check:tokens` forbids hex
+  literals and it is right to, so this keeps the guard meaningful instead of
+  adding another allowlist entry that quietly weakens it.
+- `components/three/architectural-scene.tsx` — six rectilinear masses, three
+  glazing planes, a ground plane, one white key light and one azure rim light,
+  and 90 drifting particles. Reads as architectural visualisation: nothing
+  spins, nothing orbits.
+- `components/three/hero-canvas.tsx` — the WebGL boundary. DPR capped at 1.5,
+  `frameloop` switched to "demand" when the hero leaves the viewport, antialias
+  off on low-memory devices.
+- `components/three/hero-3d.tsx` — `next/dynamic({ ssr: false })`, which is what
+  keeps Three off the server. Scroll progress is a **ref**, not state: the scene
+  reads it every frame, and holding it in state would re-render the tree on
+  every scroll event.
+
+**The bug that mattered, and how it was caught**
+
+The capability check started out *inside* `HeroCanvas`. That looks right and is
+completely wrong: **`next/dynamic` fetches on render, not on the component
+deciding to draw.** Every phone downloaded the entire 866 kB Three chunk and
+then rendered `null`.
+
+Measured before the fix: mobile TBT **225ms → 903ms** and the home page lost 13
+Lighthouse points, for a scene no phone could display. Moving the check into
+`lib/three/capabilities.ts`, read *before* `<HeroCanvas />` is rendered, fixed
+it. Proven with a Playwright network trace rather than by inspection:
+
+```
+mobile 412px    canvas=0  large-js-requests=0  bytes=0KB
+desktop 1440px  canvas=1  large-js-requests=1  bytes=866KB
+```
+
+That measurement is the reliable evidence, not the Lighthouse score — see below.
+
+**Four React Compiler lint errors, three of which were real**
+
+`eslint-plugin-react-hooks` in this project runs the compiler rules, and they
+caught genuine problems:
+
+- `react-hooks/purity` — `Math.random()` in a `useMemo`. Replaced with a seeded
+  generator, which is better regardless: the particle scatter is now identical
+  on every render and every machine, so it can never differ between two passes.
+- `react-hooks/set-state-in-effect` (×2) — capability detection in an effect
+  meant a render saying "no 3D", a state update, then a render saying "yes".
+  Now `useSyncExternalStore` with a no-op `subscribe`, since none of the inputs
+  can change without a reload. One of the two flags was on a `mounted` guard
+  that was **redundant** — `ssr: false` already renders nothing on the server,
+  so it was guarding a render that cannot happen.
+- `react-hooks/immutability` — mutating `camera.position` inside `useFrame`.
+  **The only one disabled**, scoped to that callback with the reasoning written
+  in place: `useFrame` is r3f's animation loop, not React render, and the
+  alternative the rule implies is driving a camera through React state at 60fps.
+
+**On the Lighthouse numbers in this session**
+
+Mobile scores fell across the board, including on pages this wave never
+touched — guide 78 → 68, listing 76 → 65. Untouched pages moving by the same
+amount is the signature of the machine degrading over a long session, not of
+this code. One home run recorded an 11.8s LCP that re-measured at 4.4s minutes
+later. **Do not treat any absolute number from this session as a baseline**;
+`docs/17` § 3 already says the figure that decides launch is the one measured
+against Vercel. The 0 KB network trace above is what actually establishes that
+mobile is unaffected.
+
+**Verified**: typecheck, lint, build clean; contrast, tokens, bundle, seo and
+compliance all pass; no Three.js in the server HTML; no hydration errors.
+
+**Next session must know**
+
+- Still to come: GSAP + ScrollTrigger scroll choreography, the custom cursor,
+  page transitions, the route renames with their 301s, `/sell` removal, and the
+  per-route rebuilds.
+- The 866 kB Three chunk is desktop-only and lazy, but it is still 866 kB. If
+  desktop Performance ever matters as much as mobile, `drei` is the first thing
+  to audit — most of it is unused.
+- **The live deployment still has no Supabase environment variables.** None of
+  this is visible in production until they are set and the project is redeployed
+  with the build cache disabled.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

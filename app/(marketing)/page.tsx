@@ -24,6 +24,7 @@ import { LeadForm } from "@/components/site/lead-form";
 import { MediaFrame, heroPhoto } from "@/components/site/media-frame";
 import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
 import { SearchBar } from "@/components/site/search-bar";
+import { Hero3D } from "@/components/three/hero-3d";
 import { StatTiles } from "@/components/site/stat-tiles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -236,8 +237,15 @@ export default async function HomePage() {
           className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-azure-600)_1px,transparent_1px),linear-gradient(90deg,var(--color-azure-600)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
         />
 
+        {/*
+          The 3D layer. Desktop only, lazy, and it renders nothing at all on a
+          phone, on a reduced-motion setting, or without WebGL — the composition
+          below is the design in those cases, not a fallback for one.
+        */}
+        <Hero3D />
+
         {heroPhoto(settings.heroKey, "") ? (
-          <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <div aria-hidden="true" className="absolute inset-0 -z-20">
             <PropertyImage
               photo={heroPhoto(settings.heroKey, "")}
               size={800}
