@@ -27,9 +27,25 @@ export async function createSupabaseServerClient() {
             for (const { name, value, options } of cookiesToSet) {
               cookieStore.set(name, value, options);
             }
-          } catch {
-            // Called from a Server Component, where cookies are read-only.
-            // middleware.ts refreshes the session, so this is safe to ignore.
+          } catch (error) {
+            /*
+              A Server Component cannot write cookies, and that case is
+              genuinely fine — the proxy refreshes the session on the next
+              request.
+
+              But this catch used to be silent, and a silent catch here hides
+              the one failure that matters: a Server Action that signs a user in
+              and cannot persist the session. That looked like a successful
+              login that simply did not work, with `outcome: success` in the
+              audit log and no cookie in the browser. Logging costs nothing and
+              turns a twenty-minute mystery into one line.
+            */
+            console.warn(
+              `[supabase] could not write auth cookies (${cookiesToSet
+                .map((c) => c.name)
+                .join(", ")}):`,
+              error instanceof Error ? error.message : error,
+            );
           }
         },
       },

@@ -111,14 +111,24 @@ test.describe("guides and compliance", () => {
     }
   });
 
-  test("the guides index links to all four guides", async ({ page }) => {
+  /*
+    Three, not four. The seller guide was removed from the navigation, the
+    footer and this index when the client made buying the sole transaction
+    focus.
+
+    `/sell-your-central-florida-home` still RESOLVES and still returns 200 —
+    HR11 says a published URL is permanent, and it carries indexed long-form
+    content. It is unlinked, not deleted. The `permanent URLs` test in
+    search.spec.ts is what guards that; this one only asserts what the index
+    offers.
+  */
+  test("the guides index links to the three buyer guides", async ({ page }) => {
     await page.goto("/guides");
 
     for (const path of [
       "/guides/va-home-buyer",
       "/assumable-mortgage-homes",
       "/new-construction-representation",
-      "/sell-your-central-florida-home",
     ]) {
       // Scoped to main: the header nav links to every guide as well.
       await expect(page.locator(`main a[href="${path}"]`)).toHaveCount(1);

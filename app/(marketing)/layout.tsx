@@ -1,8 +1,10 @@
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+import { CustomCursor } from "@/components/site/custom-cursor";
 import { Footer } from "@/components/site/footer";
 import { Header } from "@/components/site/header";
+import { PageTransition } from "@/components/site/page-transition";
 import { JsonLd } from "@/components/site/json-ld";
 import { agentJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 import { getSiteSettings } from "@/lib/queries/settings";
@@ -47,10 +49,17 @@ export default async function MarketingLayout({
       <Header />
 
       <main id="main" className="flex-1">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
 
       <Footer />
+
+      {/*
+        Decorative, desktop-only, and it never hides the real cursor — see the
+        component. Mounted once here rather than per page so a route change
+        cannot leave two of them behind.
+      */}
+      <CustomCursor />
 
       {/*
         Cookieless, so no consent banner — which is the reason it was chosen

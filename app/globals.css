@@ -170,9 +170,16 @@
     Body text never sits on glass. Content cards stay opaque so every
     text pairing remains inside the guard's reach. docs/03 § 3.
   */
-  --color-glass: rgb(255 255 255 / 0.72);
-  --color-glass-invert: rgb(12 27 58 / 0.55);
-  --color-glass-border: rgb(255 255 255 / 0.18);
+  /*
+    0.88, not 0.72. At 0.72 over the near-black hero this composited to a flat
+    mid-grey slab rather than glass — the alpha was low enough that the dark
+    ground dominated. Raising it lets the surface read as white with the
+    backdrop showing through, which is what "architectural glass" means here.
+  */
+  --color-glass: rgb(255 255 255 / 0.88);
+  --color-glass-invert: rgb(12 27 58 / 0.62);
+  /* A brighter top edge is what gives a glass panel its lit rim. */
+  --color-glass-border: rgb(255 255 255 / 0.55);
 
   /* ── Motion ─────────────────────────────────────────────────────────── */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);

@@ -76,16 +76,29 @@ export default function HeroCanvas({
         gl={{
           antialias: quality === "high",
           powerPreference: "high-performance",
-          // The page paints its own gradient behind this; a transparent buffer
-          // would force an extra composite for no visual gain.
-          alpha: false,
+          /*
+            TRANSPARENT, and it has to be.
+
+            An opaque buffer is cheaper, but this canvas sits ON TOP of the hero
+            photograph — the whole concept is architectural geometry layered
+            over real property imagery. With `alpha: false` the canvas paints a
+            solid rectangle and the photograph behind it is simply gone, which
+            is not a subtle regression: it deletes half the composition.
+          */
+          alpha: true,
         }}
         onCreated={({ gl, scene }) => {
-          gl.setClearColor(C.royal950, 1);
+          // Clear to fully transparent so only the geometry composites.
+          gl.setClearColor(C.royal950, 0);
           scene.matrixWorldAutoUpdate = true;
         }}
       >
-        <fog attach="fog" args={[C.royal950, 9, 26]} />
+        {/*
+          Fog fades the massing into the photograph at distance instead of
+          stopping at a hard silhouette edge, which is what makes the two layers
+          read as one image rather than as a render pasted over a photo.
+        */}
+        <fog attach="fog" args={[C.royal950, 10, 30]} />
         <ArchitecturalScene scrollRef={scrollRef} quality={quality} />
       </Canvas>
     </div>

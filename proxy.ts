@@ -56,10 +56,25 @@ export async function proxy(request: NextRequest) {
   // Public pages: no auth work at all.
   if (!pathname.startsWith("/admin")) return finish(response);
 
-  // /admin/login and /admin/auth/* are the way IN. Guarding them would make the
-  // magic-link callback unreachable and produce a redirect loop.
+  /*
+    /admin/login and /admin/auth/* are the way IN, and this proxy does not touch
+    them at all.
+
+    Guarding them would make the magic-link callback unreachable and produce a
+    redirect loop — but the stronger reason is cookies. Creating a Supabase
+    client here calls `getUser()`, which can write session cookies onto THIS
+    response. On the login POST that raced the Server Action's own cookies and
+    the sign-in silently failed to persist: the server logged `outcome: success`
+    and the browser ended up with an empty cookie jar. Measured, not guessed.
+
+    Nothing is lost by skipping them. These routes have no session to guard, and
+    bouncing an already-signed-in visitor away from the login screen is done by
+    the page itself, which can read the session safely.
+  */
   const isAuthRoute =
     pathname === "/admin/login" || pathname.startsWith("/admin/auth");
+
+  if (isAuthRoute) return finish(response);
 
   const toLogin = () => {
     const url = request.nextUrl.clone();
@@ -75,7 +90,7 @@ export async function proxy(request: NextRequest) {
     );
     // Fail CLOSED on the dashboard: without credentials we cannot establish who
     // is asking, and the answer to that is never "let them in".
-    return isAuthRoute ? finish(response) : toLogin();
+    return toLogin();
   }
 
   let user = null;
@@ -110,15 +125,7 @@ export async function proxy(request: NextRequest) {
     console.error("[proxy] session lookup failed:", error);
   }
 
-  if (!isAuthRoute && !user) return toLogin();
-
-  // Already signed in — no reason to sit on the login screen.
-  if (pathname === "/admin/login" && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    url.search = "";
-    return finish(NextResponse.redirect(url));
-  }
+  if (!user) return toLogin();
 
   return finish(response);
 }

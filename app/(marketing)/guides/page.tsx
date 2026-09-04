@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Building2, FileSignature, HardHat, Home } from "lucide-react";
+import { ArrowRight, FileSignature, HardHat, Home } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { Container, Section } from "@/components/site/container";
@@ -45,13 +45,6 @@ const GUIDES = [
     title: "New-construction representation",
     lead: "Why the sales office works for the builder, and why registering your own agent before your first visit matters more than anything else.",
     detail: "The one thing to do before you visit a model home. It takes a single message.",
-  },
-  {
-    href: "/sell-your-central-florida-home",
-    icon: Building2,
-    title: "Selling your home",
-    lead: "What it is worth, which pre-listing repairs return money and which do not, and the process from valuation to closing.",
-    detail: "The repair table is the part most sellers have never been shown.",
   },
 ];
 

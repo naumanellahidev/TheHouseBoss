@@ -8,10 +8,21 @@ export function isGroup(entry: NavEntry): entry is NavGroup {
   return "items" in entry;
 }
 
-/** Primary navigation. Mirrors docs/05-page-specs.md § Global chrome. */
+/**
+ * Primary navigation.
+ *
+ * Labels follow the client's rebrief: HOMES, COMMUNITIES, BUY, NEW
+ * CONSTRUCTION, INSIGHTS, ABOUT. Buying is the transaction focus, so there is
+ * no Sell entry anywhere in the chrome.
+ *
+ * `/sell-your-central-florida-home` still EXISTS and still 200s — HR11 says a
+ * published URL is permanent, and it carries 420 lines of real content that is
+ * indexed. Removing it from the navigation removes it from the product without
+ * throwing away the indexation, which deleting the route would.
+ */
 export const primaryNav: NavEntry[] = [
   {
-    label: "Search",
+    label: "Homes",
     href: "/search",
     items: [
       {
@@ -32,23 +43,23 @@ export const primaryNav: NavEntry[] = [
     ],
   },
   {
-    label: "Lake Mary",
+    label: "Communities",
     href: "/lake-mary",
     items: [
-      { href: "/lake-mary", label: "Lake Mary Guide" },
-      { href: "/lake-mary/homes-for-sale", label: "Homes for Sale" },
-      { href: "/lake-mary/communities", label: "Communities" },
-      { href: "/lake-mary/blog", label: "Lake Mary Blog" },
+      {
+        href: "/lake-mary",
+        label: "Lake Mary",
+        description: "The flagship market",
+      },
+      { href: "/lake-mary/homes-for-sale", label: "Lake Mary Homes for Sale" },
+      { href: "/lake-mary/communities", label: "Lake Mary Communities" },
+      ...allCities
+        .filter((c) => c.slug !== "lake-mary")
+        .map((c) => ({ href: `/${c.slug}`, label: c.name })),
     ],
   },
   {
-    label: "Cities",
-    items: allCities
-      .filter((c) => c.slug !== "lake-mary")
-      .map((c) => ({ href: `/${c.slug}`, label: c.name })),
-  },
-  {
-    label: "Guides",
+    label: "Buy",
     href: "/guides",
     items: [
       {
@@ -66,16 +77,14 @@ export const primaryNav: NavEntry[] = [
         label: "New-Construction Representation",
         description: "Why you need your own agent",
       },
-      {
-        href: "/sell-your-central-florida-home",
-        label: "Sell Your Home",
-        description: "Pricing, prep and process",
-      },
     ],
   },
-  { href: "/market-updates", label: "Market Updates" },
+  {
+    href: "/new-construction-representation",
+    label: "New Construction",
+  },
+  { href: "/market-updates", label: "Insights" },
   { href: "/about", label: "About" },
-  { href: "/reviews", label: "Reviews" },
 ];
 
 /** Footer columns. Column 1 is the brand block, rendered separately. */
@@ -101,15 +110,14 @@ export const footerNav: { heading: string; items: NavLink[] }[] = [
         href: "/new-construction-representation",
         label: "New-Construction Representation",
       },
-      { href: "/sell-your-central-florida-home", label: "Sell Your Home" },
-      { href: "/market-updates", label: "Market Updates" },
+      { href: "/market-updates", label: "Insights" },
     ],
   },
   {
     heading: "Company",
     items: [
       { href: "/about", label: "About Krisi" },
-      { href: "/lake-mary", label: "Lake Mary Guide" },
+      { href: "/lake-mary", label: "Lake Mary" },
       { href: "/lake-mary/communities", label: "Communities" },
       { href: "/reviews", label: "Reviews" },
       { href: "/contact", label: "Contact" },

@@ -22,6 +22,7 @@ import { Container, Section, SectionHeader } from "@/components/site/container";
 import { FloatCard } from "@/components/site/float-card";
 import { LeadForm } from "@/components/site/lead-form";
 import { MediaFrame, heroPhoto } from "@/components/site/media-frame";
+import { Reveal } from "@/components/site/reveal";
 import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
 import { SearchBar } from "@/components/site/search-bar";
 import { Hero3D } from "@/components/three/hero-3d";
@@ -263,7 +264,7 @@ export default async function HomePage() {
           </div>
         ) : null}
 
-        <Container className="py-16 md:py-24 xl:py-32">
+        <Container className="pt-6 pb-14 md:pt-8 md:pb-20 xl:pt-10 xl:pb-24">
           {/*
             Asymmetric: copy at 7/12, media at 5/12. The old layout was a
             centred band, which is what made the page read as a template.
@@ -350,8 +351,8 @@ export default async function HomePage() {
           </div>
 
           {/* The search card, overlapping the hero's lower edge on desktop. */}
-          <div className="mt-10 lg:mt-16">
-            <SearchBar cities={cities} variant="hero" />
+          <div className="mt-8 lg:mt-12">
+            <SearchBar cities={cities} facets={facets} variant="hero" />
           </div>
         </Container>
       </section>
@@ -384,7 +385,8 @@ export default async function HomePage() {
 
       {/* ── 3. Specialty cards ───────────────────────────────────────── */}
       <Section>
-        <Container className="flex flex-col gap-8">
+        <Container>
+          <Reveal className="flex flex-col gap-8">
           <SectionHeader
             overline="What I specialise in"
             title="Three situations where the right agent changes the outcome"
@@ -419,13 +421,15 @@ export default async function HomePage() {
               </li>
             ))}
           </ul>
+        </Reveal>
         </Container>
       </Section>
 
       {/* ── 4. Featured listings — hidden below three ────────────────── */}
       {showFeatured ? (
         <Section tone="sunken">
-          <Container className="flex flex-col gap-8">
+          <Container>
+          <Reveal className="flex flex-col gap-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <SectionHeader
                 overline="Featured"
@@ -436,21 +440,24 @@ export default async function HomePage() {
               </Button>
             </div>
             <FeaturedListings listings={featured} />
-          </Container>
+          </Reveal>
+        </Container>
         </Section>
       ) : null}
 
       {/* ── 5. Search by city ────────────────────────────────────────── */}
       {cities.length > 0 ? (
         <Section>
-          <Container className="flex flex-col gap-8">
+          <Container>
+          <Reveal className="flex flex-col gap-8">
             <SectionHeader
               overline="Search by city"
               title="Where I work"
               lead="Seminole and Orange County. Each city has its own guide — schools, commute, what the market is actually doing — not just a list of homes."
             />
             <CityTiles cities={cities} facets={facets} />
-          </Container>
+          </Reveal>
+        </Container>
         </Section>
       ) : null}
 
@@ -501,7 +508,8 @@ export default async function HomePage() {
 
       {/* ── 7. Why a contractor-Realtor — never cut ──────────────────── */}
       <Section>
-        <Container className="flex flex-col gap-8">
+        <Container>
+          <Reveal className="flex flex-col gap-8">
           <SectionHeader
             overline="The difference"
             title="What a contractor's licence actually changes"
@@ -529,6 +537,7 @@ export default async function HomePage() {
               </li>
             ))}
           </ul>
+        </Reveal>
         </Container>
       </Section>
 
@@ -572,7 +581,8 @@ export default async function HomePage() {
 
       {/* ── 9. Guides teaser ─────────────────────────────────────────── */}
       <Section>
-        <Container className="flex flex-col gap-8">
+        <Container>
+          <Reveal className="flex flex-col gap-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <SectionHeader
               overline="Guides"
@@ -598,13 +608,15 @@ export default async function HomePage() {
               </li>
             ))}
           </ul>
+        </Reveal>
         </Container>
       </Section>
 
       {/* ── 10. Reviews — hidden below three ─────────────────────────── */}
       {showReviews ? (
         <Section tone="sunken">
-          <Container className="flex flex-col gap-8">
+          <Container>
+          <Reveal className="flex flex-col gap-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <SectionHeader overline="Reviews" title="What clients say" />
               <Button variant="outline" asChild>
@@ -645,7 +657,8 @@ export default async function HomePage() {
                 </li>
               ))}
             </ul>
-          </Container>
+          </Reveal>
+        </Container>
         </Section>
       ) : null}
 

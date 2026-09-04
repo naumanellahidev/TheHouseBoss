@@ -35,7 +35,8 @@
     "check:compliance": "node scripts/check-compliance.mjs",
     "backup": "node --env-file=.env.local scripts/backup.mjs",
     "check:lighthouse": "node scripts/lighthouse.mjs",
-    "seed:images": "tsx --env-file=.env.local scripts/seed-images.mts"
+    "seed:images": "tsx --env-file=.env.local scripts/seed-images.mts",
+    "admin:credentials": "node --env-file=.env.local scripts/set-admin-credentials.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

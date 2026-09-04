@@ -1,36 +1,44 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel, Select } from "@/components/ui/field";
+import { Field, FieldLabel, Input, Select } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
-import type { City } from "@/types/domain";
+import type { City, Facets } from "@/types/domain";
 
 /**
- * The home hero's search entry point.
+ * The home hero's search.
  *
- * The client's brief says, in her own words, "the main page should focus on
- * property search" — and until now the home page had no search on it at all.
+ * The client's brief asks for property search to lead the page, and for the
+ * filters to be genuinely capable rather than three dropdowns.
  *
- * Deliberately a plain `<form method="get" action="/search">`, not a client
- * component:
+ * Still a plain `<form method="get" action="/search">` and still a server
+ * component, which is worth defending because it looks like the less ambitious
+ * choice and is not:
  *
- *  - It submits with JavaScript disabled, and it is server-rendered, so a
- *    crawler sees the real control rather than an empty div.
- *  - The browser builds the query string from the field `name`s, which means
- *    the URL it produces is exactly the URL `/search` already parses. There is
- *    no second serialisation to drift out of sync with
- *    `lib/validation/search-params.ts` — URL-is-the-state, honoured for free.
- *  - Empty selects submit as `?city=&beds=` etc., which the parser already
- *    drops tolerantly, so no cleanup step is needed.
+ *  - It submits with JavaScript disabled, and a crawler sees real controls
+ *    rather than an empty div.
+ *  - The browser builds the query string from the field `name`s, so the URL it
+ *    produces is exactly the URL `/search` already parses. There is no second
+ *    serialisation to drift out of sync with `lib/validation/search-params.ts`.
+ *  - Empty selects submit as `?city=&beds=`, which that parser already drops.
  *
- * New construction is a link rather than a filter control here — see the
- * comment at the bottom of the form for why.
+ * **Progressive disclosure without JavaScript.** The extra filters live inside a
+ * native `<details>`. That gives a real disclosure widget — keyboard operable,
+ * announced correctly, remembered by the browser on back-navigation — with no
+ * client component, no hydration and no bundle. A React panel here would have
+ * bought nothing except weight on the page whose Performance score is already
+ * short of target.
+ *
+ * Options and counts come from `listing_facets` via `getFacets()`; nothing here
+ * hardcodes a city or a property type (HR22). A zero-count option renders
+ * disabled with its count rather than vanishing, matching `filter-bar.tsx`.
  */
 
-/** Price steps, in dollars. Deliberately coarse — this is a starting point, not the filter bar. */
+/** Coarse on purpose — the hero is a starting point, `/search` has the fine control. */
 const PRICE_STEPS = [
   200_000, 300_000, 400_000, 500_000, 600_000, 750_000, 1_000_000, 1_500_000,
+  2_000_000,
 ] as const;
 
 const usd = (n: number) =>
@@ -38,16 +46,21 @@ const usd = (n: number) =>
 
 export function SearchBar({
   cities,
+  facets,
   variant = "hero",
   className,
 }: {
   /** From `getSearchCities()`. Never hardcode a city list — HR22. */
   cities: City[];
+  /** From `getFacets()`. Drives the counts and the property-type options. */
+  facets: Facets;
   /** `hero` is the home page card; `compact` is the header strip. */
   variant?: "hero" | "compact";
   className?: string;
 }) {
   const hero = variant === "hero";
+  const countFor = (slug: string) =>
+    facets.cities.find((c) => c.value === slug)?.total ?? 0;
 
   return (
     <form
@@ -56,79 +69,187 @@ export function SearchBar({
       role="search"
       aria-label="Search homes"
       className={cn(
-        hero
-          ? "glass grid w-full gap-3 rounded-lg p-4 sm:p-5 md:grid-cols-[1fr_1fr_auto_auto] md:items-end"
-          : "flex w-full flex-wrap items-end gap-2",
+        hero ? "glass rounded-xl p-4 sm:p-5 lg:p-6" : "flex flex-wrap items-end gap-2",
         className,
       )}
     >
-      <Field id="search-city">
-        <FieldLabel>City</FieldLabel>
-        <Select name="city" defaultValue="">
-          <option value="">All cities</option>
-          {cities.map((city) => (
-            <option key={city.id} value={city.slug}>
-              {city.name}
-            </option>
-          ))}
-        </Select>
-      </Field>
-
-      <Field id="search-max">
-        <FieldLabel>Max price</FieldLabel>
-        <Select name="max" defaultValue="">
-          <option value="">No maximum</option>
-          {PRICE_STEPS.map((step) => (
-            <option key={step} value={step}>
-              Up to {usd(step)}
-            </option>
-          ))}
-        </Select>
-      </Field>
-
-      <Field id="search-beds">
-        <FieldLabel>Beds</FieldLabel>
-        <Select name="beds" defaultValue="">
-          <option value="">Any</option>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={n}>
-              {n}+
-            </option>
-          ))}
-        </Select>
-      </Field>
-
-      <Button type="submit" variant="accent" size={hero ? "lg" : "md"}>
-        <Search className="size-5" aria-hidden="true" />
-        Search
-      </Button>
-
-      {/*
-        New construction is a LINK to its own page, not a checkbox on this
-        form. Three reasons, in order of weight:
-
-        1. `/search/new-construction` already exists, carries written content
-           about why a buyer needs their own representation at a builder's
-           sales office, and is indexable. A checkbox would instead produce
-           `?type=new_construction` on the generic search page — the same
-           results with none of the content and no ranking value.
-        2. A native checkbox cannot be grown to the 44x44 minimum touch target
-           reliably; the browser paints the widget at its intrinsic size and
-           ignores the box we give it. Measured, not assumed.
-        3. It is more discoverable as a labelled destination than as an
-           unchecked box someone has to notice.
-      */}
       {hero ? (
-        <p className="text-sm text-foreground-muted md:col-span-4">
-          Looking for a new build?{" "}
-          <Link
-            href="/search/new-construction"
-            className="font-semibold text-accent-quiet underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          >
-            Search new-construction homes
-          </Link>
-        </p>
-      ) : null}
+        <>
+          {/* Primary row. Everything most people need, visible without a click. */}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_auto] lg:items-end">
+            <Field id="search-city">
+              <FieldLabel>City</FieldLabel>
+              <Select name="city" defaultValue="">
+                <option value="">All cities</option>
+                {cities.map((city) => {
+                  const total = countFor(city.slug);
+                  return (
+                    <option key={city.id} value={city.slug} disabled={total === 0}>
+                      {city.name} ({total})
+                    </option>
+                  );
+                })}
+              </Select>
+            </Field>
+
+            <Field id="search-max">
+              <FieldLabel>Max price</FieldLabel>
+              <Select name="max" defaultValue="">
+                <option value="">No maximum</option>
+                {PRICE_STEPS.map((step) => (
+                  <option key={step} value={step}>
+                    Up to {usd(step)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <Field id="search-beds">
+              <FieldLabel>Beds</FieldLabel>
+              <Select name="beds" defaultValue="">
+                <option value="">Any</option>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n}+
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <Button type="submit" variant="accent" size="lg" className="lg:w-auto">
+              <Search className="size-5" aria-hidden="true" />
+              Search
+            </Button>
+          </div>
+
+          {/*
+            Native disclosure. `group` + `open:` variants animate the chevron
+            without a line of JavaScript, and the panel's contents are in the
+            DOM either way, so they submit correctly however it is rendered.
+          */}
+          <details className="group mt-3 border-t border-border pt-3">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-semibold text-accent-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+              <SlidersHorizontal className="size-4" aria-hidden="true" />
+              More filters
+              <ChevronDown
+                aria-hidden="true"
+                className="size-4 transition-transform duration-(--dur-base) ease-(--ease-out) group-open:rotate-180"
+              />
+            </summary>
+
+            <div className="grid gap-3 pt-4 md:grid-cols-2 lg:grid-cols-3">
+              <Field id="search-min">
+                <FieldLabel>Min price</FieldLabel>
+                <Select name="min" defaultValue="">
+                  <option value="">No minimum</option>
+                  {PRICE_STEPS.map((step) => (
+                    <option key={step} value={step}>
+                      From {usd(step)}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field id="search-baths">
+                <FieldLabel>Baths</FieldLabel>
+                <Select name="baths" defaultValue="">
+                  <option value="">Any</option>
+                  {[1, 2, 3].map((n) => (
+                    <option key={n} value={n}>
+                      {n}+
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field id="search-property">
+                <FieldLabel>Property type</FieldLabel>
+                <Select name="property" defaultValue="">
+                  <option value="">Any type</option>
+                  {facets.propertyTypes.map((type) => (
+                    <option
+                      key={type.value}
+                      value={type.value}
+                      disabled={type.total === 0}
+                    >
+                      {type.label} ({type.total})
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field id="search-sqft">
+                <FieldLabel>Minimum size</FieldLabel>
+                <Input
+                  name="sqftMin"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={100}
+                  placeholder={
+                    facets.sqft ? `e.g. ${facets.sqft.min.toLocaleString()}` : "Any"
+                  }
+                />
+              </Field>
+
+              <Field id="search-year">
+                <FieldLabel>Built after</FieldLabel>
+                <Input
+                  name="yearMin"
+                  type="number"
+                  inputMode="numeric"
+                  min={1800}
+                  max={2100}
+                  placeholder={facets.year ? String(facets.year.min) : "Any year"}
+                />
+              </Field>
+
+              {/*
+                A select rather than a checkbox, deliberately. A native checkbox
+                cannot be grown to the 44x44 minimum touch target — the browser
+                paints the widget at its intrinsic size and ignores the box it is
+                given. Measured when the new-construction toggle failed the
+                responsive audit at all nine widths.
+              */}
+              <Field id="search-pool">
+                <FieldLabel>Pool</FieldLabel>
+                <Select name="pool" defaultValue="">
+                  <option value="">Any</option>
+                  <option value="1">Has a pool</option>
+                </Select>
+              </Field>
+            </div>
+          </details>
+
+          <p className="mt-3 text-sm text-foreground-muted">
+            Looking for a new build?{" "}
+            <Link
+              href="/search/new-construction"
+              className="font-semibold text-accent-quiet underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              Search new-construction homes
+            </Link>
+          </p>
+        </>
+      ) : (
+        <>
+          <Field id="search-city-compact">
+            <FieldLabel>City</FieldLabel>
+            <Select name="city" defaultValue="">
+              <option value="">All cities</option>
+              {cities.map((city) => (
+                <option key={city.id} value={city.slug}>
+                  {city.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Button type="submit" variant="accent">
+            <Search className="size-5" aria-hidden="true" />
+            Search
+          </Button>
+        </>
+      )}
     </form>
   );
 }

@@ -5,8 +5,8 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-02T15:54:07.697Z
- * Tables: 12 · Views: 3
+ * Generated: 2026-09-03T20:01:17.257Z
+ * Tables: 21 · Views: 3
  */
 
 export type Json =
@@ -89,6 +89,42 @@ export type Database = {
           reading_min?: number | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          action: string;
+          entity_type: string | null;
+          entity_id: string | null;
+          metadata: Json;
+          ip_address: unknown | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          action: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          metadata?: Json;
+          ip_address?: unknown | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          action?: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          metadata?: Json;
+          ip_address?: unknown | null;
+          user_agent?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -218,6 +254,30 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           hero_alt?: string | null;
+        };
+        Relationships: [];
+      };
+      lead_notes: {
+        Row: {
+          id: string;
+          lead_id: string;
+          author_id: string | null;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          author_id?: string | null;
+          body: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          author_id?: string | null;
+          body?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -438,6 +498,7 @@ export type Database = {
           entity_type: "listing" | "article" | "city" | "community" | "profile" | "site";
           entity_id: string | null;
           created_at: string;
+          folder_id: string | null;
         };
         Insert: {
           id?: string;
@@ -451,6 +512,7 @@ export type Database = {
           entity_type: "listing" | "article" | "city" | "community" | "profile" | "site";
           entity_id?: string | null;
           created_at?: string;
+          folder_id?: string | null;
         };
         Update: {
           id?: string;
@@ -464,30 +526,208 @@ export type Database = {
           entity_type?: "listing" | "article" | "city" | "community" | "profile" | "site";
           entity_id?: string | null;
           created_at?: string;
+          folder_id?: string | null;
+        };
+        Relationships: [];
+      };
+      media_folders: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      mls_sources: {
+        Row: {
+          id: string;
+          slug: "manual" | "stellar_mls" | "other_mls" | "builder";
+          label: string;
+          is_connected: boolean;
+          last_tested_at: string | null;
+          config: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: "manual" | "stellar_mls" | "other_mls" | "builder";
+          label: string;
+          is_connected?: boolean;
+          last_tested_at?: string | null;
+          config?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: "manual" | "stellar_mls" | "other_mls" | "builder";
+          label?: string;
+          is_connected?: boolean;
+          last_tested_at?: string | null;
+          config?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      mls_sync_errors: {
+        Row: {
+          id: string;
+          run_id: string;
+          listing_ref: string | null;
+          message: string;
+          detail: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          run_id: string;
+          listing_ref?: string | null;
+          message: string;
+          detail?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          run_id?: string;
+          listing_ref?: string | null;
+          message?: string;
+          detail?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      mls_sync_runs: {
+        Row: {
+          id: string;
+          source_slug: string;
+          trigger: "manual" | "scheduled";
+          status: "running" | "succeeded" | "failed" | "cancelled";
+          started_at: string;
+          completed_at: string | null;
+          records_processed: number;
+          records_created: number;
+          records_updated: number;
+          records_removed: number;
+          records_failed: number;
+          duration_ms: number | null;
+          message: string | null;
+        };
+        Insert: {
+          id?: string;
+          source_slug: string;
+          trigger?: "manual" | "scheduled";
+          status?: "running" | "succeeded" | "failed" | "cancelled";
+          started_at?: string;
+          completed_at?: string | null;
+          records_processed?: number;
+          records_created?: number;
+          records_updated?: number;
+          records_removed?: number;
+          records_failed?: number;
+          duration_ms?: number | null;
+          message?: string | null;
+        };
+        Update: {
+          id?: string;
+          source_slug?: string;
+          trigger?: "manual" | "scheduled";
+          status?: "running" | "succeeded" | "failed" | "cancelled";
+          started_at?: string;
+          completed_at?: string | null;
+          records_processed?: number;
+          records_created?: number;
+          records_updated?: number;
+          records_removed?: number;
+          records_failed?: number;
+          duration_ms?: number | null;
+          message?: string | null;
+        };
+        Relationships: [];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          kind: "lead" | "mls_sync" | "content" | "system" | "warning";
+          title: string;
+          body: string | null;
+          href: string | null;
+          severity: "info" | "success" | "warning" | "error";
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          kind: "lead" | "mls_sync" | "content" | "system" | "warning";
+          title: string;
+          body?: string | null;
+          href?: string | null;
+          severity?: "info" | "success" | "warning" | "error";
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          kind?: "lead" | "mls_sync" | "content" | "system" | "warning";
+          title?: string;
+          body?: string | null;
+          href?: string | null;
+          severity?: "info" | "success" | "warning" | "error";
+          read_at?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
       profiles: {
         Row: {
           id: string;
-          role: "admin" | "editor" | "viewer";
+          role: "super_admin" | "admin" | "editor" | "content_manager" | "viewer";
           full_name: string | null;
           avatar_key: string | null;
           created_at: string;
+          username: string | null;
+          display_name: string | null;
+          status: "active" | "suspended";
+          last_login_at: string | null;
+          updated_at: string;
         };
         Insert: {
           id: string;
-          role?: "admin" | "editor" | "viewer";
+          role?: "super_admin" | "admin" | "editor" | "content_manager" | "viewer";
           full_name?: string | null;
           avatar_key?: string | null;
           created_at?: string;
+          username?: string | null;
+          display_name?: string | null;
+          status?: "active" | "suspended";
+          last_login_at?: string | null;
+          updated_at?: string;
         };
         Update: {
           id?: string;
-          role?: "admin" | "editor" | "viewer";
+          role?: "super_admin" | "admin" | "editor" | "content_manager" | "viewer";
           full_name?: string | null;
           avatar_key?: string | null;
           created_at?: string;
+          username?: string | null;
+          display_name?: string | null;
+          status?: "active" | "suspended";
+          last_login_at?: string | null;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -557,6 +797,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      role_permissions: {
+        Row: {
+          role: "super_admin" | "admin" | "editor" | "content_manager" | "viewer";
+          permission: string;
+        };
+        Insert: {
+          role: "super_admin" | "admin" | "editor" | "content_manager" | "viewer";
+          permission: string;
+        };
+        Update: {
+          role?: "super_admin" | "admin" | "editor" | "content_manager" | "viewer";
+          permission?: string;
+        };
+        Relationships: [];
+      };
       saved_searches: {
         Row: {
           id: string;
@@ -592,6 +847,51 @@ export type Database = {
           confirm_token?: string | null;
           unsubscribed?: boolean;
           last_sent_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      seo_pages: {
+        Row: {
+          id: string;
+          path: string;
+          title: string | null;
+          description: string | null;
+          canonical_url: string | null;
+          og_title: string | null;
+          og_description: string | null;
+          og_key: string | null;
+          noindex: boolean;
+          nofollow: boolean;
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          path: string;
+          title?: string | null;
+          description?: string | null;
+          canonical_url?: string | null;
+          og_title?: string | null;
+          og_description?: string | null;
+          og_key?: string | null;
+          noindex?: boolean;
+          nofollow?: boolean;
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          path?: string;
+          title?: string | null;
+          description?: string | null;
+          canonical_url?: string | null;
+          og_title?: string | null;
+          og_description?: string | null;
+          og_key?: string | null;
+          noindex?: boolean;
+          nofollow?: boolean;
+          updated_at?: string;
           created_at?: string;
         };
         Relationships: [];

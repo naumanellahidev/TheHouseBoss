@@ -2,97 +2,64 @@
 
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { revealOnScroll } from "@/lib/motion/gsap";
 
 /**
- * Reveal content as it enters the viewport.
+ * Scroll choreography.
  *
- * One shared IntersectionObserver for every instance on the page rather than
- * one each: a dozen observers on the home page is a dozen sets of callbacks
- * competing for the same main thread the Lighthouse score is already short on.
+ * Wraps a section and staggers its direct children in as it enters the
+ * viewport. GSAP + ScrollTrigger rather than the CSS/IntersectionObserver
+ * version this replaced, so the whole site has ONE reveal mechanism — two would
+ * drift apart in timing and easing and look like a bug.
  *
- * Fires once and unobserves. A reveal that re-triggers on scroll-up is the
- * thing that makes a site feel restless rather than considered.
+ * Staggering the *children* rather than the wrapper is what makes it read as
+ * choreography instead of a fade: an overline, a heading and a grid arriving
+ * 80ms apart feels authored; the same three arriving together does not.
  *
- * Reduced motion is handled entirely in CSS (`app/globals.css`): the reduce
- * block forces `.reveal` to full opacity and no transform, and zeroes
- * `transition-delay` so a stagger cannot survive as a sequence of pops. That is
- * why `delay` below is safe.
+ * Reduced motion is handled inside `revealOnScroll` — the elements are set to
+ * their final state immediately, never left invisible. That matters more here
+ * than usual, because GSAP writes inline styles and an inline style beats the
+ * `prefers-reduced-motion` block in `globals.css`; the CSS guard cannot save us.
  *
- * If JavaScript never runs, the element stays at `opacity: 0` — which is why
- * this is used for presentation only. Nothing that must be readable, and
- * nothing a crawler needs, may depend on it. The markup is server-rendered
- * either way, so the content is in the HTML source regardless.
+ * The cleanup return from `revealOnScroll` is not optional. A ScrollTrigger
+ * that outlives its element holds a detached node and recalculates on every
+ * scroll — the classic GSAP leak in a client-routed app, where components
+ * unmount constantly but the page never reloads to clear them.
  */
-
-type Entry = { element: Element; reveal: () => void };
-
-let observer: IntersectionObserver | null = null;
-const registry = new Map<Element, Entry>();
-
-function ensureObserver(): IntersectionObserver {
-  observer ??= new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        registry.get(entry.target)?.reveal();
-        registry.delete(entry.target);
-        observer?.unobserve(entry.target);
-      }
-    },
-    // A little before the element arrives, so the transition is finishing as it
-    // reaches comfortable reading position rather than starting there.
-    { rootMargin: "0px 0px -12% 0px", threshold: 0.05 },
-  );
-  return observer;
-}
-
 export function Reveal({
   children,
-  /** Stagger, in ms. Capped at 240 — beyond that it reads as a page that is slow. */
-  delay = 0,
+  /** Gap between children, in seconds. */
+  stagger = 0.08,
+  /** How far they travel, in px. */
+  y = 24,
+  /** Stagger the direct children (default) or animate the wrapper as one. */
+  mode = "children",
   as: Tag = "div",
   className,
 }: {
   children: React.ReactNode;
-  delay?: number;
-  as?: "div" | "section" | "li" | "article";
+  stagger?: number;
+  y?: number;
+  mode?: "children" | "self";
+  as?: "div" | "section" | "ul" | "article";
   className?: string;
 }) {
-  const ref = React.useRef<HTMLElement>(null);
-  const [revealed, setRevealed] = React.useState(false);
+  const host = React.useRef<HTMLElement>(null);
 
   React.useEffect(() => {
-    const element = ref.current;
+    const element = host.current;
     if (!element) return;
 
-    // Already past it on load — a deep link or a restored scroll position.
-    // Reveal immediately rather than waiting for a scroll that may never come.
-    if (element.getBoundingClientRect().top < window.innerHeight) {
-      setRevealed(true);
-      return;
-    }
+    const targets =
+      mode === "self"
+        ? [element]
+        : (Array.from(element.children) as Element[]);
 
-    const io = ensureObserver();
-    registry.set(element, { element, reveal: () => setRevealed(true) });
-    io.observe(element);
-
-    return () => {
-      registry.delete(element);
-      io.unobserve(element);
-    };
-  }, []);
+    return revealOnScroll(targets, { stagger, y });
+  }, [stagger, y, mode]);
 
   return (
-    <Tag
-      // `Tag` is one of several element types, so the ref is widened to the
-      // common base. Every DOM API used above (getBoundingClientRect, observe)
-      // lives on Element, so nothing narrower is needed.
-      ref={ref as React.Ref<never>}
-      className={cn("reveal", className)}
-      data-revealed={revealed}
-      style={delay > 0 ? { transitionDelay: `${Math.min(delay, 240)}ms` } : undefined}
-    >
+    <Tag ref={host as React.Ref<never>} className={className}>
       {children}
     </Tag>
   );
