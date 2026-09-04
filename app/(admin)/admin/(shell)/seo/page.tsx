@@ -1,29 +1,26 @@
-import Link from "next/link";
-import { ArrowRight, Globe, Route as RouteIcon, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { SeoConsole } from "@/components/admin/seo/seo-console";
 import { EmptyState } from "@/components/site/empty-state";
-import { ResponsiveTable } from "@/components/site/responsive-table";
-import { Badge } from "@/components/ui/badge";
 import { getAdminIdentity } from "@/lib/auth/permissions";
-import { getRedirects, getSeoPages } from "@/lib/queries/platform";
-import { formatDate } from "@/lib/utils/date";
+import { getRedirects, getSeoCoverage, getSeoPages } from "@/lib/queries/platform";
+import { getAdminSettings } from "@/lib/queries/settings";
 
 export const dynamic = "force-dynamic";
 
 /**
- * The SEO centre: per-page overrides, redirects, and sitemap status.
+ * The SEO centre.
  *
- * **An override is an override, not a requirement.** A path with no `seo_pages`
- * row falls back to the builders in `lib/seo/metadata.ts`, which already
- * produce a correct title, description and canonical for every route. So an
- * empty table here is the healthy state, not a gap — which is why the empty
- * state says so rather than nagging.
+ * Read-only until now: it listed `seo_pages` and said, in as many words, that
+ * there was deliberately no button. That was true while metadata was typed by
+ * hand into each record and this table was a curiosity. Generation changed the
+ * question — the useful one is "what is missing", and it has to be answerable
+ * and fixable from one screen.
  *
- * Title and description limits are enforced by CHECK constraints on the table,
- * the same numbers `scripts/check-seo.mjs` asserts against rendered pages. A
- * value typed here cannot fail that guard, because the database refuses it
- * first.
+ * The work lives in `SeoConsole`, a client component, because almost all of it
+ * is buttons. This file stays a server component that fetches and checks the
+ * permission, which is the split every other admin screen uses.
  */
 export default async function SeoPage() {
   const identity = await getAdminIdentity();
@@ -41,159 +38,45 @@ export default async function SeoPage() {
     );
   }
 
-  const [pages, redirects] = await Promise.all([getSeoPages(), getRedirects()]);
+  const [pages, redirects, coverage, settings] = await Promise.all([
+    getSeoPages(),
+    getRedirects(),
+    getSeoCoverage(),
+    getAdminSettings(),
+  ]);
+
+  /*
+    The static routes the sitemap always carries, plus one entry per published
+    record. Counted here rather than by fetching /sitemap.xml and parsing it:
+    the numbers come from the same rows the sitemap is built from, and an admin
+    screen should not make an HTTP request to its own site to answer a question
+    it already has the data for.
+  */
+  const STATIC_ROUTES = 14;
+  const sitemapUrlCount =
+    STATIC_ROUTES + coverage.groups.reduce((total, group) => total + group.total, 0);
 
   return (
     <>
       <AdminPageHeader
         title="SEO"
-        description="Per-page metadata overrides, permanent redirects, and sitemap status."
+        description="What search engines and AI assistants read: page titles, descriptions, redirects and the sitemap."
       />
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-h4 font-semibold">Page overrides</h2>
-
-        {pages.length === 0 ? (
-          <EmptyState
-            icon={Globe}
-            title="No overrides — that is the healthy state"
-            description="Every route already gets a title, description and canonical from lib/seo/metadata.ts. Add a row here only to override one of them for a specific path."
-          />
-        ) : (
-          <ResponsiveTable
-            caption="Per-page SEO overrides"
-            columns={[
-              { key: "path", header: "Path", primary: true },
-              { key: "title", header: "Title" },
-              { key: "robots", header: "Robots" },
-              { key: "updated", header: "Updated", hideOnCard: true },
-            ]}
-            rows={pages}
-            getRowKey={(row) => row.id}
-            renderCell={(row, column) => {
-              switch (column.key) {
-                case "path":
-                  return (
-                    <code className="text-sm">{row.path}</code>
-                  );
-                case "title":
-                  return (
-                    <span className="flex flex-col gap-0.5">
-                      <span className="text-sm">{row.title ?? "—"}</span>
-                      {row.title ? (
-                        <span className="text-xs text-foreground-subtle tabular">
-                          {row.title.length}/60 characters
-                        </span>
-                      ) : null}
-                    </span>
-                  );
-                case "robots":
-                  return row.noindex || row.nofollow ? (
-                    <Badge tone="pending">
-                      {[row.noindex && "noindex", row.nofollow && "nofollow"]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </Badge>
-                  ) : (
-                    <Badge tone="active">Indexable</Badge>
-                  );
-                case "updated":
-                  return (
-                    <span className="text-xs text-foreground-subtle tabular">
-                      {formatDate(row.updatedAt)}
-                    </span>
-                  );
-                default:
-                  return null;
-              }
-            }}
-          />
-        )}
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="text-h4 font-semibold">Redirects</h2>
-        <p className="text-sm text-foreground-muted">
-          Written automatically whenever a published slug changes, so an indexed
-          URL never starts returning 404 (CLAUDE.md HR11). They can also be added
-          by hand for a URL that moved before this site existed.
-        </p>
-
-        {redirects.length === 0 ? (
-          <EmptyState
-            icon={RouteIcon}
-            title="No redirects yet"
-            description="One appears here the first time a published listing or article slug is edited."
-          />
-        ) : (
-          <ResponsiveTable
-            caption="Permanent redirects"
-            columns={[
-              { key: "from", header: "From", primary: true },
-              { key: "to", header: "To" },
-              { key: "code", header: "Status" },
-            ]}
-            rows={redirects}
-            getRowKey={(row) => row.id}
-            renderCell={(row, column) => {
-              switch (column.key) {
-                case "from":
-                  return <code className="text-sm">{row.fromPath}</code>;
-                case "to":
-                  return (
-                    <span className="flex items-center gap-1.5">
-                      <ArrowRight
-                        className="size-3.5 shrink-0 text-foreground-subtle"
-                        aria-hidden="true"
-                      />
-                      <code className="text-sm">{row.toPath}</code>
-                    </span>
-                  );
-                case "code":
-                  return <Badge tone="neutral">{row.statusCode}</Badge>;
-                default:
-                  return null;
-              }
-            }}
-          />
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-h4 font-semibold">Sitemap</h2>
-        <p className="text-sm text-foreground-muted">
-          Generated on every request by <code>app/sitemap.ts</code> from the
-          published rows in this database, so it can never fall out of date with
-          the content. There is deliberately no &ldquo;regenerate&rdquo; button —
-          there is nothing to regenerate.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/sitemap.xml"
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm font-semibold text-accent-quiet underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          >
-            View sitemap.xml
-          </Link>
-          <Link
-            href="/robots.txt"
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm font-semibold text-accent-quiet underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          >
-            View robots.txt
-          </Link>
-          <Link
-            href="/llms.txt"
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm font-semibold text-accent-quiet underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          >
-            View llms.txt
-          </Link>
-        </div>
-      </section>
+      <SeoConsole
+        pages={pages}
+        redirects={redirects}
+        coverage={coverage}
+        /*
+          The model NAME, not whether a key exists. "gemma4:31b" tells the
+          operator which writer produced the copy in front of them; a boolean
+          tells them nothing they can act on. Server-side env, read in a server
+          component and passed down — the key itself never crosses.
+        */
+        modelName={process.env.OLLAMA_API_KEY ? (process.env.OLLAMA_MODEL ?? null) : null}
+        lastSitemapRefresh={settings.lastSitemapPing}
+        sitemapUrlCount={sitemapUrlCount}
+      />
     </>
   );
 }

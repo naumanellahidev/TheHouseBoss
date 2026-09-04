@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Check, ExternalLink, Eye, Save, X } from "lucide-react";
+import { Check, ExternalLink, Eye, Save, Sparkles, X } from "lucide-react";
 
 import {
   createArticle,
   saveArticle,
   suggestArticleSlug,
 } from "@/app/(admin)/admin/(shell)/content-actions";
+import { suggestArticleSeo } from "@/app/(admin)/admin/(shell)/seo-suggest";
 import { ArticleEditor } from "@/components/admin/articles/editor";
 import { ImageField } from "@/components/admin/image-field";
 import { TagInput } from "@/components/admin/tag-input";
@@ -83,6 +84,36 @@ export function ArticleForm({
 
   /** Writes are strictly ordered — see the note in the listing editor. */
   const saveChain = React.useRef<Promise<unknown>>(Promise.resolve());
+
+  const [writingSeo, setWritingSeo] = React.useState(false);
+
+  /*
+    Same contract as the listing editor's: fill the two fields, save nothing.
+    Publishing writes the generated metadata regardless; this shows what it will
+    say while there is still time to disagree with it.
+  */
+  async function writeSeo() {
+    setWritingSeo(true);
+    const result = await suggestArticleSeo({
+      title: values.title ?? "",
+      excerpt: values.excerpt ?? null,
+      bodyText: values.bodyText ?? null,
+    });
+    setWritingSeo(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    set("metaTitle", result.title);
+    set("metaDesc", result.description);
+    toast.success(
+      result.usedModel
+        ? "Written and polished from your own words."
+        : "Written from the title and opening paragraphs.",
+    );
+  }
 
   function set<K extends keyof ArticleInput>(key: K, value: ArticleInput[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -339,6 +370,23 @@ export function ArticleForm({
               </FieldDescription>
             </Field>
 
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface-sunken p-4">
+              <p className="max-w-[58ch] text-sm text-foreground-muted">
+                Both of these are optional. When you publish, they are written
+                from your title and opening paragraphs. Press the button to see
+                what that will say.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                loading={writingSeo}
+                onClick={writeSeo}
+              >
+                <Sparkles aria-hidden="true" />
+                Write it for me
+              </Button>
+            </div>
+
             <Field error={errorOf("metaTitle")}>
               <FieldLabel>Meta title</FieldLabel>
               <Input
@@ -349,7 +397,7 @@ export function ArticleForm({
             </Field>
 
             <Field error={errorOf("metaDesc")}>
-              <FieldLabel required>Meta description</FieldLabel>
+              <FieldLabel>Meta description</FieldLabel>
               <Textarea
                 rows={3}
                 value={values.metaDesc ?? ""}
@@ -357,7 +405,8 @@ export function ArticleForm({
               />
               <FieldDescription>
                 <span className="tabular">{(values.metaDesc ?? "").length}</span> / 155.
-                This is the sentence under the link in search results.
+                Optional — leave it blank and one is written from your opening
+                paragraphs when you publish. Type here only to override that.
               </FieldDescription>
             </Field>
           </div>

@@ -27,6 +27,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { storeImage } from "@/lib/images/store";
+// Shared with the Branding tab so both file site artwork under the same id.
+import { SITE_ENTITY_ID } from "@/lib/images/site-entity";
 import { createServiceClient } from "@/lib/supabase/service";
 
 const FORCE = process.argv.includes("--force");
@@ -37,7 +39,6 @@ const DRY = process.argv.includes("--dry");
  * `id = 1`. A fixed sentinel gives site-level images a stable, valid owner —
  * fixed rather than random so re-running does not orphan the previous batch.
  */
-const SITE_ENTITY_ID = "00000000-0000-4000-8000-000000000001";
 
 type ImageSpec = { url: string; alt: string; source: string };
 type Manifest = {

@@ -188,7 +188,8 @@ If Performance is short, check in this order:
 1. Is the LCP image `priority` with a correct `sizes`?
 2. Are three variants actually being generated, and is the card loading the
    800w rather than the 1600w?
-3. Is `images.unoptimized: true` set? (If not, Vercel is transforming and may be
+3. Is `images.loader: "custom"` set, and are there zero `/_next/image` requests
+   in the network panel? (If not, Vercel is transforming and may be
    failing.)
 4. Is any client component doing work that belongs on the server?
 5. Bundle size — run `@next/bundle-analyzer`

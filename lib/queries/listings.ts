@@ -108,6 +108,27 @@ export async function getFeaturedListings(limit = 6): Promise<ListingCard[]> {
   return (data ?? []).map(toListingCard);
 }
 
+/**
+ * Every available listing, newest first, for `/llms.txt`.
+ *
+ * Separate from `getFeaturedListings` because the audience is different: the
+ * homepage wants the six she chose, an assistant wants the inventory it can
+ * cite. Capped, because llms.txt is a map and not a feed — a file with four
+ * hundred addresses in it stops being read.
+ */
+export async function getListingsForLlms(limit = 60): Promise<ListingCard[]> {
+  const db = createSupabasePublicClient();
+  const { data, error } = await db
+    .from("listing_card")
+    .select(CARD_COLUMNS)
+    .in("status", AVAILABLE)
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`getListingsForLlms: ${error.message}`);
+  return (data ?? []).map(toListingCard);
+}
+
 export async function getSoldListings(
   citySlug?: string,
   limit = 24,
@@ -194,9 +215,57 @@ export async function searchListings(p: SearchParams): Promise<SearchResult> {
     q = q.in("id", idList);
   }
 
+  /*
+    Keyword search.
+
+    This used to match `address` and `slug` only, while `not-found.tsx` and the
+    `SearchAction` in the JSON-LD both promise "address, city or keyword". A
+    search action a crawler can follow and get nothing from is worse than not
+    publishing one, so the promise is now kept:
+
+      address    — on the card view
+      city_name  — on the card view, which is why "Heathrow" now works
+      zip        — on the card view
+      headline
+      description — both only on the base table
+
+    The last two need the base table, so they are resolved to a bounded list of
+    ids first and folded into the same `or` rather than issued as a second
+    query. Bounded at 200 deliberately: a PostgREST `or` filter travels in the
+    URL, and an unbounded id list is a 414 waiting for the day the inventory
+    grows. Two hundred addresses is far past the point a keyword search is
+    still useful.
+
+    `slug` is dropped. It is derived from the address, so it never matched
+    anything the address did not, and it let a visitor match on punctuation
+    that is not visible anywhere on the page.
+  */
   if (p.q) {
-    const term = p.q.replace(/[%,()]/g, " ").trim();
-    if (term) q = q.or(`address.ilike.%${term}%,slug.ilike.%${term}%`);
+    // Characters that would otherwise terminate or inject into the PostgREST
+    // filter expression. Not a security boundary — the anon key is limited by
+    // RLS — but a malformed filter returns a 400, which reads as "search is
+    // broken".
+    const term = p.q.replace(/[%,()*:."\\]/g, " ").trim();
+
+    if (term) {
+      const clauses = [
+        `address.ilike.%${term}%`,
+        `city_name.ilike.%${term}%`,
+        `zip.ilike.%${term}%`,
+      ];
+
+      const { data: textIds } = await db
+        .from("listings")
+        .select("id")
+        .or(`headline.ilike.%${term}%,description.ilike.%${term}%`)
+        .eq("published", true)
+        .limit(200);
+
+      const ids = (textIds ?? []).map((r: { id: string }) => r.id);
+      if (ids.length > 0) clauses.push(`id.in.(${ids.join(",")})`);
+
+      q = q.or(clauses.join(","));
+    }
   }
 
   switch (p.sort) {

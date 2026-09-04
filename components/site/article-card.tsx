@@ -1,7 +1,10 @@
 import Link from "next/link";
+
+import { articleHref } from "@/lib/utils/routes";
 import { Clock } from "lucide-react";
 
-import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
+import { PropertyImage } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { formatDate } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";
 import type { ArticleCard as ArticleCardType } from "@/types/domain";
@@ -17,12 +20,13 @@ import type { ArticleCard as ArticleCardType } from "@/types/domain";
  * reader needs to know before trusting it (docs/14 § 1, rule 4).
  */
 
-/** Where an article lives depends on what kind it is. */
-export function articleHref(article: ArticleCardType): string {
-  if (article.kind === "market_update") return `/market-updates/${article.slug}`;
-  if (article.city?.slug === "lake-mary") return `/lake-mary/blog/${article.slug}`;
-  return `/market-updates/${article.slug}`;
-}
+/*
+  Where an article lives now comes from `lib/utils/routes.ts`, so the publish
+  action and the SEO backfill can ask the same question without importing a
+  React component. Re-exported here because every existing call site imports it
+  from this module.
+*/
+export { articleHref };
 
 export function ArticleCard({
   article,

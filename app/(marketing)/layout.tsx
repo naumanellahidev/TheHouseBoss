@@ -46,13 +46,13 @@ export default async function MarketingLayout({
         Skip to content
       </a>
 
-      <Header />
+      <Header settings={settings} />
 
       <main id="main" className="flex-1">
         <PageTransition>{children}</PageTransition>
       </main>
 
-      <Footer />
+      <Footer settings={settings} />
 
       {/*
         Decorative, desktop-only, and it never hides the real cursor — see the

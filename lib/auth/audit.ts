@@ -48,6 +48,7 @@ export type AuditAction =
   | "media_deleted"
   | "lead_updated"
   | "seo_updated"
+  | "sitemap_refreshed"
   | "redirect_created"
   | "redirect_deleted"
   | "settings_updated"

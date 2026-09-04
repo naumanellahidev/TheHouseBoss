@@ -32,6 +32,21 @@ export type BuildMetadataArgs = {
    */
   image?: string | null;
   noindex?: boolean;
+  /**
+   * A generated or hand-set row from `seo_pages`.
+   *
+   * Applied over `title` and `description` when present. The row cannot hold an
+   * out-of-band description — the table's CHECK constraint enforces 140–158 —
+   * so an override is always at least as good as what it replaces. Absent is
+   * the normal case and changes nothing.
+   */
+  override?: {
+    title: string | null;
+    description: string | null;
+    canonicalUrl: string | null;
+    noindex: boolean;
+    nofollow: boolean;
+  } | null;
   type?: "website" | "article" | "profile";
   publishedTime?: string;
   modifiedTime?: string;
@@ -56,11 +71,25 @@ export function buildMetadata({
   path,
   image,
   noindex = false,
+  override,
   type = "website",
   publishedTime,
   modifiedTime,
 }: BuildMetadataArgs): Metadata {
   const url = absolute(path);
+
+  /*
+    The override is applied FIRST, so every check and every derived field below
+    sees the value that will actually ship. Applying it afterwards would warn
+    about a description the page never renders.
+
+    `||` and not `??`: an override row can exist with a null or empty column
+    (a title set, no description), and an empty string there means "not set",
+    not "set to nothing".
+  */
+  title = override?.title || title;
+  description = override?.description || description;
+  noindex = override?.noindex ?? noindex;
 
   if (title.length > TITLE_MAX) {
     warn("title", title, `is ${title.length} chars, over ${TITLE_MAX}`);
@@ -95,7 +124,7 @@ export function buildMetadata({
   return {
     title: truncateOnWord(title, TITLE_MAX),
     description: truncateOnWord(description, DESC_MAX),
-    alternates: { canonical: url },
+    alternates: { canonical: override?.canonicalUrl || url },
     robots: noindex
       ? { index: false, follow: true }
       : {

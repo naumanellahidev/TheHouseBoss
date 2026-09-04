@@ -64,10 +64,16 @@ export const articleSchema = z
     message: "Describe the cover image — alt text is required.",
     path: ["coverAlt"],
   })
-  .refine((v) => v.status !== "published" || (v.metaDesc?.trim().length ?? 0) > 0, {
-    message: "Write a meta description before publishing.",
-    path: ["metaDesc"],
-  });
+  /*
+    There is no `metaDesc` refinement any more.
+
+    It used to block publishing until one was typed. That was a bad trade twice
+    over: it stopped the client publishing, and the value it forced was usually
+    too short to survive `buildMetadata()`, so it was discarded at render and
+    the gate protected nothing. `lib/seo/auto/` now generates one at publish and
+    the field is an override — so blocking on it would block on something the
+    system already guarantees.
+  */;
 
 export type ArticleInput = z.infer<typeof articleSchema>;
 
@@ -96,16 +102,15 @@ export function articleChecklist(v: Partial<ArticleInput>): ArticleChecklistItem
       label: "At least a couple of paragraphs of body text",
       ok: (v.bodyText?.trim().length ?? 0) >= 200,
     },
-    {
-      id: "excerpt",
-      label: "Excerpt written — it is the summary that gets quoted",
-      ok: (v.excerpt?.trim().length ?? 0) > 0,
-    },
-    {
-      id: "meta",
-      label: "Meta description written",
-      ok: (v.metaDesc?.trim().length ?? 0) > 0,
-    },
+    /*
+      `excerpt` and `meta` were both items here and are both gone.
+
+      Each is now generated from the body at publish (lib/seo/auto/generate.ts)
+      and each field remains editable as an override. A checklist item for
+      something the system supplies is not a safeguard, it is a chore — and the
+      body-length item above is what actually guarantees there is enough text
+      for either to be generated from.
+    */
     {
       id: "cover",
       label: "Cover image has alt text, or there is no cover image",

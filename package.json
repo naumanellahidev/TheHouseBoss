@@ -16,7 +16,7 @@
     "check:tokens": "node scripts/check-tokens.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
-    "check:pending": "node scripts/check-pending.mjs",
+    "check:pending": "node --env-file-if-exists=.env.local scripts/check-pending.mjs",
     "db:types": "node --env-file=.env.local scripts/gen-types.mjs",
     "db:reset": "supabase db reset",
     "db:push": "supabase db push",
@@ -36,7 +36,8 @@
     "backup": "node --env-file=.env.local scripts/backup.mjs",
     "check:lighthouse": "node scripts/lighthouse.mjs",
     "seed:images": "tsx --env-file=.env.local scripts/seed-images.mts",
-    "admin:credentials": "node --env-file=.env.local scripts/set-admin-credentials.mjs"
+    "admin:credentials": "node --env-file=.env.local scripts/set-admin-credentials.mjs",
+    "seo:backfill": "tsx --conditions=react-server --env-file=.env.local scripts/seo-backfill.mts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
@@ -73,6 +74,7 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "resend": "^6.25.0",
+    "server-only": "^0.0.1",
     "sharp": "^0.35.4",
     "tailwind-merge": "^3.6.0",
     "three": "^0.185.1",

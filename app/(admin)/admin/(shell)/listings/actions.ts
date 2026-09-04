@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { deleteImages } from "@/lib/images/store";
+import { syncListingSeo } from "@/lib/seo/auto/apply";
 import { recordAudit } from "@/lib/auth/audit";
 import { getAdminListingById } from "@/lib/queries/admin";
 import { requireAdmin } from "@/lib/supabase/server";
@@ -153,6 +154,19 @@ export async function createListing(
   if (error) return { ok: false, error: friendlyError(error.message) };
 
   const city = Array.isArray(data.cities) ? data.cities[0] : data.cities;
+
+  /*
+    Generated AFTER the write and BEFORE the revalidate, so the first render of
+    the new page already reads the row this produced. Doing it after the
+    revalidate would put the un-generated version in the cache for an hour.
+
+    Awaited rather than detached: a serverless function can be frozen the moment
+    it returns, and a floating promise there never completes. `syncListingSeo`
+    swallows its own failures, so this cannot turn a successful save into a
+    failed one.
+  */
+  if (parsed.data.published) await syncListingSeo(data.slug);
+
   revalidateListing(data.slug, [city?.slug ?? null]);
 
   return { ok: true, data: { id: data.id, slug: data.slug } };
@@ -204,6 +218,8 @@ export async function saveListing(
     revalidatePath(`/listing/${before.slug}`);
   }
 
+  if (parsed.data.published) await syncListingSeo(data.slug);
+
   revalidateListing(data.slug, [beforeCity?.slug ?? null, afterCity?.slug ?? null]);
   return { ok: true, data: { slug: data.slug } };
 }
@@ -246,6 +262,11 @@ export async function setListingPublished(raw: unknown): Promise<ActionResult> {
     entityId: parsed.data.id,
     metadata: { slug: data.slug },
   });
+
+  // Only on the way IN. Unpublishing leaves the seo_pages row alone: the page
+  // is gone from the public read either way, and keeping the row means
+  // re-publishing does not have to regenerate from scratch.
+  if (parsed.data.value) await syncListingSeo(data.slug);
 
   revalidateListing(data.slug, [city?.slug ?? null]);
   return { ok: true };

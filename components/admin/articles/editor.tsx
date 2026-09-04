@@ -7,6 +7,8 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { TableKit } from "@tiptap/extension-table";
+
+import { AnswerFirstNode } from "@/components/admin/articles/answer-first-node";
 import {
   Bold,
   Code,
@@ -17,6 +19,7 @@ import {
   Link2,
   List,
   ListOrdered,
+  MessageSquareQuote,
   Minus,
   Quote,
   Redo2,
@@ -75,6 +78,12 @@ export function ArticleEditor({ value, onChange, articleId }: ArticleEditorProps
       }),
       Image.configure({ inline: false, allowBase64: false }),
       TableKit.configure({ table: { resizable: false } }),
+      /*
+        The answer-first block. Until now it existed only in the hand-written
+        guide pages, so every CMS article was missing the one structure an AI
+        assistant extracts first (docs/14 § 1, rule 1).
+      */
+      AnswerFirstNode,
       Placeholder.configure({
         placeholder:
           "Write the article. Lead with the answer, then support it — that is what gets quoted.",
@@ -283,6 +292,18 @@ function Toolbar({
         icon={Quote}
         active={editor.isActive("blockquote")}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
+      />
+      {/*
+        Labelled "Answer" and not "Summary". It marks the sentence that answers
+        the question the section asks — the block an assistant lifts when it
+        cites this article — and calling it a summary invites a paragraph of
+        throat-clearing instead.
+      */}
+      <Tool
+        label="Answer"
+        icon={MessageSquareQuote}
+        active={editor.isActive("answerFirst")}
+        onClick={() => editor.chain().focus().toggleAnswerFirst().run()}
       />
 
       <Divider />

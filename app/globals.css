@@ -203,6 +203,29 @@
   --container-wide: 90rem; /* 1440 */
   --header-h: 4rem; /* 64 mobile */
   --header-h-lg: 5rem; /* 80 desktop */
+
+  /*
+    Logo heights.
+
+    The uploaded artwork is a full lockup — brand name, licensee, brokerage and
+    a rule — not a single glyph. Rendered at 44px it was legible only as a
+    smudge, which is what "the logo looks weird" meant. These heights fill the
+    bar they sit in: 48 in a 64px mobile header, 64 in an 80px desktop one.
+
+    Tokens rather than utilities on the component, because the header height
+    they must stay in proportion to is also a token, and the two are only
+    correct relative to each other.
+  */
+  --logo-h-compact: 2.5rem; /* 40 — dense spaces */
+  --logo-h: 3rem; /* 48 — mobile header, inside 64 */
+  --logo-h-md: 3.5rem; /* 56 — tablet */
+  --logo-h-lg: 4rem; /* 64 — desktop header, inside 80 */
+  --logo-h-footer: 4.5rem; /* 72 — the footer has room */
+  --logo-h-stacked: 5rem; /* 80 — sign-in, where it is the only thing there */
+
+  /* A wide logo must never push the primary nav off the bar. */
+  --logo-max-w: 15rem;
+  --logo-max-w-compact: 11rem;
 }
 
 /* ============================================================================

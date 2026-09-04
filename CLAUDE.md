@@ -71,8 +71,14 @@ storage, or real search visibility. Never "improve" past them.
    the upload API route, and a Postgres `CHECK` constraint.
 4. Image keys come from `nanoid()`, never from the address or title — editing an
    address must never break an image URL.
-5. `next.config.ts` sets `images.unoptimized: true`. We pre-generate sizes;
-   Vercel's transformation quota must not be consumed.
+5. **Vercel's image-transformation quota must never be consumed.** Exhausting it
+   makes every image return 402 in production. This was `images.unoptimized:
+   true`; it is now `images.loader: "custom"` pointing at `lib/image-loader.ts`,
+   which gives the same guarantee — Next never routes through `/_next/image`
+   when a loader is set — while restoring the `srcset` that `unoptimized`
+   stripped. The rule is the quota, not the flag. Enforced by
+   `tests/image-loader.spec.ts`, which asserts no `/_next/image` request is
+   ever issued.
 6. Every image has an `onError` fallback to `/placeholder-property.webp`. A
    broken-image icon must never render.
 7. Width and height are stored in the DB and always passed to the image

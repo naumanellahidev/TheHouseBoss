@@ -78,6 +78,34 @@ export const settingsSchema = z.object({
 
   // compliance — legally required, editable with a warning in the UI
   brokerageName: optionalText(200),
+
+  /*
+    Branding, migration 015. Editable with no restrictions, by the client's
+    decision — including the fields that carry legal weight.
+
+    What is NOT editable is the FREC 61J2-10.026 relationship between the
+    brokerage and agent font sizes. That lives in ComplianceFooter as two
+    constants, is the rule itself rather than a value, and is asserted by
+    scripts/check-compliance.mjs against the rendered classes.
+  */
+  brandName: optionalText(120),
+  legalName: optionalText(120),
+  logoKey: optionalText(300),
+  logoInvertKey: optionalText(300),
+  licenseReLabel: optionalText(120),
+  licenseReAuthority: optionalText(200),
+  licenseContractorLabel: optionalText(120),
+  licenseContractorAuthority: optionalText(200),
+  yearsExperience: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .nullable()
+    .optional()
+    // An empty input posts "" — coerce would turn that into 0, which would
+    // render "0 years of experience" rather than falling back to site-config.
+    .catch(null),
   licenseRe: optionalText(40),
   licenseContractor: optionalText(40),
   disclosureText: optionalText(1000),

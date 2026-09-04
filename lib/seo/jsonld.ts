@@ -279,6 +279,16 @@ const RESIDENCE_TYPE: Record<string, string> = {
 export function listingJsonLd(
   listing: Listing,
   imageUrls: string[],
+  /**
+   * The summary rendered visibly on the page (`lib/seo/auto/answer-first.ts`).
+   *
+   * Passed in rather than generated here, so the markup and the page carry the
+   * SAME string by construction. Structured data that describes something the
+   * page does not show is a policy violation, and on a property listing it is
+   * also a misrepresentation exposure — which is why this is a parameter and
+   * not a second call to the generator.
+   */
+  answerFirst?: string,
 ): JsonLdObject {
   const sold = listing.status === "sold";
 
@@ -330,7 +340,69 @@ export function listingJsonLd(
         }
       : {}),
     ...(listing.yearBuilt != null ? { yearBuilt: listing.yearBuilt } : {}),
+    ...(listing.lotSize != null && listing.lotSize > 0
+      ? {
+          lotSize: {
+            "@type": "QuantitativeValue",
+            value: listing.lotSize,
+            /*
+              ACR, not FTK. `listings.lot_size` is stored in ACRES — the column
+              comment in migration 004 says so — while `sqft` above is square
+              feet, and reusing FTK here published "0.28 square feet" for a
+              quarter-acre lot. On a property listing that is not a formatting
+              slip; it is a false statement of fact about the property.
+            */
+            unitCode: "ACR",
+          },
+        }
+      : {}),
+    /*
+      `containedInPlace` names the city as a place, which is what lets an
+      assistant connect this property to "homes in Lake Mary" rather than
+      treating the city as a word in an address string. Cheap, and it is the
+      single most useful relationship on the graph for the question this site
+      exists to be the answer to.
+    */
+    containedInPlace: {
+      "@type": "City",
+      name: listing.city.name,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: listing.city.name,
+        addressRegion: "FL",
+        addressCountry: "US",
+      },
+    },
     ...(amenities.length ? { amenityFeature: amenities } : {}),
+    /*
+      Fees and taxes as `additionalProperty`, because schema.org has no field
+      for either on a Residence and inventing one puts an unparsed key in the
+      graph. `PropertyValue` is the documented way to carry a fact that has no
+      dedicated property, and it keeps the number machine-readable rather than
+      buried in prose.
+    */
+    ...(listing.hoaFee != null && listing.hoaFee > 0
+      ? {
+          additionalProperty: [
+            {
+              "@type": "PropertyValue",
+              name: "HOA fee",
+              value: listing.hoaFee,
+              unitText: "USD per month",
+            },
+            ...(listing.taxesAnnual != null && listing.taxesAnnual > 0
+              ? [
+                  {
+                    "@type": "PropertyValue",
+                    name: "Annual property taxes",
+                    value: listing.taxesAnnual,
+                    unitText: "USD per year",
+                  },
+                ]
+              : []),
+          ],
+        }
+      : {}),
   };
 
   return {
@@ -338,7 +410,26 @@ export function listingJsonLd(
     "@type": "RealEstateListing",
     url: absolute(`/listing/${listing.slug}`),
     name: `${listing.address}, ${listing.city.name}, FL`,
-    ...(listing.description ? { description: listing.description } : {}),
+    /*
+      The answer-first summary is the description, in preference to the agent's
+      marketing copy. It states the facts in plain sentences and is the text
+      actually rendered at the top of the page; the marketing description is
+      written to persuade a buyer and is a poor answer to "what is this
+      property". The marketing copy is still on the page, and still indexed.
+    */
+    description: answerFirst || listing.description || undefined,
+    ...(listing.mlsNumber
+      ? {
+          // The MLS number is the identifier every other system knows this
+          // property by, which is what makes it worth publishing: it is how an
+          // assistant reconciles this page with an aggregator's copy.
+          identifier: {
+            "@type": "PropertyValue",
+            propertyID: "MLS",
+            value: listing.mlsNumber,
+          },
+        }
+      : {}),
     ...(listing.publishedAt ? { datePosted: listing.publishedAt } : {}),
     // Up to six; more is noise and inflates the page weight for no gain.
     ...(imageUrls.length ? { image: imageUrls.slice(0, 6) } : {}),
@@ -354,7 +445,12 @@ export function listingJsonLd(
           ? "https://schema.org/LimitedAvailability"
           : "https://schema.org/InStock",
       seller: { "@id": AGENT_ID },
+      ...(listing.publishedAt ? { validFrom: listing.publishedAt } : {}),
     },
+    // Both, deliberately: `provider` is who is offering the service of
+    // representing this property, which is the relationship a "who should I
+    // call about this house" question is actually asking about.
+    provider: { "@id": AGENT_ID },
     mainEntity: residence,
   };
 }

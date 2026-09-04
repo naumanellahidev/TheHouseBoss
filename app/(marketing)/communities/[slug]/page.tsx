@@ -7,10 +7,12 @@ import { FaqAccordion } from "@/components/site/faq-accordion";
 import { JsonLd } from "@/components/site/json-ld";
 import { LeadForm } from "@/components/site/lead-form";
 import { Markdown } from "@/components/site/markdown";
-import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
+import { PropertyImage } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { ListingGrid } from "@/components/listing/listing-grid";
 import { Button } from "@/components/ui/button";
 import { breadcrumbJsonLd, faqJsonLd, placeJsonLd } from "@/lib/seo/jsonld";
+import { getSeoOverride } from "@/lib/queries/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
   getCommunityBySlug,
@@ -51,7 +53,10 @@ export async function generateMetadata({
     return { title: "Community not found", robots: { index: false, follow: true } };
   }
 
+  const override = await getSeoOverride(`/communities/${community.slug}`);
+
   return buildMetadata({
+    override,
     title: community.metaTitle || `${community.name}, ${community.city.name} FL`,
     // Same floor as the city pages: a stored description under 140 characters
     // gets padded by search engines with whatever text they find instead.

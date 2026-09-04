@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { purgeSoldPhotos } from "@/lib/images/purge";
 import { markMaintenanceRun } from "@/lib/queries/settings";
+import { recordAudit } from "@/lib/auth/audit";
 import { requireAdmin } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { settingsSchema } from "@/lib/validation/settings";
@@ -69,6 +70,17 @@ export async function saveSettings(raw: unknown): Promise<SettingsResult> {
       license_re: v.licenseRe ?? null,
       license_contractor: v.licenseContractor ?? null,
       disclosure_text: v.disclosureText ?? null,
+
+      // Branding, migration 015.
+      brand_name: v.brandName ?? null,
+      legal_name: v.legalName ?? null,
+      logo_key: v.logoKey ?? null,
+      logo_invert_key: v.logoInvertKey ?? null,
+      license_re_label: v.licenseReLabel ?? null,
+      license_re_authority: v.licenseReAuthority ?? null,
+      license_contractor_label: v.licenseContractorLabel ?? null,
+      license_contractor_authority: v.licenseContractorAuthority ?? null,
+      years_experience: v.yearsExperience ?? null,
       lead_notify_email: v.leadNotifyEmail ?? null,
       autoresponder_subject: v.autoresponderSubject ?? null,
       autoresponder_body: v.autoresponderBody ?? null,
@@ -81,6 +93,19 @@ export async function saveSettings(raw: unknown): Promise<SettingsResult> {
   }
 
   // Settings appear in the layout, so every page is affected.
+  /*
+    Audited: these fields include the brokerage name and both licence numbers,
+    which are the legal disclosure on every public page. "Who changed the
+    brokerage name, and when" is a question that gets asked after a complaint,
+    not before.
+  */
+  await recordAudit({
+    action: "settings_updated",
+    entityType: "site_settings",
+    entityId: "1",
+    metadata: { fields: Object.keys(parsed.data).length },
+  });
+
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings");
   return { ok: true };

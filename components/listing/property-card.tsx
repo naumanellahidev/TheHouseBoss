@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Bath, BedDouble, Maximize } from "lucide-react";
 
 import { Badge, listingStatusBadge } from "@/components/ui/badge";
-import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
+import { PropertyImage } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { formatBaths, formatNumber, formatPrice } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";

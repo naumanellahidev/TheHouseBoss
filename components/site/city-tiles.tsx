@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import { MediaFrame, heroPhoto } from "@/components/site/media-frame";
-import { IMAGE_SIZES } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { cn } from "@/lib/utils";
 import type { City, Facets } from "@/types/domain";
 

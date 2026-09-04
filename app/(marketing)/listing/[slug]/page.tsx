@@ -23,7 +23,9 @@ import {
   getSimilarListings,
   resolveRedirect,
 } from "@/lib/queries/listings";
+import { listingAnswerFirst } from "@/lib/seo/auto/answer-first";
 import { breadcrumbJsonLd, listingJsonLd } from "@/lib/seo/jsonld";
+import { getSeoOverride } from "@/lib/queries/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { photoUrl } from "@/lib/storage/url";
 import { formatPrice } from "@/lib/utils";
@@ -89,7 +91,10 @@ export async function generateMetadata({
       ? listing.soldPrice
       : listing.price;
 
+  const override = await getSeoOverride(`/listing/${listing.slug}`);
+
   return buildMetadata({
+    override,
     title:
       listing.metaTitle ||
       `${listing.address}, ${listing.city.name}, FL — ${formatPrice(price)}`,
@@ -153,6 +158,13 @@ export default async function ListingPage({
 
   const similar = await getSimilarListings(listing, 3).catch(() => []);
 
+  /*
+    Computed once and used twice — rendered on the page and passed to the
+    JSON-LD builder. Generating it separately in each place is how the visible
+    text and the markup drift apart.
+  */
+  const answerFirst = listingAnswerFirst(listing);
+
   const crumbs = [
     { href: `/${listing.city.slug}/homes-for-sale`, label: `${listing.city.name} Homes for Sale` },
     { href: `/listing/${listing.slug}`, label: listing.address },
@@ -167,6 +179,7 @@ export default async function ListingPage({
           listingJsonLd(
             listing,
             listing.photos.slice(0, 6).map((photo) => photoUrl(photo, 1600)),
+            answerFirst,
           ),
           breadcrumbJsonLd(crumbs),
         ]}
@@ -226,10 +239,39 @@ export default async function ListingPage({
               </p>
             </header>
 
-            {/* 4. Key facts */}
+            {/*
+              4. The summary an assistant quotes.
+
+              Placed above the key facts and below the price, which is the
+              first substantive block of prose on the page — where an extractor
+              looks. Every sentence is composed from a stored column, and the
+              identical string is the `description` in the JSON-LD below, so
+              the markup and the visible page can never disagree.
+
+              It is not a duplicate of the marketing description further down.
+              That one is written by the agent and reads like an advertisement;
+              this one answers "what is this property" in plain sentences, which
+              is the question actually being asked of an assistant.
+            */}
+            <section
+              aria-labelledby="summary-heading"
+              className="flex flex-col gap-3 rounded-lg border border-border bg-surface-sunken p-5"
+            >
+              <h2
+                id="summary-heading"
+                className="text-overline font-semibold tracking-[0.12em] text-accent-quiet uppercase"
+              >
+                At a glance
+              </h2>
+              <p className="max-w-[68ch] text-lead leading-relaxed text-foreground">
+                {answerFirst}
+              </p>
+            </section>
+
+            {/* 5. Key facts */}
             <KeyFacts listing={listing} />
 
-            {/* 5. Description */}
+            {/* 6. Description */}
             {listing.headline || listing.description ? (
               <section aria-labelledby="about-heading" className="flex flex-col gap-4">
                 <h2 id="about-heading" className="text-h2">

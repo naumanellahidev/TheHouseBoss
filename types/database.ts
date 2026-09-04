@@ -5,7 +5,7 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-03T20:01:17.257Z
+ * Generated: 2026-09-04T12:26:57.514Z
  * Tables: 21 · Views: 3
  */
 
@@ -923,6 +923,15 @@ export type Database = {
           last_purge_run: string | null;
           last_sitemap_ping: string | null;
           updated_at: string;
+          brand_name: string | null;
+          legal_name: string | null;
+          logo_key: string | null;
+          logo_invert_key: string | null;
+          license_re_label: string | null;
+          license_re_authority: string | null;
+          license_contractor_label: string | null;
+          license_contractor_authority: string | null;
+          years_experience: number | null;
         };
         Insert: {
           id?: number;
@@ -950,6 +959,15 @@ export type Database = {
           last_purge_run?: string | null;
           last_sitemap_ping?: string | null;
           updated_at?: string;
+          brand_name?: string | null;
+          legal_name?: string | null;
+          logo_key?: string | null;
+          logo_invert_key?: string | null;
+          license_re_label?: string | null;
+          license_re_authority?: string | null;
+          license_contractor_label?: string | null;
+          license_contractor_authority?: string | null;
+          years_experience?: number | null;
         };
         Update: {
           id?: number;
@@ -977,6 +995,15 @@ export type Database = {
           last_purge_run?: string | null;
           last_sitemap_ping?: string | null;
           updated_at?: string;
+          brand_name?: string | null;
+          legal_name?: string | null;
+          logo_key?: string | null;
+          logo_invert_key?: string | null;
+          license_re_label?: string | null;
+          license_re_authority?: string | null;
+          license_contractor_label?: string | null;
+          license_contractor_authority?: string | null;
+          years_experience?: number | null;
         };
         Relationships: [];
       };
@@ -1085,6 +1112,15 @@ export type Database = {
           license_contractor: string | null;
           disclosure_text: string | null;
           updated_at: string | null;
+          brand_name: string | null;
+          legal_name: string | null;
+          logo_key: string | null;
+          logo_invert_key: string | null;
+          license_re_label: string | null;
+          license_re_authority: string | null;
+          license_contractor_label: string | null;
+          license_contractor_authority: string | null;
+          years_experience: number | null;
         };
         Relationships: [];
       };

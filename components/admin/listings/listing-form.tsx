@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
-import { AlertTriangle, ExternalLink, Save } from "lucide-react";
+import { AlertTriangle, ExternalLink, Save, Sparkles } from "lucide-react";
 
 import {
   createListing,
@@ -12,6 +12,7 @@ import {
   saveListing,
   suggestSlug,
 } from "@/app/(admin)/admin/(shell)/listings/actions";
+import { suggestListingSeo } from "@/app/(admin)/admin/(shell)/seo-suggest";
 import { TagInput } from "@/components/admin/tag-input";
 import { PhotoUploader } from "@/components/admin/listings/photo-uploader";
 import { PrePublishChecklist } from "@/components/admin/listings/pre-publish-checklist";
@@ -385,6 +386,53 @@ export function ListingForm({
         persist(mode === "publish" ? { ...payload, published: true } : payload, mode),
       )();
     };
+  }
+
+  const [writingSeo, setWritingSeo] = React.useState(false);
+
+  /*
+    "Write it for me" — the SEO tab's own generate button.
+
+    Fills the two fields from the listing's facts and stops there. It does NOT
+    save and it does NOT touch `seo_pages`: publishing already writes generated
+    metadata for every listing, so this is a preview of what that will say,
+    offered early enough to edit. Marking the form dirty is deliberate — the
+    text is now the admin's to keep or clear, and autosave should treat it so.
+  */
+  async function writeSeo() {
+    setWritingSeo(true);
+    const v = getValues();
+
+    const result = await suggestListingSeo({
+      address: v.address ?? "",
+      cityName: selectedCity?.name ?? "",
+      status: v.status ?? "active",
+      price: v.price ?? null,
+      soldPrice: v.soldPrice ?? null,
+      beds: v.beds ?? null,
+      baths: v.baths ?? null,
+      sqft: v.sqft ?? null,
+      yearBuilt: v.yearBuilt ?? null,
+      pool: Boolean(v.pool),
+      contractorsTake: v.contractorsTake ?? null,
+    });
+    setWritingSeo(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    setValue("metaTitle", result.title, { shouldDirty: true, shouldValidate: true });
+    setValue("metaDesc", result.description, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    toast.success(
+      result.usedModel
+        ? "Written and polished. Every number came from this listing."
+        : "Written from this listing's own details.",
+    );
   }
 
   async function regenerateSlug() {
@@ -790,6 +838,31 @@ export function ListingForm({
           </FieldDescription>
         </Field>
 
+        {/*
+          The generate button sits ABOVE both fields, not beside one of them.
+          It writes both, and a control that changes two fields should not look
+          like it belongs to the first.
+        */}
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-sunken p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="max-w-[60ch] text-sm text-foreground-muted">
+              You do not have to fill these in. When you publish, a title and
+              description are written from this listing&rsquo;s own details. Use
+              the button to see what that will say, and edit it if you want
+              something different.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              loading={writingSeo}
+              onClick={writeSeo}
+            >
+              <Sparkles aria-hidden="true" />
+              Write it for me
+            </Button>
+          </div>
+        </div>
+
         <TextField
           name="metaTitle"
           label="Meta title"
@@ -806,7 +879,7 @@ export function ListingForm({
           rows={3}
           maxLength={155}
           currentLength={(values.metaDesc ?? "").length}
-          description="This is the sentence that appears under the link in search results, and often the sentence an AI assistant quotes."
+          description="Optional. Leave it blank and one is written for you when you publish, from this listing's own facts. Type here only to override that — and give it at least 140 characters, or it is regenerated anyway."
         />
 
         {/* Search-result preview. Shows what the page will actually look like
@@ -825,7 +898,7 @@ export function ListingForm({
           <p className="line-clamp-2 text-sm text-foreground-muted">
             {values.metaDesc?.trim() ||
               values.description?.trim().slice(0, 155) ||
-              "No meta description yet — search engines will pick their own text."}
+              "Written for you on publish, from the address, price and specs above."}
           </p>
         </div>
       </div>

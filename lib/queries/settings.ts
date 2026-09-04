@@ -26,6 +26,12 @@ type Row = Record<string, any>;
 const str = (v: unknown): string | null =>
   typeof v === "string" && v.trim().length > 0 ? v.trim() : null;
 
+/** PostgREST returns numerics as strings often enough to be worth normalising. */
+const num = (v: unknown): number | null => {
+  const n = typeof v === "string" ? Number(v) : v;
+  return typeof n === "number" && Number.isFinite(n) ? n : null;
+};
+
 /** Drops empty values so a `sameAs` array of blanks can never be emitted. */
 function toProfiles(v: unknown): Record<string, string> {
   if (!v || typeof v !== "object" || Array.isArray(v)) return {};
@@ -58,6 +64,23 @@ function toSiteSettings(row: Row | null): SiteSettings {
     licenseRe: str(row?.license_re),
     licenseContractor: str(row?.license_contractor),
     disclosureText: str(row?.disclosure_text),
+
+    // Branding overrides, migration 015. NULL means "use lib/site-config.ts".
+    brandName: str(row?.brand_name),
+    legalName: str(row?.legal_name),
+    logoKey: str(row?.logo_key),
+    logoInvertKey: str(row?.logo_invert_key),
+    logoW: num(row?.logo_w),
+    logoH: num(row?.logo_h),
+    logoInvertW: num(row?.logo_invert_w),
+    logoInvertH: num(row?.logo_invert_h),
+    licenseReLabel: str(row?.license_re_label),
+    licenseReAuthority: str(row?.license_re_authority),
+    licenseContractorLabel: str(row?.license_contractor_label),
+    licenseContractorAuthority: str(row?.license_contractor_authority),
+    yearsExperience:
+      typeof row?.years_experience === "number" ? row.years_experience : null,
+
     updatedAt: str(row?.updated_at),
   };
 }

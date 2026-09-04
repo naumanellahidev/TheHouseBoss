@@ -37,10 +37,59 @@ const PAGES = [
   "/legal/accessibility",
 ];
 
-const AGENT_NAME = "Krisi Kakarova";
-const BROKERAGE = "World Properties Group";
-const RE_LICENCE = "SL3327932";
-const CONTRACTOR_LICENCE = "CRC1335654";
+/**
+ * The expected disclosure values.
+ *
+ * Read from `site_settings` when the service key is available, falling back to
+ * the launch values. This used to be four hardcoded literals, which meant the
+ * guard asserted the values the site was BUILT with rather than the values it
+ * currently renders — so the moment an administrator edited the brokerage name
+ * in the dashboard, this script failed on all 21 pages with "could not isolate
+ * the brokerage and agent elements" and reported a compliance breach that did
+ * not exist.
+ *
+ * The fallbacks are kept deliberately. Without a service key (CI, a fresh
+ * clone) the guard still runs and still checks something real; it simply checks
+ * the launch values.
+ */
+async function expectedDisclosure() {
+  const fallback = {
+    agent: "Krisi Kakarova",
+    brokerage: "World Properties Group",
+    re: "SL3327932",
+    contractor: "CRC1335654",
+  };
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.log("  (no service key — checking the launch values)");
+    return fallback;
+  }
+
+  try {
+    const response = await fetch(
+      `${url}/rest/v1/site_settings?id=eq.1&select=legal_name,brokerage_name,license_re,license_contractor`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+    );
+    const [row] = await response.json();
+    return {
+      agent: row?.legal_name || fallback.agent,
+      brokerage: row?.brokerage_name || fallback.brokerage,
+      re: row?.license_re || fallback.re,
+      contractor: row?.license_contractor || fallback.contractor,
+    };
+  } catch (error) {
+    console.log(`  (settings unreadable: ${error.message} — using launch values)`);
+    return fallback;
+  }
+}
+
+const expected = await expectedDisclosure();
+const AGENT_NAME = expected.agent;
+const BROKERAGE = expected.brokerage;
+const RE_LICENCE = expected.re;
+const CONTRACTOR_LICENCE = expected.contractor;
 
 const failures = [];
 const notes = [];

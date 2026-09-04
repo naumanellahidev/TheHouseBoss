@@ -4,7 +4,8 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 
-import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
+import { PropertyImage } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { cn } from "@/lib/utils";
 import type { Photo } from "@/types/domain";
 

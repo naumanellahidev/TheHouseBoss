@@ -112,6 +112,121 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-04 — Automatic SEO/AEO, branding panel, image loader, SEO console
+
+**Shipped**
+
+- **Automatic metadata for every published page.** `lib/seo/auto/` — a
+  deterministic generator that always lands inside the 140–158 band by
+  construction, an optional Ollama polish layer that can only return something
+  equally valid or the deterministic text, and a writer that persists to
+  `seo_pages`. Wired into every publish action (listings, articles, cities,
+  communities) and read back by `generateMetadata` on all six route types.
+- **The publish gates that demanded metadata are gone.** `articleSchema`'s
+  `metaDesc` refinement, the `meta` checklist item on both editors and the
+  article `excerpt` item. Each demanded a value the render layer then discarded
+  for being too short — a gate that blocked the client and protected nothing.
+- **"Write it for me"** in the listing and article SEO tabs. Generates from the
+  form's current values, so it works on a record that has never been saved. It
+  fills the fields and saves nothing.
+- **The SEO screen is a console.** Coverage per entity type, a live percentage,
+  which model is writing, generate-the-missing (batched at 25, resumable),
+  per-page Rewrite/Edit/Remove, character meters against the real constraint, an
+  add-redirect form, sitemap statistics and a cache-refresh button.
+- **Branding panel** in Settings: brand name, licensed name, both logo
+  uploaders, licence labels and authorities, years of experience. Verified end
+  to end — uploaded through the admin, rendered on the public site, removed.
+- **Logo sizing.** Real dimensions from `media` through the public view
+  (migration 016) instead of an assumed 3:2, `--logo-h-*` tokens sized against
+  `--header-h`, nothing painted behind it, and the type-set lockup as the
+  fallback when the artwork fails to load.
+- **`lib/image-loader.ts`** — a custom `next/image` loader. Measured: the home
+  page at 360px went from 418 kB of WebP (one 800w for every photo) to 246 kB.
+- **AEO for listings.** An answer-first summary rendered visibly and reused
+  verbatim as the JSON-LD `description`; `lotSize`, `containedInPlace`,
+  `additionalProperty` for HOA and taxes, the MLS number as `identifier`,
+  `provider` and `validFrom`. `llms.txt` gained per-listing entries and
+  per-article abstracts.
+- **`AnswerFirst` reached the editor** as a Tiptap node, and the article
+  description generator now prefers it structurally.
+- **Keyword search does what the page promises.** `searchListings` matched
+  address and slug only while `not-found.tsx` and the JSON-LD `SearchAction`
+  both promised "address, city or keyword". It now also matches city name, zip,
+  headline and description.
+- **`check-pending.mjs` reads the database**, so a value the client supplies in
+  Settings satisfies the matching `PENDING` in `site-config.ts`.
+
+**Defects found and fixed along the way**
+
+- `IMAGE_SIZES` was exported from a `"use client"` module, so every server
+  component importing it received a client reference and got `undefined`. Next
+  substituted `100vw`, meaning every card image on the site asked for the
+  full-width variant. Invisible while `unoptimized` stripped `sizes`; the loader
+  made it expensive. Moved to `lib/image-sizes.ts`.
+- `lot_size` is stored in ACRES. Two new code paths labelled it square feet and
+  published "0.28 square feet" for a quarter-acre lot — a false statement about
+  a property, not a units nit. Both fixed to `ACR`.
+- Five of eight city descriptions generated at 116–138 characters, which the
+  `seo_pages` CHECK constraint rejects outright. `pad()` gained a ladder of
+  attribution lines short enough that one always fits.
+- Generated titles were truncated mid-phrase because the stored `meta_title`
+  already carried the " | The House Boss" suffix the layout appends again.
+  `stripBrandSuffix` + `trimTitle`.
+- `/longwood/homes-for-sale` and `/longwood` emitted identical titles once the
+  generated override landed. The search route now leads with the intent:
+  "Homes for Sale in Longwood, FL".
+- `PropertyImage` painted `bg-surface-sunken` behind the transparent logo — the
+  pale card in the footer. Fixed with a `bare` mode.
+- A failed logo image left the header's home link with no content: a serious
+  `link-name` violation and a 0x44 touch target. `bare` mode now takes a
+  `fallback`, and the type-set lockup is it.
+- `ImageField`'s buttons were 36px, under the 44px minimum.
+
+**Open / deferred**
+
+- **Vercel still has no Supabase environment variables.** `/api/health` returns
+  503 and the deployed HTML contains zero occurrences of the project ref, so
+  `NEXT_PUBLIC_SUPABASE_URL` was unset at build time. None of this work is
+  visible in production until they are set and the project is redeployed with
+  the build cache disabled. Owner: the developer with Vercel access.
+- **The Ollama API key was pasted into a chat transcript and should be
+  rotated.** It lives only in `.env.local`, which is gitignored.
+- **No dark-background logo.** The supplied artwork is gold and navy drawn for a
+  white page, so on the navy footer the gold reads and the two navy sub-lines do
+  not. A white card behind it was implemented and rejected by the client, who
+  asked for full transparency. The fix is a light-text version uploaded to
+  Admin → Settings → Branding, which `Logo` already prefers. Owner: the client.
+- FAQ suggestions from question-shaped H2s: not built.
+- GSAP is still on every page's critical path; not yet deferred behind the
+  capability check the Three.js bundle uses.
+
+**Decisions made this session**
+
+- **HR5 was amended** to name what it protects (Vercel's transformation quota)
+  rather than the mechanism (`images.unoptimized`). The flag forbade the fix to
+  the problem it caused. `tests/image-loader.spec.ts` asserts no `/_next/image`
+  request is ever issued, and that test is the enforcement now. `CLAUDE.md`,
+  `docs/07` and `docs/13` all updated.
+- `ConfirmDialog`'s typed confirmation became optional. Demanding the same
+  ceremony for "delete a listing and its photographs" and "remove a metadata
+  override" teaches the operator to type without reading.
+- Nothing is pinged when the sitemap is refreshed. Google retired the endpoint
+  in 2023 and it now 404s; the UI says so rather than firing a request that
+  quietly fails.
+
+**Next session must know**
+
+- `npm run seo:backfill` regenerates metadata for everything published; add
+  `-- --dry-run` to see it without writing. It needs
+  `--conditions=react-server` (already in the npm script) because `server-only`
+  throws outside that condition.
+- Verified with the key unset: all 15 pages still generated, all in band, zero
+  model calls. The model is genuinely optional.
+- 358 Playwright tests pass. **Never pipe a test command through `tail`** — the
+  exit code read is `tail`'s. This session that mistake was avoided by
+  redirecting to a file and reading `$?` directly, and it caught a real
+  regression the summary line would have hidden.
+
 ### 2026-08-30 — Documentation and planning
 
 **Shipped**

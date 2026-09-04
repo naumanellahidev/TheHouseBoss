@@ -1,8 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { PropertyImage } from "@/components/site/property-image";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/site-config";
+import type { SiteSettings } from "@/types/domain";
 
 /**
  * Brand lockup.
@@ -13,15 +14,26 @@ import { siteConfig } from "@/lib/site-config";
  *
  * ── The artwork ───────────────────────────────────────────────────────────
  *
- * The client's logo is expected at `public/logo/house-boss.png` (and, if
- * supplied, `house-boss-invert.png` for dark grounds). If the file is absent
- * the component falls back to the type-set lockup below, so the site never
- * renders a broken image — the same discipline `PropertyImage` follows.
+ * The logo is UPLOADED THROUGH THE ADMIN, not committed to the repository. It
+ * lives in `site_settings.logo_key` and goes through the same sharp pipeline as
+ * every other image on this site, so it gets 400/800/1600 WebP derivatives, a
+ * blur placeholder and stored dimensions for free.
  *
- * Whether the artwork exists is a BUILD-TIME constant (`HAS_ARTWORK`), not a
- * runtime check. A server component cannot stat the filesystem on Vercel's
- * runtime, and doing an existence check per render would be absurd for an asset
- * that either ships or does not.
+ * That replaces the previous `public/logo/*.png` + `HAS_ARTWORK` arrangement,
+ * which required somebody to put a file in the repo and flip a constant. A
+ * client cannot do that; uploading an image in a dashboard is something they do
+ * every day.
+ *
+ * With no key set, the type-set lockup below renders — so the site never shows
+ * a broken image and never waits on an asset.
+ *
+ * ── Sizing ───────────────────────────────────────────────────────────────
+ *
+ * The height comes from the `--logo-h-*` tokens and the width from the image's
+ * own ratio, read from `media` through the public view. It used to be a fixed
+ * 44px box at an assumed 3:2 — too small for a lockup that carries the
+ * licensee and brokerage lines, and the wrong shape for any logo that is not
+ * 3:2. Rendered `bare`, so nothing is painted behind a transparent PNG.
  *
  * ── Why the image carries no text alternative of its own ──────────────────
  *
@@ -30,20 +42,6 @@ import { siteConfig } from "@/lib/site-config";
  * it rather than baked into the picture, so it stays selectable, translatable
  * and legible to a screen reader.
  */
-
-/**
- * Flip to `true` once `public/logo/house-boss.png` exists.
- *
- * Deliberately a single constant rather than a try/catch import: it makes the
- * state of the asset obvious in one place, and a missing file becomes a visible
- * fallback rather than a build failure.
- */
-const HAS_ARTWORK = false;
-
-const ARTWORK = {
-  light: "/logo/house-boss.png",
-  dark: "/logo/house-boss-invert.png",
-} as const;
 
 /**
  * Compact mark for tight spaces — the header at narrow widths, a favicon, an
@@ -101,33 +99,94 @@ export function Logo({
   invert = false,
   href = "/",
   className,
-  /**
-   * Rendered width in px. The artwork is served at 3x and downscaled, so it
-   * stays sharp on a high-density display without shipping a second file.
-   */
-  width = 200,
+  settings,
 }: {
   variant?: "full" | "compact" | "stacked";
   invert?: boolean;
   href?: string | null;
   className?: string;
-  width?: number;
+  /** Live branding. Absent → the type-set lockup from site-config. */
+  settings?: SiteSettings | null;
 }) {
-  const inner = HAS_ARTWORK ? (
-    <Image
-      src={invert ? ARTWORK.dark : ARTWORK.light}
-      alt={siteConfig.name}
-      width={width}
-      // The supplied artwork is roughly 3:2. Height is stated explicitly so the
-      // header reserves the right box before the image loads — zero CLS (HR7).
-      height={Math.round((width * 2) / 3)}
-      priority
-      className={cn(
-        "h-auto w-auto object-contain",
-        variant === "compact" ? "max-h-9" : "max-h-14",
-      )}
-    />
-  ) : (
+  const brandName = settings?.brandName ?? siteConfig.name;
+
+  /*
+    An inverted logo is used only when one was supplied. Falling back to the
+    light artwork on a dark ground is better than falling back to no logo, and
+    most brand marks carry enough contrast to survive it.
+  */
+  const artworkKey = invert
+    ? (settings?.logoInvertKey ?? settings?.logoKey)
+    : settings?.logoKey;
+
+  /*
+    The artwork's REAL dimensions, from `media` via the public view (migration
+    016). This was a hardcoded 900×600 — a guess that happened to be wrong for
+    the logo that was actually uploaded (612×408 is 3:2, but nothing guarantees
+    the next one is), and a wrong ratio inside a fixed frame is what letterboxed
+    the mark and left it looking pasted onto a card.
+
+    The 3:2 fallback survives for the window between an upload and the view
+    catching up, which is the only case where a key exists and a size does not.
+  */
+  const artworkW = (invert ? settings?.logoInvertW : settings?.logoW) ?? 900;
+  const artworkH = (invert ? settings?.logoInvertH : settings?.logoH) ?? 600;
+
+  /*
+    Height per context, width from the aspect ratio, capped so a wide lockup
+    cannot push the primary nav off the bar. Tokens, because these are only
+    correct in proportion to `--header-h`, which is also a token.
+  */
+  /*
+    The height goes on the IMAGE and the width cap on its wrapper.
+
+    Putting the height on the wrapper looked identical until the plate below was
+    added: padding then ate into a fixed box, shrinking the mark, and because a
+    flex child stretches by default the card ran the full width of the footer
+    column with the logo adrift at its left edge. Height on the image, `w-fit`
+    on the wrapper, and the card is exactly as big as what it holds.
+  */
+  const artworkHeight =
+    variant === "compact"
+      ? "h-(--logo-h)"
+      : variant === "stacked"
+        ? "h-(--logo-h-stacked)"
+        : invert
+          ? "h-(--logo-h) md:h-(--logo-h-footer)"
+          : "h-(--logo-h) md:h-(--logo-h-md) lg:h-(--logo-h-lg)";
+
+  const artworkMaxWidth =
+    variant === "compact" ? "max-w-(--logo-max-w-compact)" : "max-w-(--logo-max-w)";
+
+  /*
+    NOTHING is painted behind the logo. Ever.
+
+    Two earlier versions got this wrong in opposite directions. `PropertyImage`
+    paints `bg-surface-sunken` behind photography, which showed through the
+    transparent artwork as a grey rectangle — an accident. Replacing it with a
+    deliberate white card to keep the light-on-dark artwork readable was a
+    considered choice, and the client rejected it: the logo is to sit directly
+    on whatever is behind it, with no plate.
+
+    The consequence is real and accepted. The supplied artwork is gold and navy
+    drawn for a white page, so on the navy footer the gold reads and the two
+    navy sub-lines do not. The fix is a light-text version uploaded to
+    `logo_invert_key` in Admin → Settings → Branding, which this component
+    already prefers whenever one exists.
+  */
+
+  /*
+    The type-set lockup.
+
+    Extracted from the ternary into a value because it is now used TWICE: when
+    no artwork has been uploaded, and when uploaded artwork fails to load. The
+    second case is the one that bit — a failed image left the header's home link
+    with no content at all, which axe reported as a serious `link-name`
+    violation and the responsive audit caught as a 0x44 touch target. Rendering
+    nothing is right for a decorative photograph and wrong for a link's only
+    label.
+  */
+  const typeSet = (
     <>
       <span
         className={cn(
@@ -136,7 +195,7 @@ export function Logo({
           invert ? "text-foreground-invert" : "text-foreground",
         )}
       >
-        {siteConfig.name}
+        {brandName}
       </span>
 
       {variant !== "compact" ? (
@@ -147,10 +206,40 @@ export function Logo({
           )}
         >
           <span aria-hidden="true" className="block h-0.5 w-8 bg-accent" />
-          Powered by {siteConfig.brokerage}
+          Powered by {settings?.brokerageName ?? siteConfig.brokerage}
         </span>
       ) : null}
     </>
+  );
+
+  const inner = artworkKey ? (
+    <PropertyImage
+      photo={{
+        kind: "stored",
+        key: artworkKey,
+        w: artworkW,
+        h: artworkH,
+        // The artwork is a wordmark, so its alt IS the brand name and it is
+        // what names the link. `fallback` covers it never arriving.
+        alt: brandName,
+      }}
+      /*
+        800, not 400. The logo now renders up to 80px tall and, at a 3:2 ratio
+        on a 2x screen, wants ~240px across — the 400 was chosen when the box
+        was 44px tall. `sizes` lets the loader drop back to the 400 on a phone,
+        so this costs nothing where it is not needed.
+      */
+      size={800}
+      sizes="(max-width: 767px) 180px, 300px"
+      priority
+      aspect="none"
+      bare
+      fallback={typeSet}
+      wrapperClassName={cn("w-fit self-start", artworkMaxWidth)}
+      className={cn(artworkHeight, "w-auto object-contain")}
+    />
+  ) : (
+    typeSet
   );
 
   const layout = cn(

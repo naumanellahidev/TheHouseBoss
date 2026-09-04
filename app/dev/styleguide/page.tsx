@@ -7,7 +7,8 @@ import { EmptyState } from "@/components/site/empty-state";
 import { FaqAccordion } from "@/components/site/faq-accordion";
 import { LeadForm } from "@/components/site/lead-form";
 import { Logo } from "@/components/site/logo";
-import { PropertyImage, IMAGE_SIZES } from "@/components/site/property-image";
+import { PropertyImage } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
 import {
   ResponsiveTable,
   type Column,

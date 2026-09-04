@@ -33,6 +33,8 @@ export function ImageField({
   alt,
   onChange,
   disabledReason,
+  hideAlt = false,
+  contain = false,
 }: {
   label: string;
   description?: string;
@@ -43,6 +45,17 @@ export function ImageField({
   alt: string | null;
   onChange: (next: { key: string | null; alt: string | null }) => void;
   disabledReason?: string;
+  /**
+   * Drop the alt-text input.
+   *
+   * For a logo only. The accessible name of the logo comes from the brand name
+   * in the link that wraps it, so a per-image alt would be a SECOND name for
+   * the same control — which is the WCAG 2.5.3 failure the header already had
+   * once. Everywhere else alt text is required and this stays false.
+   */
+  hideAlt?: boolean;
+  /** Fit the whole image in the frame instead of cropping it. Logos, marks. */
+  contain?: boolean;
 }) {
   const toast = useToast();
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -103,36 +116,37 @@ export function ImageField({
               alt=""
               fill
               sizes="224px"
-              className="object-cover"
+              className={cn(contain ? "object-contain p-2" : "object-cover")}
               unoptimized
             />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <label className="flex flex-col gap-1.5">
-              <span className="flex items-baseline gap-2 text-xs font-semibold text-foreground">
-                Alt text
-                <span className="font-medium text-foreground-subtle">Required</span>
-              </span>
-              <input
-                value={alt ?? ""}
-                onChange={(event) => onChange({ key: imageKey, alt: event.target.value })}
-                placeholder="Downtown Lake Mary on a clear afternoon"
-                aria-invalid={!alt?.trim() || undefined}
-                className={cn(
-                  "h-11 w-full rounded-md border bg-surface px-3 text-body text-foreground",
-                  "placeholder:text-foreground-subtle",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                  alt?.trim() ? "border-border-strong" : "border-danger",
-                )}
-              />
-            </label>
+            {hideAlt ? null : (
+              <label className="flex flex-col gap-1.5">
+                <span className="flex items-baseline gap-2 text-xs font-semibold text-foreground">
+                  Alt text
+                  <span className="font-medium text-foreground-subtle">Required</span>
+                </span>
+                <input
+                  value={alt ?? ""}
+                  onChange={(event) => onChange({ key: imageKey, alt: event.target.value })}
+                  placeholder="Downtown Lake Mary on a clear afternoon"
+                  aria-invalid={!alt?.trim() || undefined}
+                  className={cn(
+                    "h-11 w-full rounded-md border bg-surface px-3 text-body text-foreground",
+                    "placeholder:text-foreground-subtle",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    alt?.trim() ? "border-border-strong" : "border-danger",
+                  )}
+                />
+              </label>
+            )}
 
             <div className="mt-auto flex gap-2">
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 loading={uploading}
                 onClick={() => inputRef.current?.click()}
               >
@@ -141,7 +155,6 @@ export function ImageField({
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
                 className="text-danger hover:bg-danger-bg hover:text-danger"
                 onClick={() => onChange({ key: null, alt: null })}
               >
@@ -162,7 +175,11 @@ export function ImageField({
           <Button
             type="button"
             variant="outline"
-            size="sm"
+            /*
+              No `size="sm"` on any button in this field. `sm` is 36px tall,
+              under the 44px minimum in CLAUDE.md HR25 — measured in a browser,
+              not assumed. It applied to Choose, Replace and Remove alike.
+            */
             loading={uploading}
             disabled={!entityId}
             onClick={() => inputRef.current?.click()}

@@ -300,3 +300,99 @@ export async function getNotifications(limit = 20): Promise<AdminNotification[]>
     createdAt: r.created_at,
   }));
 }
+
+/* ── SEO coverage ─────────────────────────────────────────────────────────── */
+
+export type SeoCoverageGroup = {
+  label: string;
+  /** Published records of this kind. */
+  total: number;
+  /** How many of them have a generated or hand-written `seo_pages` row. */
+  covered: number;
+  /** Up to a handful of paths with no row, so the admin can act on them. */
+  missing: string[];
+};
+
+export type SeoCoverage = {
+  groups: SeoCoverageGroup[];
+  total: number;
+  covered: number;
+  /** Rows in `seo_pages` that no longer match a published record. */
+  orphaned: string[];
+};
+
+/**
+ * How much of the published site has generated metadata.
+ *
+ * The SEO screen used to list `seo_pages` and stop there, which answered "what
+ * has been overridden" and never "what is missing" — and missing is the only
+ * question worth asking now that the rows are generated rather than typed.
+ *
+ * Four small selects and a diff in memory. A join would need a view over four
+ * unrelated tables to produce something this screen reads once; at the scale
+ * this site operates (tens of records, not thousands) the round trips cost less
+ * than the migration would.
+ */
+export async function getSeoCoverage(): Promise<SeoCoverage> {
+  const db = await createSupabaseServerClient();
+
+  const [pages, listings, articles, cities, communities] = await Promise.all([
+    db.from("seo_pages").select("path"),
+    db.from("listings").select("slug").eq("published", true),
+    db.from("articles").select("slug, kind, cities(slug)").eq("status", "published"),
+    db.from("cities").select("slug").eq("published", true),
+    db.from("communities").select("slug").eq("published", true),
+  ]);
+
+  const have = new Set((pages.data ?? []).map((r: { path: string }) => r.path));
+
+  const group = (label: string, paths: string[]): SeoCoverageGroup => {
+    const missing = paths.filter((p) => !have.has(p));
+    return { label, total: paths.length, covered: paths.length - missing.length, missing };
+  };
+
+  const articlePaths = (articles.data ?? []).map(
+    (r: { slug: string; kind: string; cities: unknown }) => {
+      const city = Array.isArray(r.cities) ? r.cities[0] : r.cities;
+      const citySlug = (city as { slug?: string } | null)?.slug;
+      if (r.kind === "market_update") return `/market-updates/${r.slug}`;
+      return citySlug === "lake-mary"
+        ? `/lake-mary/blog/${r.slug}`
+        : `/market-updates/${r.slug}`;
+    },
+  );
+
+  const groups = [
+    group(
+      "Listings",
+      (listings.data ?? []).map((r: { slug: string }) => `/listing/${r.slug}`),
+    ),
+    group("Articles", articlePaths),
+    group("Cities", (cities.data ?? []).map((r: { slug: string }) => `/${r.slug}`)),
+    group(
+      "Communities",
+      (communities.data ?? []).map((r: { slug: string }) => `/communities/${r.slug}`),
+    ),
+  ];
+
+  const allPaths = new Set([
+    ...(listings.data ?? []).map((r: { slug: string }) => `/listing/${r.slug}`),
+    ...articlePaths,
+    ...(cities.data ?? []).map((r: { slug: string }) => `/${r.slug}`),
+    ...(communities.data ?? []).map(
+      (r: { slug: string }) => `/communities/${r.slug}`,
+    ),
+  ]);
+
+  return {
+    groups,
+    total: groups.reduce((t, g) => t + g.total, 0),
+    covered: groups.reduce((t, g) => t + g.covered, 0),
+    /*
+      A row whose record was unpublished or deleted. Harmless — nothing reads it
+      — but worth surfacing, because it is also how a typo in a hand-added path
+      shows up: an override that looks saved and applies to nothing.
+    */
+    orphaned: [...have].filter((p) => !allPaths.has(p)),
+  };
+}

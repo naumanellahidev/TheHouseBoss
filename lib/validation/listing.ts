@@ -149,12 +149,14 @@ export function prePublishChecklist(v: Partial<ListingInput>): ChecklistItem[] {
       tab: "content",
       ok: (v.description?.trim().length ?? 0) >= 100,
     },
-    {
-      id: "meta",
-      label: "Meta description written",
-      tab: "seo",
-      ok: (v.metaDesc?.trim().length ?? 0) > 0,
-    },
+    /*
+      The "meta description written" item is gone.
+
+      `listingDescription()` has always had a length-gated fallback, so a short
+      hand-typed value was silently ignored at render — the gate demanded a
+      value the page then threw away. Generation at publish makes that explicit:
+      the SEO tab's field is an override, and blank is a valid answer.
+    */
     {
       id: "core",
       label: "Price, city and status set",

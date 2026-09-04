@@ -36,10 +36,27 @@ export async function generateMetadata({
   }
 
   return buildMetadata({
-    title: `${city.name}, FL Homes for Sale`,
+    /*
+      "Homes for Sale in Longwood, FL", not "Longwood, FL Homes for Sale".
+
+      The city hub at /longwood is a guide and this is its search results, and
+      several seeded city rows carry a `meta_title` of "<City>, FL Homes for
+      Sale" — so the two routes were emitting an identical title. `check-seo`
+      catches that as a duplicate, and duplicate titles are one of the few
+      things that genuinely cost rankings.
+
+      Fixed here rather than by overriding the author's `meta_title`, because
+      this route has no author-supplied title to respect and the hub does. Front
+      -loading the intent also reads better in a result: someone searching
+      "homes for sale longwood" sees their phrase first.
+    */
+    title: `Homes for Sale in ${city.name}, FL`,
     description:
-      city.metaDesc ||
-      `Browse homes for sale in ${city.name}, ${city.county} County, Florida. Filter by price, bedrooms, property type and new construction, with a licensed contractor's read on every property.`,
+      // Length-gated, not truthiness: a short `meta_desc` used to win here and
+      // then get padded by search engines with whatever text they found.
+      city.metaDesc && city.metaDesc.length >= 140
+        ? city.metaDesc
+        : `Browse homes for sale in ${city.name}, ${city.county} County, Florida. Filter by price, bedrooms, property type and new construction, with a licensed contractor's read on every property.`,
     path: `/${city.slug}/homes-for-sale`,
   });
 }

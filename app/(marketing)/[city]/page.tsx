@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CityHub } from "@/components/site/city-hub";
+import { getSeoOverride } from "@/lib/queries/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { getArticles } from "@/lib/queries/articles";
 import { getCityBySlug, getCitySlugsForStaticParams, getCommunities } from "@/lib/queries/cities";
@@ -48,7 +49,10 @@ export async function generateMetadata({
     return { title: "City not found", robots: { index: false, follow: true } };
   }
 
+  const override = await getSeoOverride(`/${city.slug}`);
+
   return buildMetadata({
+    override,
     title: city.metaTitle || `${city.name}, FL Real Estate & Neighbourhood Guide`,
     // A stored description shorter than the 140-character floor is worse than
     // the generated one: search engines truncate long, but they pad short with

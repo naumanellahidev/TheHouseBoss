@@ -15,6 +15,15 @@ import { Field, FieldDescription, FieldLabel, Input } from "@/components/ui/fiel
  *
  * `consequence` is where the caller states what is actually lost — "12 photos,
  * about 2.5 MB of storage" — so the decision is made with the facts visible.
+ *
+ * ── When there is no phrase ───────────────────────────────────────────────
+ *
+ * `confirmPhrase` is optional, and omitting it gives a plain confirm. That is
+ * not a loophole: typed friction is right for deleting a listing and its
+ * photographs, and wrong for removing a metadata override, which loses nothing
+ * — the page simply goes back to its generated title. Demanding the same
+ * ceremony for both teaches the operator to type without reading, which is
+ * exactly what the friction exists to prevent.
  */
 export function ConfirmDialog({
   open,
@@ -32,8 +41,8 @@ export function ConfirmDialog({
   title: string;
   description?: string;
   consequence?: React.ReactNode;
-  /** The exact text the user must type. */
-  confirmPhrase: string;
+  /** The exact text the user must type. Omit for a plain confirm. */
+  confirmPhrase?: string;
   confirmLabel?: string;
   confirmHint?: string;
   onConfirm: (typed: string) => Promise<void> | void;
@@ -54,6 +63,7 @@ export function ConfirmDialog({
   }
 
   const matches =
+    !confirmPhrase ||
     typed.trim().toLowerCase() === confirmPhrase.trim().toLowerCase();
 
   return (
@@ -65,19 +75,23 @@ export function ConfirmDialog({
           </div>
         ) : null}
 
-        <Field>
-          <FieldLabel required>
-            Type <span className="font-mono">{confirmPhrase}</span> to confirm
-          </FieldLabel>
-          <Input
-            value={typed}
-            onChange={(event) => setTyped(event.target.value)}
-            autoComplete="off"
-            // Not autoFocus: focus lands on the dialog, and jumping straight
-            // into the confirmation field encourages typing before reading.
-          />
-          {confirmHint ? <FieldDescription>{confirmHint}</FieldDescription> : null}
-        </Field>
+        {confirmPhrase ? (
+          <Field>
+            <FieldLabel required>
+              Type <span className="font-mono">{confirmPhrase}</span> to confirm
+            </FieldLabel>
+            <Input
+              value={typed}
+              onChange={(event) => setTyped(event.target.value)}
+              autoComplete="off"
+              // Not autoFocus: focus lands on the dialog, and jumping straight
+              // into the confirmation field encourages typing before reading.
+            />
+            {confirmHint ? <FieldDescription>{confirmHint}</FieldDescription> : null}
+          </Field>
+        ) : confirmHint ? (
+          <p className="text-sm text-foreground-muted">{confirmHint}</p>
+        ) : null}
 
         <DialogFooter>
           <Button

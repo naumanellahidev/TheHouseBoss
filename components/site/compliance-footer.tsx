@@ -1,4 +1,5 @@
 import { siteConfig } from "@/lib/site-config";
+import type { SiteSettings } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
 /**
@@ -45,8 +46,40 @@ function EqualHousingMark({ className }: { className?: string }) {
   );
 }
 
-export function ComplianceFooter({ className }: { className?: string }) {
+export function ComplianceFooter({
+  className,
+  settings,
+}: {
+  className?: string;
+  /**
+   * Live values from `site_settings`. Every field falls back to
+   * `lib/site-config.ts`, which stays the build-time source of truth for the
+   * contexts that cannot read the database (generateMetadata, opengraph-image,
+   * robots.ts, sitemap.ts, llms.txt).
+   *
+   * These fields are editable with no restrictions, by the client's decision.
+   * What is NOT editable is the relationship between the two font sizes below:
+   * that is FREC 61J2-10.026 itself rather than a value, and
+   * scripts/check-compliance.mjs reads the rendered classes to prove it.
+   */
+  settings?: SiteSettings | null;
+}) {
   const { licenses, legalName, brokerage, name } = siteConfig;
+
+  /*
+    `??` and not `||`: an empty string in the database is a value the admin
+    typed, and `optionalText()` in lib/validation/settings.ts already normalises
+    blanks to null on the way in. Using `||` here would make a legitimately
+    short value fall back to the hardcoded one.
+  */
+  const brokerageName = settings?.brokerageName ?? brokerage;
+  const agentName = settings?.legalName ?? legalName;
+  const brandName = settings?.brandName ?? name;
+  const reNumber = settings?.licenseRe ?? licenses.realEstate.number;
+  const reLabel = settings?.licenseReLabel ?? licenses.realEstate.label;
+  const contractorNumber = settings?.licenseContractor ?? licenses.contractor.number;
+  const contractorLabel =
+    settings?.licenseContractorLabel ?? licenses.contractor.label;
 
   return (
     <div
@@ -58,21 +91,20 @@ export function ComplianceFooter({ className }: { className?: string }) {
         <div className="flex flex-col gap-2">
           {/* Brokerage first and largest — FREC prominence requirement */}
           <p className={cn(BROKERAGE_CLASS, "text-foreground-invert")}>
-            {brokerage}
+            {brokerageName}
           </p>
 
           <p className={cn(NAME_CLASS, "text-foreground-invert-muted")}>
-            {legalName} · {name}
+            {agentName} · {brandName}
           </p>
 
           <ul className="flex flex-col gap-1 text-xs text-foreground-invert-muted sm:flex-row sm:flex-wrap sm:gap-x-4">
             <li>
-              {licenses.realEstate.label}{" "}
-              <span className="tabular">{licenses.realEstate.number}</span>
+              {reLabel} <span className="tabular">{reNumber}</span>
             </li>
             <li>
-              {licenses.contractor.label}{" "}
-              <span className="tabular">{licenses.contractor.number}</span>
+              {contractorLabel}{" "}
+              <span className="tabular">{contractorNumber}</span>
             </li>
           </ul>
         </div>
@@ -98,8 +130,12 @@ export function ComplianceFooter({ className }: { className?: string }) {
             be independently verified. Property details, availability and
             pricing are subject to change without notice.
           </p>
+
+          {/* Additional disclosure, typed by the admin. Editable since Phase 2
+              and until now rendered nowhere. */}
+          {settings?.disclosureText ? <p>{settings.disclosureText}</p> : null}
           <p>
-            &copy; {new Date().getFullYear()} {name}. All rights reserved.
+            &copy; {new Date().getFullYear()} {brandName}. All rights reserved.
           </p>
         </div>
       </div>

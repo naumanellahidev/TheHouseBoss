@@ -8,6 +8,7 @@ import {
   saveSettings,
 } from "@/app/(admin)/admin/(shell)/settings/actions";
 import { runOrphanSweep } from "@/app/(admin)/admin/(shell)/media/actions";
+import { ImageField } from "@/components/admin/image-field";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/field";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
+import { SITE_ENTITY_ID } from "@/lib/images/site-entity";
 import { formatBytes } from "@/lib/storage/budget";
 import { PROFILE_FIELDS } from "@/lib/validation/settings";
 import { siteConfig } from "@/lib/site-config";
@@ -54,6 +56,14 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
     announcement: settings.announcement ?? "",
     announcementHref: settings.announcementHref ?? "",
     brokerageName: settings.brokerageName ?? "",
+    brandName: settings.brandName ?? "",
+    legalName: settings.legalName ?? "",
+    licenseReLabel: settings.licenseReLabel ?? "",
+    licenseReAuthority: settings.licenseReAuthority ?? "",
+    licenseContractorLabel: settings.licenseContractorLabel ?? "",
+    licenseContractorAuthority: settings.licenseContractorAuthority ?? "",
+    yearsExperience:
+      settings.yearsExperience === null ? "" : String(settings.yearsExperience),
     licenseRe: settings.licenseRe ?? "",
     licenseContractor: settings.licenseContractor ?? "",
     disclosureText: settings.disclosureText ?? "",
@@ -68,6 +78,18 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
     ),
   );
 
+  /*
+    The two logo keys are separate state rather than fields in `form`.
+
+    They are set by ImageField's `onChange`, not by an input event, and the
+    upload has ALREADY happened by the time the key arrives — the object is in
+    storage and has a `media` row whether or not the form is subsequently
+    saved. Keeping them out of `form` makes that asymmetry visible instead of
+    hiding it behind a `set()` call that looks like every other field.
+  */
+  const [logoKey, setLogoKey] = React.useState(settings.logoKey);
+  const [logoInvertKey, setLogoInvertKey] = React.useState(settings.logoInvertKey);
+
   const [errors, setErrors] = React.useState<Record<string, string[]>>({});
 
   const set = (key: keyof typeof form) => (value: string) =>
@@ -78,7 +100,7 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
     setSaving(true);
     setErrors({});
 
-    const result = await saveSettings({ ...form, profiles });
+    const result = await saveSettings({ ...form, profiles, logoKey, logoInvertKey });
     setSaving(false);
 
     if (!result.ok) {
@@ -97,6 +119,7 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
         <TabsList>
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="profiles">Profiles</TabsTrigger>
+          <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="site">Site</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -214,6 +237,132 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
                 </Field>
               ))}
             </div>
+          </div>
+        </TabsContent>
+
+        {/* ── Branding ─────────────────────────────────────────────────── */}
+        <TabsContent value="branding">
+          <div className="flex max-w-3xl flex-col gap-6">
+            <p className="max-w-[70ch] text-sm text-foreground-muted">
+              Everything here is optional. A field left blank uses the value
+              built into the site, so clearing one restores the default rather
+              than emptying the page. Changes appear on the live site as soon as
+              you save.
+            </p>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field error={errorOf("brandName")}>
+                <FieldLabel>Brand name</FieldLabel>
+                <Input
+                  value={form.brandName}
+                  onChange={(event) => set("brandName")(event.target.value)}
+                  placeholder={siteConfig.name}
+                />
+                <FieldDescription>
+                  The trading name in the header, the footer and the browser tab.
+                </FieldDescription>
+              </Field>
+
+              <Field error={errorOf("legalName")}>
+                <FieldLabel>Your name, as licensed</FieldLabel>
+                <Input
+                  value={form.legalName}
+                  onChange={(event) => set("legalName")(event.target.value)}
+                  placeholder={siteConfig.legalName}
+                />
+                <FieldDescription>
+                  Appears in the compliance line on every page.
+                </FieldDescription>
+              </Field>
+            </div>
+
+            <ImageField
+              label="Logo"
+              description="Shown in the header, the footer and the sign-in screen. A transparent PNG or SVG-exported PNG works best. It is resized on upload; nothing needs preparing first."
+              entityType="site"
+              entityId={SITE_ENTITY_ID}
+              imageKey={logoKey}
+              alt={null}
+              hideAlt
+              contain
+              onChange={(next) => setLogoKey(next.key)}
+            />
+
+            <ImageField
+              label="Logo for dark backgrounds"
+              description="Optional, but worth adding. Your logo is drawn for a white page, so on the dark footer it is shown on a small white card to stay readable. Upload a version with light-coloured text here and the footer will use it directly, with nothing behind it."
+              entityType="site"
+              entityId={SITE_ENTITY_ID}
+              imageKey={logoInvertKey}
+              alt={null}
+              hideAlt
+              contain
+              onChange={(next) => setLogoInvertKey(next.key)}
+            />
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field error={errorOf("licenseReLabel")}>
+                <FieldLabel>Real estate licence label</FieldLabel>
+                <Input
+                  value={form.licenseReLabel}
+                  onChange={(event) => set("licenseReLabel")(event.target.value)}
+                  placeholder={siteConfig.licenses.realEstate.label}
+                />
+              </Field>
+
+              <Field error={errorOf("licenseReAuthority")}>
+                <FieldLabel>Issued by</FieldLabel>
+                <Input
+                  value={form.licenseReAuthority}
+                  onChange={(event) => set("licenseReAuthority")(event.target.value)}
+                  placeholder={siteConfig.licenses.realEstate.authority}
+                />
+              </Field>
+
+              <Field error={errorOf("licenseContractorLabel")}>
+                <FieldLabel>Contractor licence label</FieldLabel>
+                <Input
+                  value={form.licenseContractorLabel}
+                  onChange={(event) =>
+                    set("licenseContractorLabel")(event.target.value)
+                  }
+                  placeholder={siteConfig.licenses.contractor.label}
+                />
+              </Field>
+
+              <Field error={errorOf("licenseContractorAuthority")}>
+                <FieldLabel>Issued by</FieldLabel>
+                <Input
+                  value={form.licenseContractorAuthority}
+                  onChange={(event) =>
+                    set("licenseContractorAuthority")(event.target.value)
+                  }
+                  placeholder={siteConfig.licenses.contractor.authority}
+                />
+              </Field>
+            </div>
+
+            <Field error={errorOf("yearsExperience")}>
+              <FieldLabel>Years of experience</FieldLabel>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                inputMode="numeric"
+                className="max-w-40"
+                value={form.yearsExperience}
+                onChange={(event) => set("yearsExperience")(event.target.value)}
+              />
+              <FieldDescription>
+                Used in the about section and in the structured data search
+                engines and AI assistants read. Leave blank to omit it.
+              </FieldDescription>
+            </Field>
+
+            <p className="max-w-[70ch] text-sm text-foreground-muted">
+              Licence numbers and the brokerage name are on the Compliance tab,
+              because Florida advertising rules govern them.
+            </p>
           </div>
         </TabsContent>
 

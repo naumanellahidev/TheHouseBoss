@@ -1,8 +1,9 @@
 import * as React from "react";
 import Link from "next/link";
 
-import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
-import { TableScroll } from "@/components/site/prose";
+import { PropertyImage } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
+import { AnswerFirst, TableScroll } from "@/components/site/prose";
 import { cn } from "@/lib/utils";
 
 /**
@@ -123,6 +124,15 @@ function renderNode(node: Node, key: number): React.ReactNode {
 
     case "listItem":
       return <li>{children}</li>;
+
+    /*
+      The answer-first block, written in the editor and rendered through the
+      same component the hand-written guides use — so a CMS article and a coded
+      guide present the answer identically, which is what makes the pattern
+      recognisable to an extractor across the whole site.
+    */
+    case "answerFirst":
+      return node.content?.length ? <AnswerFirst>{children}</AnswerFirst> : null;
 
     case "blockquote":
       return <blockquote>{children}</blockquote>;

@@ -165,7 +165,13 @@ Non-negotiable in this component:
 ```js
 // next.config.ts
 images: {
-  unoptimized: true,   // hard rule 5 — we pre-generate; do not burn Vercel quota
+  // Hard rule 5 is the QUOTA, not the flag. `unoptimized: true` protected it
+  // but stripped the srcset, so only one of the three derivatives was ever
+  // served. A custom loader protects it the same way — Next never calls
+  // /_next/image when one is set — and picks the right derivative per width.
+  loader: "custom",
+  loaderFile: "./lib/image-loader.ts",
+  deviceSizes: [400, 800, 1600],
   remotePatterns: [{ protocol: 'https', hostname: '*.supabase.co' }],
 }
 ```

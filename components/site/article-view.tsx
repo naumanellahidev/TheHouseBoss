@@ -3,7 +3,8 @@ import { CalendarDays, Clock } from "lucide-react";
 
 import { Breadcrumbs, type Crumb } from "@/components/site/breadcrumbs";
 import { Container, Section } from "@/components/site/container";
-import { IMAGE_SIZES, PropertyImage } from "@/components/site/property-image";
+import { PropertyImage } from "@/components/site/property-image";
+import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { LeadForm } from "@/components/site/lead-form";
 import { RichText, headingsOf } from "@/components/site/rich-text";
 import { ShareRow } from "@/components/site/share-row";

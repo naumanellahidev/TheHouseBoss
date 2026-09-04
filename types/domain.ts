@@ -312,6 +312,29 @@ export type SiteSettings = {
   ogKey: string | null;
   heroKey: string | null;
   brokerageName: string | null;
+  /** Runtime branding overrides (migration 015). NULL means "use site-config". */
+  brandName: string | null;
+  legalName: string | null;
+  logoKey: string | null;
+  logoInvertKey: string | null;
+  /**
+   * The logo's real pixel size, read from `media` through the public view
+   * (migration 016). Null when no logo is set.
+   *
+   * Needed so the header can reserve the right box before the image loads. The
+   * component previously assumed 3:2 for every upload, which letterboxed any
+   * other ratio and was the reason a transparent logo showed a pale plate in
+   * the footer.
+   */
+  logoW: number | null;
+  logoH: number | null;
+  logoInvertW: number | null;
+  logoInvertH: number | null;
+  licenseReLabel: string | null;
+  licenseReAuthority: string | null;
+  licenseContractorLabel: string | null;
+  licenseContractorAuthority: string | null;
+  yearsExperience: number | null;
   licenseRe: string | null;
   licenseContractor: string | null;
   disclosureText: string | null;

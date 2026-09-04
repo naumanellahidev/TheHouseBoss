@@ -1,6 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+
+import {
+  syncArticleSeo,
+  syncCitySeo,
+  syncCommunitySeo,
+} from "@/lib/seo/auto/apply";
 import { z } from "zod";
 
 import { deleteImages } from "@/lib/images/store";
@@ -148,6 +154,10 @@ export async function createArticle(
   if (error) return { ok: false, error: friendly(error.message, "createArticle") };
 
   const city = Array.isArray(data.cities) ? data.cities[0] : data.cities;
+
+  // Before the revalidate, so the first render of the new page already has it.
+  if (parsed.data.status === "published") await syncArticleSeo(data.slug);
+
   revalidateArticle(data.slug, data.kind, [city?.slug ?? null]);
 
   return { ok: true, data: { id: data.id, slug: data.slug } };
@@ -192,6 +202,8 @@ export async function saveArticle(
   if (before?.slug && before.slug !== data.slug) {
     revalidateArticle(before.slug, before.kind, [beforeCity?.slug ?? null]);
   }
+  if (parsed.data.status === "published") await syncArticleSeo(data.slug);
+
   revalidateArticle(data.slug, data.kind, [
     beforeCity?.slug ?? null,
     afterCity?.slug ?? null,
@@ -310,6 +322,8 @@ export async function saveCity(id: string, raw: unknown): Promise<ContentResult>
 
   if (error) return { ok: false, error: friendly(error.message, "saveCity") };
 
+  if (parsed.data.published) await syncCitySeo(data.slug);
+
   for (const slug of new Set([before?.slug, data.slug].filter(Boolean))) {
     revalidatePath(`/${slug}`);
     revalidatePath(`/${slug}/homes-for-sale`);
@@ -417,6 +431,8 @@ export async function saveCommunity(id: string, raw: unknown): Promise<ContentRe
   if (before?.slug && before.slug !== data.slug) {
     revalidatePath(`/communities/${before.slug}`);
   }
+  if (parsed.data.published) await syncCommunitySeo(data.slug);
+
   revalidateCommunity(data.slug, [beforeCity?.slug ?? null, afterCity?.slug ?? null]);
   return { ok: true };
 }

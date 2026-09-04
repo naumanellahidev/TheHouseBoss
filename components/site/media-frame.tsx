@@ -44,10 +44,14 @@ export function MediaFrame({
   /**
    * 800 by default, NOT 1600.
    *
-   * `next.config.ts` sets `images.unoptimized: true` (HR5), which means
-   * next/image emits no srcset — so whichever variant this names is downloaded
-   * by every device, and the `sizes` string below is inert for selection. We
-   * pre-generate 400/800/1600 and can only serve one of them.
+   * This used to be the ONLY lever. `images.unoptimized: true` (HR5) meant
+   * next/image emitted no srcset, so whichever variant this named was
+   * downloaded by every device and the `sizes` string was inert for selection.
+   *
+   * `lib/image-loader.ts` fixed that: the srcset now offers all three
+   * derivatives and `sizes` decides between them. This value survives as the
+   * default and the ceiling — the largest variant the loader may reach for —
+   * because 1600 is still the wrong file to hand a phone.
    *
    * Measured: two 1600w heroes cost 509 kB on a 412px viewport and pushed the
    * home page's mobile LCP to 6.1s. At 412px x 1.75 DPR the browser wants

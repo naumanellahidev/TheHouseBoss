@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 
 import { ComplianceFooter } from "@/components/site/compliance-footer";
+import type { SiteSettings } from "@/types/domain";
 import { Logo } from "@/components/site/logo";
 import {
   FacebookIcon,
@@ -32,21 +33,35 @@ const profileLabels: Record<string, string> = {
   linkedin: "LinkedIn",
 };
 
-export function Footer() {
+export function Footer({ settings }: { settings?: SiteSettings | null }) {
   const { contact, profiles } = siteConfig;
-  const hasPhone = !isPending(contact.phone);
-  const hasEmail = !isPending(contact.email);
 
-  const liveProfiles = Object.entries(profiles).filter(
-    ([, url]) => !isPending(url),
-  );
+  /*
+    The admin's values win; site-config is the fallback.
+
+    Until now the Profiles tab in Settings changed only the `sameAs` array in
+    JSON-LD — the visible social icons here read site-config exclusively, so
+    adding an Instagram URL in the dashboard did nothing a visitor could see.
+  */
+  const phone = settings?.phone ?? (isPending(contact.phone) ? null : contact.phone);
+  const email = settings?.email ?? (isPending(contact.email) ? null : contact.email);
+  const hasPhone = Boolean(phone);
+  const hasEmail = Boolean(email);
+
+  const mergedProfiles = {
+    ...Object.fromEntries(
+      Object.entries(profiles).filter(([, url]) => !isPending(url)),
+    ),
+    ...(settings?.profiles ?? {}),
+  };
+  const liveProfiles = Object.entries(mergedProfiles).filter(([, url]) => url);
 
   return (
     <footer className="mt-auto bg-surface-invert text-foreground-invert-muted">
       <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 lg:py-16">
         {/* ── Brand ──────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
-          <Logo variant="full" invert />
+          <Logo variant="full" settings={settings} invert />
 
           <p className="max-w-[36ch] text-sm leading-relaxed">
             {siteConfig.positioning}
@@ -163,7 +178,7 @@ export function Footer() {
       </div>
 
       {/* ── Legally required disclosure ──────────────────────────────── */}
-      <ComplianceFooter />
+      <ComplianceFooter settings={settings} />
     </footer>
   );
 }

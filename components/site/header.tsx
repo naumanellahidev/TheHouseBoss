@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/site/logo";
+import type { SiteSettings } from "@/types/domain";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { isGroup, primaryNav, type NavGroup } from "@/lib/nav";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,7 @@ import { cn } from "@/lib/utils";
  * blur appear only after 8px of scroll so the hero reads as full-bleed.
  * docs/04-responsive-spec.md § 3.
  */
-export function Header() {
+export function Header({ settings }: { settings?: SiteSettings | null }) {
   const [scrolled, setScrolled] = React.useState(false);
   const pathname = usePathname();
 
@@ -44,8 +45,8 @@ export function Header() {
       )}
     >
       <div className="container-page flex h-(--header-h) items-center justify-between gap-4 lg:h-(--header-h-lg)">
-        <Logo variant="compact" className="lg:hidden" />
-        <Logo variant="full" className="hidden lg:inline-flex" />
+        <Logo variant="compact" className="lg:hidden" settings={settings} />
+        <Logo variant="full" className="hidden lg:inline-flex" settings={settings} />
 
         <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-1">

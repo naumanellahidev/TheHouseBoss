@@ -55,11 +55,34 @@ const nextConfig: NextConfig = {
 
   images: {
     /**
-     * CLAUDE.md hard rule 5. We pre-generate 1600/800/400 WebP in the upload
-     * pipeline, so Vercel's transformation quota must not be consumed —
-     * exhausting it makes images return 402 in production.
+     * CLAUDE.md hard rule 5 — the quota, not the flag.
+     *
+     * The rule protects Vercel's image-transformation quota, because exhausting
+     * it makes every image return 402 in production. `unoptimized: true` was
+     * one way to guarantee that, but it also stripped the `srcset`, so the
+     * three derivatives the upload pipeline writes were reduced to one and a
+     * phone downloaded the desktop file.
+     *
+     * A custom loader gives the same guarantee for the same reason — Next never
+     * routes through `/_next/image` when one is set — while restoring the
+     * srcset. `unoptimized` and `loader` cannot both be used: `unoptimized`
+     * wins and the loader is silently ignored, which is why it is gone rather
+     * than kept "for safety".
+     *
+     * `tests/image-loader.spec.ts` asserts that no request to `/_next/image` is
+     * ever issued. That test is the actual enforcement of HR5 now.
      */
-    unoptimized: true,
+    loader: "custom",
+    loaderFile: "./lib/image-loader.ts",
+
+    /*
+      Exactly the three widths that exist on disk. Next builds the srcset from
+      these, so leaving the defaults in place would generate candidate entries
+      for widths the loader has to round anyway — eight URLs pointing at three
+      files, and a browser choosing between duplicates.
+    */
+    deviceSizes: [400, 800, 1600],
+    imageSizes: [400],
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
       // Future: Cloudflare R2 behind a custom domain (docs/07 § 10)

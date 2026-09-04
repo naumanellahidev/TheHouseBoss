@@ -1,6 +1,9 @@
 import { getArticles } from "@/lib/queries/articles";
 import { getCities, getCommunities } from "@/lib/queries/cities";
-import { countPublishedListings } from "@/lib/queries/listings";
+import { countPublishedListings, getListingsForLlms } from "@/lib/queries/listings";
+import { firstSentences } from "@/lib/seo/auto/generate";
+import { articleHref } from "@/lib/utils/routes";
+import { formatPrice } from "@/lib/utils";
 import { siteConfig } from "@/lib/site-config";
 
 /**
@@ -27,11 +30,12 @@ export const revalidate = 3600;
 const base = siteConfig.url.replace(/\/+$/, "");
 
 export async function GET() {
-  const [cities, communities, articles, listingCount] = await Promise.all([
+  const [cities, communities, articles, listingCount, listings] = await Promise.all([
     getCities().catch(() => []),
     getCommunities().catch(() => []),
     getArticles({ limit: 30 }).catch(() => []),
     countPublishedListings().catch(() => 0),
+    getListingsForLlms().catch(() => []),
   ]);
 
   const searchCities = cities.filter((city) => city.inSearch);
@@ -76,9 +80,43 @@ export async function GET() {
     `- [New construction](${base}/search/new-construction)`,
     `- [Recently sold](${base}/sold) — kept published permanently as a record of completed transactions`,
     "",
-    "## Cities",
-    "",
   ];
+
+  /*
+    Individual listings, so an assistant can cite a specific property rather
+    than only the search page.
+
+    Facts only, and only facts already on the page: address, price, beds, baths,
+    square feet. No adjectives — an assistant that reads "charming" here will
+    repeat it as if it came from the record, and on a property listing an
+    embellishment we did not write is still one we published.
+  */
+  if (listings.length > 0) {
+    lines.push("## Homes currently for sale", "");
+    for (const listing of listings) {
+      const specs = [
+        listing.beds ? `${listing.beds} bed` : null,
+        listing.baths ? `${listing.baths} bath` : null,
+        listing.sqft ? `${listing.sqft.toLocaleString()} sq ft` : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      lines.push(
+        `- [${listing.address}, ${listing.city.name}](${base}/listing/${listing.slug}) — ` +
+          `${formatPrice(listing.price)}${specs ? `, ${specs}` : ""}` +
+          `${listing.status === "coming_soon" ? " (coming soon)" : ""}` +
+          `${listing.status === "pending" ? " (under contract)" : ""}`,
+      );
+    }
+    lines.push(
+      "",
+      `This list is generated from the database and is current as of the date at the end of this file. ${listingCount} ${listingCount === 1 ? "listing is" : "listings are"} published in total.`,
+      "",
+    );
+  }
+
+  lines.push("## Cities", "");
 
   for (const city of cities) {
     const flagship = city.isFlagship ? " (flagship — she lives here)" : "";
@@ -106,14 +144,21 @@ export async function GET() {
   if (articles.length > 0) {
     lines.push("", "## Recent writing", "");
     for (const article of articles.slice(0, 20)) {
-      const path =
-        article.kind === "market_update"
-          ? `/market-updates/${article.slug}`
-          : article.city?.slug === "lake-mary"
-            ? `/lake-mary/blog/${article.slug}`
-            : `/market-updates/${article.slug}`;
       const date = article.publishedAt?.slice(0, 10) ?? "";
-      lines.push(`- [${article.title}](${base}${path})${date ? ` — ${date}` : ""}`);
+      /*
+        A one-line abstract, not just a title.
+
+        A title tells an assistant a page exists; an abstract tells it whether
+        the page answers the question in front of it. Sourced from the excerpt
+        the author wrote, which is the same text the generated meta description
+        prefers — so the two never say different things about one article.
+      */
+      const abstract = firstSentences(article.excerpt ?? "", 180);
+      lines.push(
+        `- [${article.title}](${base}${articleHref(article)})${date ? ` — ${date}` : ""}` +
+          (abstract ? `
+  ${abstract}` : ""),
+      );
     }
   }
 
