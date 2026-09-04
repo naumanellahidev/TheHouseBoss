@@ -9,12 +9,16 @@
  *   npm run seo:backfill              # write
  *   npm run seo:backfill -- --dry-run # report only, no writes
  *
- * ── Why it is sequential ──────────────────────────────────────────────────
+ * ── Concurrency ───────────────────────────────────────────────────────────
  *
- * Each record may make one model call. Running them in parallel would open as
- * many concurrent requests as there are listings, which is the reliable way to
- * get rate-limited by a provider and end up with a backfill that half-worked.
- * A hundred records at ~1.5s each is under three minutes, run once.
+ * Four at a time, from `lib/seo/auto/pool.ts`. Not unbounded — each record may
+ * make a model call, and opening one request per listing is the reliable way to
+ * get rate-limited and end up with a backfill that half-worked. Not sequential
+ * either, which is what this was: a hundred records at ~1.5s each is nearly
+ * three minutes of waiting on a socket, and four in flight makes it forty
+ * seconds.
+ *
+ * Output stays in input order, so the report still reads top to bottom.
  */
 
 /*
@@ -39,6 +43,15 @@ async function main() {
   } = await import("../lib/seo/auto/apply");
   const { isModelConfigured } = await import("../lib/seo/auto/ollama");
   const { articleHref } = await import("../lib/utils/routes");
+  const { mapWithConcurrency, SEO_CONCURRENCY } = await import(
+    "../lib/seo/auto/pool"
+  );
+  const {
+    autoArticleDescription,
+    autoCityDescription,
+    autoCommunityDescription,
+    autoListingDescription,
+  } = await import("../lib/seo/auto/generate");
 
   console.log(
     isModelConfigured()
@@ -63,61 +76,72 @@ async function main() {
     than by a flag threaded into the writer. A dry run that goes through the
     same write path with a boolean guard is one missed branch away from writing.
   */
+  type Row = { label: string; description: string; usedModel: boolean };
+
   const write = async (
     label: string,
     run: () => Promise<{ description: string; title: string; usedModel: boolean }>,
     preview: () => { description: string; usedModel: boolean },
-  ) => {
-    if (dryRun) return report(label, preview());
-    report(label, await run());
+  ): Promise<Row> => {
+    const result = dryRun ? preview() : await run();
+    return { label, description: result.description, usedModel: result.usedModel };
   };
 
-  console.log("\nListings");
+  /*
+    Doing is separated from reporting, so four concurrent workers cannot
+    interleave their output mid-line. `mapWithConcurrency` returns results in
+    INPUT order, so the report still reads top to bottom in the order the
+    records were listed even though they finished out of order.
+  */
+  const runGroup = async <T,>(
+    heading: string,
+    items: readonly T[],
+    task: (item: T) => Promise<Row | null>,
+  ) => {
+    console.log(`
+${heading}`);
+    const rows = await mapWithConcurrency(items, SEO_CONCURRENCY, task);
+    for (const row of rows) if (row) report(row.label, row);
+  };
+
   const slugs = await getListingSlugsForStaticParams();
-  for (const slug of slugs) {
+  await runGroup("Listings", slugs, async (slug) => {
     const listing = await getListingBySlug(slug);
-    if (!listing) continue;
-    const { autoListingDescription } = await import("../lib/seo/auto/generate");
-    await write(
+    if (!listing) return null;
+    return write(
       `/listing/${slug}`,
       () => ensureListingSeo(listing),
       () => ({ description: autoListingDescription(listing), usedModel: false }),
     );
-  }
+  });
 
-  console.log("\nArticles");
   const articles = await getArticles({ limit: 500 });
-  for (const card of articles) {
+  await runGroup("Articles", articles, async (card) => {
     const article = await getArticleBySlug(card.slug);
-    if (!article) continue;
+    if (!article) return null;
     const path = articleHref(article);
-    const { autoArticleDescription } = await import("../lib/seo/auto/generate");
-    await write(
+    return write(
       path,
       () => ensureArticleSeo(article, path),
       () => ({ description: autoArticleDescription(article), usedModel: false }),
     );
-  }
+  });
 
-  console.log("\nCities");
-  for (const city of await getCities()) {
-    const { autoCityDescription } = await import("../lib/seo/auto/generate");
-    await write(
+  await runGroup("Cities", await getCities(), (city) =>
+    write(
       `/${city.slug}`,
       () => ensureCitySeo(city),
       () => ({ description: autoCityDescription(city), usedModel: false }),
-    );
-  }
+    ),
+  );
 
-  console.log("\nCommunities");
-  for (const community of await getCommunities()) {
-    const { autoCommunityDescription } = await import("../lib/seo/auto/generate");
-    await write(
+  await runGroup("Communities", await getCommunities(), (community) =>
+    write(
       `/communities/${community.slug}`,
       () => ensureCommunitySeo(community),
       () => ({ description: autoCommunityDescription(community), usedModel: false }),
-    );
-  }
+    ),
+  );
 
   console.log(
     `\n${done} ${done === 1 ? "page" : "pages"}${dryRun ? " would be written" : " written"}` +

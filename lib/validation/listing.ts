@@ -14,6 +14,42 @@ import { LISTING_TYPES, PROPERTY_TYPES } from "@/lib/validation/search-params";
 
 export const MAX_PHOTOS = 15;
 
+/**
+ * A URL field that is genuinely optional.
+ *
+ * `z.string().url()` rejects `""`, and an HTML input that has never been typed
+ * in posts `""` — so a field labelled "Optional. Shown as a button on the
+ * listing page." showed "Invalid URL" the moment the form validated, and
+ * blocked the save. The field was optional in intent and mandatory in effect.
+ *
+ * The empty string is normalised to `null` BEFORE the URL check runs, which is
+ * the only ordering that works: a `.optional()` after `.url()` never sees the
+ * value, because the URL check has already failed.
+ *
+ * `preprocess` and not `transform` for the same reason — transform runs after
+ * validation.
+ */
+/**
+ * Optional free text: a blank input becomes NULL, not `""`.
+ *
+ * Same root cause as `optionalUrl` — an untouched input posts an empty string —
+ * with two consequences. A field with a format rule (`zip`, five digits)
+ * rejected blank outright and blocked the save. A field without one stored `""`,
+ * which reads as "the agent deliberately set this to nothing" when it means
+ * "never filled in", and which the SEO generator then has to treat as a value.
+ */
+const optionalText = (schema: z.ZodType<string>) =>
+  z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    schema.nullable(),
+  );
+
+const optionalUrl = (max: number) =>
+  z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    z.string().trim().url("Enter a full address starting with https://").max(max).nullable(),
+  );
+
 export const storedPhotoSchema = z.object({
   kind: z.literal("stored"),
   /** Immutable key from nanoid(). No size suffix, no extension (HR1, HR4). */
@@ -77,25 +113,23 @@ export const listingSchema = z
     features: z.array(z.string().trim().min(1).max(60)).max(60).default([]),
 
     address: z.string().trim().min(3).max(200),
-    unit: z.string().trim().max(30).nullable().optional(),
+    unit: optionalText(z.string().trim().max(30)).optional(),
     cityId: z.string().uuid(),
     communityId: z.string().uuid().nullable().optional(),
-    zip: z
-      .string()
-      .regex(/^\d{5}$/, "five digits")
-      .nullable()
-      .optional(),
+    zip: optionalText(
+      z.string().trim().regex(/^\d{5}$/, "Five digits, e.g. 32746"),
+    ).optional(),
     lat: z.number().min(-90).max(90).nullable().optional(),
     lng: z.number().min(-180).max(180).nullable().optional(),
 
-    headline: z.string().trim().max(90).nullable().optional(),
-    description: z.string().trim().max(20_000).nullable().optional(),
-    contractorsTake: z.string().trim().max(5000).nullable().optional(),
+    headline: optionalText(z.string().trim().max(90)).optional(),
+    description: optionalText(z.string().trim().max(20_000)).optional(),
+    contractorsTake: optionalText(z.string().trim().max(5000)).optional(),
     photos: z.array(photoSchema).max(MAX_PHOTOS),
-    virtualTour: z.string().url().max(500).nullable().optional(),
+    virtualTour: optionalUrl(500).optional(),
 
-    metaTitle: z.string().trim().max(70).nullable().optional(),
-    metaDesc: z.string().trim().max(180).nullable().optional(),
+    metaTitle: optionalText(z.string().trim().max(70)).optional(),
+    metaDesc: optionalText(z.string().trim().max(180)).optional(),
 
     isFeatured: z.boolean().default(false),
     published: z.boolean().default(false),

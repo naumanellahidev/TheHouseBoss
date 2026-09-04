@@ -112,6 +112,85 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-05 — Homepage close, listing-form steps, generation reliability
+
+**Shipped**
+
+- **The empty column beside the lead form now carries a photograph** — the
+  flagship city's own hero, already uploaded, so it is a real picture of the
+  place the copy names rather than stock. Hidden below `lg`, where it would push
+  the first form field under the fold.
+- **A light band between the lead section and the footer**, with two calls to
+  action. The page previously ended on navy and ran straight into a navy footer,
+  so the form and the footer read as one block. The primary action follows the
+  same rule as the hero: with fewer than five published listings it offers a
+  conversation rather than a near-empty search.
+- **The listing editor reads as steps.** Back/Next under every section (which
+  autosave on the way past), and a count on each tab of what is still
+  outstanding there — taken from the pre-publish checklist, which previously
+  only became visible once you reached the last tab.
+- **The Media step is no longer a dead end.** It explained that the listing must
+  be saved first and offered no way to do it; the button that lifts the blocker
+  now sits beside the blocker.
+
+**Defects fixed**
+
+- **"Virtual tour URL" was labelled optional and rejected blank.**
+  `z.string().url()` refuses `""`, and an untouched input posts `""`, so the
+  field showed "Invalid URL" the moment the form validated and blocked the save.
+  Fixed with a `preprocess` that nulls a blank BEFORE the URL check — ordering
+  matters, because `.optional()` after `.url()` never sees the value.
+- The same latent bug in **`zip`**, whose five-digit regex also rejected blank.
+  Every other optional text field now stores NULL instead of `""`.
+- **Generation was losing most of its polish to HTTP 429.** A batch at four-way
+  concurrency produced 1 polished description out of 15. Measured directly: the
+  configured provider allows exactly ONE request in flight and answers a second
+  with `{"error":"too many concurrent requests"}` — and a burst then trips a
+  cooldown that fails the next few sequential calls too. 429 is now a
+  first-class outcome with exponential backoff and jitter rather than being
+  folded into "unreachable" and silently dropped. Same 15 pages: **11 polished**.
+
+**Decisions made this session**
+
+- **Parallelism is the wrong lever for generation, and the pool holds the line
+  at one rather than raising it.** `lib/seo/auto/pool.ts` exists and is
+  env-configurable so a provider that does permit concurrency needs one number
+  changed, but the default is 1 and the measurement is recorded beside it.
+- Timeout is 15s, not the 10s first chosen. Ten looked right until the
+  cold-start case was measured at ~4.5s; warm calls are 0.7–1.0s.
+- The retry now distinguishes what is worth repeating. `timeout` and
+  `unreachable` stop immediately; `rate-limited` backs off; a rejected
+  *response* re-rolls at a higher temperature, because a second sample at the
+  same temperature is close to a copy of the first.
+- Model rejections carry a reason (`length`, `formatting`, `invented-number`,
+  `rate-limited`) instead of collapsing to a boolean, so a silent fallback is
+  diagnosable.
+- The logo has **no background in any context**. A white card was implemented to
+  keep the light artwork readable on the dark footer and the client rejected it;
+  full transparency is the instruction and the consequence is recorded below.
+
+**Open / deferred**
+
+- **The footer logo's two navy sub-lines are hard to read on the navy footer.**
+  The artwork is drawn for a white page. The fix is a light-text version
+  uploaded to Admin → Settings → Branding, which `Logo` already prefers over the
+  default. Owner: the client.
+- **Vercel still has no Supabase environment variables**, so none of this is
+  visible in production. Unchanged from the previous session.
+- **The Ollama key should be rotated** — it was pasted into a chat transcript.
+- `.github/workflows/backup.yml` cannot be pushed: the OAuth token lacks
+  `workflow` scope. It is untracked on disk and needs a scoped token or a manual
+  add through the GitHub UI.
+- FAQ suggestions from question-shaped H2s: still not built. GSAP is still on
+  every page's critical path.
+
+**Next session must know**
+
+- `SEO_CONCURRENCY` env var exists and defaults to 1. Raising it against Ollama
+  Cloud makes generation worse, not faster — the measurement is in
+  `lib/seo/auto/pool.ts`.
+- 358 Playwright tests pass, exit code read from Playwright directly.
+
 ### 2026-09-04 — Automatic SEO/AEO, branding panel, image loader, SEO console
 
 **Shipped**

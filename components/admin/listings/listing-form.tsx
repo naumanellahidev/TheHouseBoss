@@ -4,7 +4,14 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
-import { AlertTriangle, ExternalLink, Save, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Save,
+  Sparkles,
+} from "lucide-react";
 
 import {
   createListing,
@@ -34,7 +41,12 @@ import { SwitchField } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { useIsCompact } from "@/lib/hooks/use-media-query";
-import { canPublish, listingSchema, type ListingInput } from "@/lib/validation/listing";
+import {
+  canPublish,
+  listingSchema,
+  prePublishChecklist,
+  type ListingInput,
+} from "@/lib/validation/listing";
 import { LISTING_TYPES, PROPERTY_TYPES } from "@/lib/validation/search-params";
 import { shortAgo } from "@/lib/utils/date";
 import { cn, slugify } from "@/lib/utils";
@@ -108,6 +120,50 @@ const AUTOSAVE_MS = 30_000;
  * useless when the offending field sits on a tab you are not looking at. Every
  * error is now named, and the summary jumps to the section that fixes it.
  */
+/**
+ * Back / Next under each section.
+ *
+ * The editor is tabs, and tabs say "these are six places you may go" when what
+ * a first-time listing actually needs is "here is the next thing to do". Adding
+ * an explicit path through them turns the same six panels into steps without
+ * taking away the ability to jump straight to one — which someone editing an
+ * existing listing wants and a wizard would have removed.
+ *
+ * `goToSection` autosaves on the way past, so moving through the steps also
+ * saves progress.
+ */
+function StepNav({
+  previous,
+  next,
+  onGo,
+}: {
+  previous: { id: string; label: string } | null;
+  next: { id: string; label: string } | null;
+  onGo: (id: string) => void;
+}) {
+  if (!previous && !next) return null;
+
+  return (
+    <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+      {previous ? (
+        <Button type="button" variant="ghost" onClick={() => onGo(previous.id)}>
+          <ChevronLeft aria-hidden="true" />
+          {previous.label}
+        </Button>
+      ) : (
+        <span />
+      )}
+
+      {next ? (
+        <Button type="button" variant="outline" onClick={() => onGo(next.id)}>
+          {next.label}
+          <ChevronRight aria-hidden="true" />
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 const FIELD_INFO: Record<string, { label: string; tab: string }> = {
   address: { label: "Street address", tab: "basics" },
   unit: { label: "Unit", tab: "basics" },
@@ -301,6 +357,30 @@ export function ListingForm({
   }, [listingId, isDirty, saving, getValues, persist]);
 
   /** Save on section change, as the spec requires. */
+  /*
+    Which sections still need something, and how many things.
+
+    The pre-publish checklist already knows what a listing needs; this maps its
+    items onto the sections that fix them, which is the information the tab
+    strip was missing. On a NEW listing the tabs are six identical words and
+    nothing says which of them you have actually finished — the checklist was
+    only visible once you reached the last tab.
+  */
+  const outstandingBySection = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const item of prePublishChecklist(values)) {
+      if (!item.ok) counts[item.tab] = (counts[item.tab] ?? 0) + 1;
+    }
+    return counts;
+  }, [values]);
+
+  const sectionIndex = SECTIONS.findIndex((item) => item.id === section);
+  const previousSection = sectionIndex > 0 ? SECTIONS[sectionIndex - 1] : null;
+  const nextSection =
+    sectionIndex >= 0 && sectionIndex < SECTIONS.length - 1
+      ? SECTIONS[sectionIndex + 1]
+      : null;
+
   function goToSection(next: string) {
     setSection(next);
     if (!listingId || !isDirty) return;
@@ -761,6 +841,34 @@ export function ListingForm({
 
     media: (
       <div className="flex flex-col gap-6">
+        {/*
+          A dead end, until now.
+
+          On a new listing the uploader is disabled and explains why — photo
+          keys are `listings/{id}/…`, so the listing has to exist first. What it
+          never offered was the way out: the operator had to work out for
+          herself that "Save draft" at the bottom of the screen was the unlock.
+          The button that fixes the blocker belongs beside the blocker.
+        */}
+        {!listingId ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-info/30 bg-info-bg p-4">
+            <p className="max-w-[60ch] text-sm text-foreground">
+              Photos are filed under the listing, so it has to be saved once
+              before they can be added. Nothing is published — it saves as a
+              draft only you can see.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              loading={saving === "draft"}
+              onClick={submit("draft")}
+            >
+              <Save aria-hidden="true" />
+              Save draft and add photos
+            </Button>
+          </div>
+        ) : null}
+
         <PhotoUploader
           listingId={listingId}
           photos={photos}
@@ -966,7 +1074,14 @@ export function ListingForm({
           {SECTIONS.map((item) => (
             <AccordionItem key={item.id} value={item.id}>
               <AccordionTrigger>{item.label}</AccordionTrigger>
-              <AccordionContent>{sectionContent[item.id]}</AccordionContent>
+              <AccordionContent>
+                {sectionContent[item.id]}
+                <StepNav
+                  previous={previousSection}
+                  next={nextSection}
+                  onGo={goToSection}
+                />
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -976,12 +1091,34 @@ export function ListingForm({
             {SECTIONS.map((item) => (
               <TabsTrigger key={item.id} value={item.id}>
                 {item.label}
+                {/*
+                  A count, not a red dot. "Details 2" says there are two things
+                  left in there; a dot says only that something is wrong, which
+                  on a form you have not filled in yet is every tab.
+
+                  Hidden from screen readers because the same information is
+                  announced properly by the pre-publish checklist on the Publish
+                  tab, where each item is a link to the field that fixes it.
+                */}
+                {outstandingBySection[item.id] ? (
+                  <span
+                    aria-hidden="true"
+                    className="ml-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-warning-bg px-1 text-xs font-semibold text-foreground tabular"
+                  >
+                    {outstandingBySection[item.id]}
+                  </span>
+                ) : null}
               </TabsTrigger>
             ))}
           </TabsList>
           {SECTIONS.map((item) => (
             <TabsContent key={item.id} value={item.id}>
               {sectionContent[item.id]}
+              <StepNav
+                previous={previousSection}
+                next={nextSection}
+                onGo={goToSection}
+              />
             </TabsContent>
           ))}
         </Tabs>

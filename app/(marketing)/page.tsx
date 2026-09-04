@@ -201,6 +201,26 @@ export default async function HomePage() {
 
   /** Spec: swap the primary CTA rather than advertise an empty search. */
   const inventoryIsThin = published < 5;
+
+  /*
+    The photograph beside the lead form.
+
+    Lake Mary first — it is the flagship city and the one the copy names — then
+    any city that has a hero, then the site-wide hero. All three are already
+    uploaded through the admin, so this adds no asset and nothing to maintain.
+    If none exists the block is simply not rendered.
+  */
+  const leadPhotoCity = lakeMary?.heroKey
+    ? lakeMary
+    : (cities.find((city) => city.heroKey) ?? null);
+
+  const leadPhoto =
+    heroPhoto(leadPhotoCity?.heroKey, leadPhotoCity?.heroAlt, 1600, 1200) ??
+    heroPhoto(settings.heroKey, "Central Florida homes", 1600, 1200);
+
+  const leadPhotoCaption = leadPhotoCity
+    ? `${leadPhotoCity.name}, ${leadPhotoCity.county} County`
+    : "Lake Mary and Central Florida";
   const showFeatured = featured.length >= 3;
   const showReviews = reviews.length >= 3;
 
@@ -667,13 +687,42 @@ export default async function HomePage() {
       <Section tone="invert">
         <Container>
           <div className="grid items-start gap-8 lg:grid-cols-12 lg:gap-12">
-            <div className="flex flex-col gap-4 lg:col-span-6">
+            <div className="flex flex-col gap-8 lg:col-span-6">
               <SectionHeader
                 invert
                 overline="Stay ahead of the market"
                 title="Get new listings before they are everywhere"
                 lead="I will send you homes that match what you are looking for in Lake Mary and Central Florida — and nothing else."
               />
+
+              {/*
+                The photograph that fills the column beside the form.
+
+                Not decoration for its own sake: the column was empty below the
+                heading, so on a wide screen the form floated alone against a
+                large field of navy. It uses the flagship city's own hero, which
+                is already uploaded and already on the page's city tiles — so it
+                is a real photograph of the place the copy names, not a stock
+                image standing in for one.
+
+                Hidden below `lg`. On a phone the form is the only thing that
+                matters here, and an image above it would push the first field
+                below the fold.
+              */}
+              {leadPhoto ? (
+                <MediaFrame
+                  photo={leadPhoto}
+                  size={800}
+                  sizes="(max-width: 1023px) 0px, 45vw"
+                  aspect="4/3"
+                  scrim
+                  className="hidden lg:block"
+                >
+                  <p className="absolute inset-x-0 bottom-0 p-5 text-sm font-medium text-foreground-invert">
+                    {leadPhotoCaption}
+                  </p>
+                </MediaFrame>
+              ) : null}
             </div>
             <div className="lg:col-span-6">
               <LeadForm
@@ -681,6 +730,65 @@ export default async function HomePage() {
                 submitLabel="Send me new listings"
                 className="rounded-lg bg-surface p-5 shadow-lg lg:p-6"
               />
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ── 12. Closing CTA band ─────────────────────────────────────── */}
+      {/*
+        A light band between the navy lead section and the navy footer.
+
+        Two reasons it earns its place. Visually, the page ended on dark and ran
+        straight into a dark footer, so the lead form and the footer read as one
+        undifferentiated block. Practically, it is the last thing a reader sees
+        who did not fill in the form — and the two things worth offering them
+        are the inventory and a conversation.
+
+        The primary action follows the same rule as the hero: when there are
+        fewer than five published listings, sending someone to a near-empty
+        search is worse than sending them to a person.
+      */}
+      <Section>
+        <Container>
+          <div className="flex flex-col items-center gap-6 text-center">
+            <SectionHeader
+              align="center"
+              overline="Where to next"
+              title={
+                inventoryIsThin
+                  ? "Tell me what you are looking for"
+                  : "Start with the homes, or start with a conversation"
+              }
+              lead={
+                inventoryIsThin
+                  ? "New listings are added as they come to market. In the meantime, the fastest route to the right home is a short conversation about what you need."
+                  : "Browse everything currently for sale, or ask the questions a listing page cannot answer — about the construction, the neighbourhood, or the loan."
+              }
+            />
+
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:justify-center">
+              {inventoryIsThin ? (
+                <>
+                  <Button asChild size="lg">
+                    <Link href="/contact">Talk to Krisi</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/guides">Read the buyer guides</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button asChild size="lg">
+                    <Link href="/search">
+                      Browse every home for sale
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link href="/contact">Talk to Krisi</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </Container>

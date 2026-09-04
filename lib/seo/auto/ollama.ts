@@ -35,7 +35,16 @@ import { DESC_MAX, DESC_MIN, trimToWord } from "@/lib/seo/auto/generate";
  * in production. `scripts/seo-check-model.mjs` exists to catch exactly that.
  */
 
-const TIMEOUT_MS = 20_000;
+/*
+  15s, down from 20.
+
+  Measured against the configured provider: 0.7–1.0s warm, and about 4.5s on
+  the first call after an idle period, which is the number that sets this floor.
+  Ten seconds looked tempting until the cold-start case was measured; twenty was
+  simply twenty seconds of a publish hanging before falling back to text that
+  was already sitting in a variable.
+*/
+const TIMEOUT_MS = 15_000;
 
 /**
  * Headroom, because a REASONING model may be configured.
@@ -57,6 +66,25 @@ const TIMEOUT_MS = 20_000;
  * generation, and the `finish_reason` guard below catches it if it does.
  */
 const MAX_TOKENS = 900;
+
+/**
+ * Why a rejected response was rejected.
+ *
+ * Returned rather than logged-and-forgotten so the caller can say something
+ * true. "The model's answer was rejected because it contained a number that is
+ * not in this listing" is a sentence an operator can act on; silence looks like
+ * the feature not working.
+ */
+export type Rejection =
+  | "unconfigured"
+  | "unreachable"
+  | "rate-limited"
+  | "timeout"
+  | "truncated"
+  | "empty"
+  | "length"
+  | "formatting"
+  | "invented-number";
 
 type Config = { key: string; baseUrl: string; model: string };
 
@@ -87,18 +115,31 @@ function containsOnlyKnownNumbers(text: string, source: string): boolean {
   return used.every((n) => known.has(n));
 }
 
-/** Reject anything that would look wrong in a `<meta>` tag. */
-function isUsable(text: string, source: string): boolean {
+/**
+ * Reject anything that would look wrong in a `<meta>` tag, and say why.
+ *
+ * The reason is returned rather than collapsed to a boolean so a rejection is
+ * diagnosable. "It quietly used the written version again" is not a report
+ * anyone can act on; "the model put in a number this listing does not contain"
+ * is — and on a property listing that particular rejection is the one that
+ * matters most.
+ */
+function review(text: string, source: string): "ok" | Rejection {
   const value = text.trim();
-  if (value.length < DESC_MIN || value.length > DESC_MAX) return false;
+  if (value.length < DESC_MIN || value.length > DESC_MAX) return "length";
   // Markdown, quotes and newlines all render literally in a meta description.
-  if (/[*_#`\n\r]|^["']|["']$/.test(value)) return false;
+  if (/[*_#`\n\r]|^["']|["']$/.test(value)) return "formatting";
   // A model that starts explaining itself has not answered the prompt.
-  if (/^(here|sure|certainly|of course)\b/i.test(value)) return false;
-  return containsOnlyKnownNumbers(value, source);
+  if (/^(here|sure|certainly|of course)\b/i.test(value)) return "formatting";
+  if (!containsOnlyKnownNumbers(value, source)) return "invented-number";
+  return "ok";
 }
 
-async function complete(prompt: string, cfg: Config): Promise<string | null> {
+type Completion =
+  | { text: string }
+  | { error: Rejection; retryAfterMs?: number | null };
+
+async function complete(prompt: string, cfg: Config, temperature: number): Promise<Completion> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -113,8 +154,15 @@ async function complete(prompt: string, cfg: Config): Promise<string | null> {
       body: JSON.stringify({
         model: cfg.model,
         // Low but not zero: high temperature is where invented facts come from.
-        temperature: 0.3,
+        // The retry nudges it up, because a second sample at the SAME
+        // temperature is close to a second copy of the first answer — which is
+        // what made the old retry a wasted round trip rather than a second
+        // chance.
+        temperature,
         max_tokens: MAX_TOKENS,
+        // Explicit: a streamed body would arrive as SSE and `response.json()`
+        // would throw, which the catch below would report as "unreachable".
+        stream: false,
         messages: [
           {
             role: "system",
@@ -129,7 +177,24 @@ async function complete(prompt: string, cfg: Config): Promise<string | null> {
       }),
     });
 
-    if (!response.ok) return null;
+    /*
+      429 is a first-class outcome, not a generic failure.
+
+      The configured provider permits exactly ONE request in flight and answers
+      anything more with `{"error":"too many concurrent requests"}`. Folding
+      that into "unreachable" meant a publish quietly dropped its polish because
+      another publish happened to be a second ahead of it — and the operator saw
+      nothing. The caller waits and tries again instead.
+    */
+    if (response.status === 429) {
+      const after = Number(response.headers.get("retry-after"));
+      return {
+        error: "rate-limited",
+        retryAfterMs: Number.isFinite(after) && after > 0 ? after * 1000 : null,
+      };
+    }
+
+    if (!response.ok) return { error: "unreachable" };
     const data = await response.json();
 
     /*
@@ -137,15 +202,18 @@ async function complete(prompt: string, cfg: Config): Promise<string | null> {
       "length"` means the model was cut off mid-sentence, and half a meta
       description is worse than the deterministic one it would replace.
     */
-    if (data?.choices?.[0]?.finish_reason === "length") return null;
+    if (data?.choices?.[0]?.finish_reason === "length") return { error: "truncated" };
 
     // `reasoning` is deliberately ignored. Only `content` is the answer.
     const text = data?.choices?.[0]?.message?.content;
-    return typeof text === "string" ? text.trim() : null;
-  } catch {
-    // Timeout, DNS failure, unreachable host, malformed JSON — all the same
-    // outcome here: no polish, deterministic output stands.
-    return null;
+    if (typeof text !== "string" || text.trim() === "") return { error: "empty" };
+    return { text: text.trim() };
+  } catch (error) {
+    // Timeout, DNS failure, unreachable host, malformed JSON. Separated only so
+    // the caller can distinguish "the provider is slow" from "the provider is
+    // wrong", which are different problems with different fixes.
+    const aborted = error instanceof Error && error.name === "AbortError";
+    return { error: aborted ? "timeout" : "unreachable" };
   } finally {
     clearTimeout(timer);
   }
@@ -163,24 +231,73 @@ export async function polishDescription(opts: {
   /** The record's own text. Nothing outside this may appear in the output. */
   source: string;
   kind: "listing" | "article" | "city" | "community";
-}): Promise<{ text: string; usedModel: boolean }> {
+}): Promise<{ text: string; usedModel: boolean; rejection?: Rejection }> {
   const cfg = config();
-  if (!cfg) return { text: opts.fallback, usedModel: false };
-
-  const prompt =
-    `Write a meta description for this ${opts.kind}.\n\n` +
-    `${opts.source}\n\n` +
-    `A working version is:\n${opts.fallback}\n\n` +
-    `Improve its readability. Keep every fact identical.`;
-
-  // One retry. A second failure means the endpoint is unwell, not unlucky, and
-  // a publish should not wait 24 seconds to find that out.
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const raw = await complete(prompt, cfg);
-    if (raw && isUsable(raw, `${opts.source} ${opts.fallback}`)) {
-      return { text: trimToWord(raw, DESC_MAX), usedModel: true };
-    }
+  if (!cfg) {
+    return { text: opts.fallback, usedModel: false, rejection: "unconfigured" };
   }
 
-  return { text: opts.fallback, usedModel: false };
+  const prompt =
+    `Write a meta description for this ${opts.kind}.
+
+` +
+    `${opts.source}
+
+` +
+    `A working version is:
+${opts.fallback}
+
+` +
+    `Improve its readability. Keep every fact identical.`;
+
+  const corpus = `${opts.source} ${opts.fallback}`;
+  let last: Rejection = "unreachable";
+
+  /*
+    Up to three attempts, and which failures are worth repeating differs.
+
+    - `rate-limited` IS worth repeating, after waiting. The provider allows one
+      request in flight and answers a second with 429; two publishes a second
+      apart would otherwise both lose their polish silently. This is the case
+      that made generation look unreliable.
+    - `length` or `formatting` is the model missing on one sample. A second
+      sample at a higher temperature is a genuinely different attempt, unlike
+      the old unconditional retry at the same temperature, which mostly
+      re-rolled the same answer.
+    - `timeout` and `unreachable` mean the provider is unwell. Trying again buys
+      another fifteen seconds of a publish hanging for the same answer, so it
+      stops.
+  */
+  const temperatures = [0.3, 0.3, 0.6];
+
+  for (let attempt = 0; attempt < temperatures.length; attempt += 1) {
+    const result = await complete(prompt, cfg, temperatures[attempt]);
+
+    if ("error" in result) {
+      last = result.error;
+
+      if (result.error === "rate-limited") {
+        // Exponential, with jitter so several publishes that collided once do
+        // not collide again at exactly the same moment.
+        const base = result.retryAfterMs ?? 1200 * 2 ** attempt;
+        await new Promise((r) => setTimeout(r, base + Math.random() * 400));
+        continue;
+      }
+
+      if (result.error === "timeout" || result.error === "unreachable") break;
+      continue;
+    }
+
+    const verdict = review(result.text, corpus);
+    if (verdict === "ok") {
+      return { text: trimToWord(result.text, DESC_MAX), usedModel: true };
+    }
+    last = verdict;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    console.info(`[seo] model output not used (${last}); deterministic text stands`);
+  }
+
+  return { text: opts.fallback, usedModel: false, rejection: last };
 }

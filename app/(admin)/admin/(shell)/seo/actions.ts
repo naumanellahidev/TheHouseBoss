@@ -151,11 +151,20 @@ export async function generateMissingSeo(): Promise<SeoActionResult> {
   }
 
   const batch = targets.slice(0, BATCH);
-  let done = 0;
-  for (const path of batch) {
-    const result = await generateForPath(path);
-    if (result.ok) done += 1;
-  }
+
+  /*
+    Four at a time, not one. Sequentially this loop was 25 model calls at about
+    a second and a half each — nearly forty seconds of a server action waiting
+    on a socket, which on Vercel is close enough to the timeout to be a real
+    risk. See `lib/seo/auto/pool.ts` for why four and not twenty-five.
+  */
+  const { mapWithConcurrency, SEO_CONCURRENCY } = await import(
+    "@/lib/seo/auto/pool"
+  );
+  const outcomes = await mapWithConcurrency(batch, SEO_CONCURRENCY, (path) =>
+    generateForPath(path),
+  );
+  const done = outcomes.filter((result) => result.ok).length;
 
   revalidatePath("/admin/seo");
   const left = targets.length - batch.length;
