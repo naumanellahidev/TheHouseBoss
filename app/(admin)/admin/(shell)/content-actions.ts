@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { deleteImages } from "@/lib/images/store";
+import { recordAudit } from "@/lib/auth/audit";
 import { getAdminArticleById, getAdminCommunityById } from "@/lib/queries/admin";
 import { requireAdmin, createSupabaseServerClient } from "@/lib/supabase/server";
 import { articleSchema, type ArticleInput } from "@/lib/validation/article";
@@ -221,6 +222,15 @@ export async function deleteArticle(
 
   const { error } = await db.from("articles").delete().eq("id", id);
   if (error) return { ok: false, error: friendly(error.message, "deleteArticle") };
+
+  // Title and slug, not just the id: the row is gone by the time anyone reads
+  // this, so the entry has to identify what was deleted on its own.
+  await recordAudit({
+    action: "article_deleted",
+    entityType: "article",
+    entityId: id,
+    metadata: { slug: String(article.slug), title: String(article.title) },
+  });
 
   const city = Array.isArray(article.cities) ? article.cities[0] : article.cities;
   revalidateArticle(

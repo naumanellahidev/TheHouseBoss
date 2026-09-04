@@ -82,11 +82,29 @@ export async function requireAdmin() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, full_name")
+    .select("id, role, full_name, status")
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "admin") throw new Error("FORBIDDEN");
+  /*
+    The roles that administer the site, and the SAME set as `is_admin()` in
+    Postgres. Migration 014 widened the role list from three to five, and this
+    check did not follow — a `super_admin` was refused by the dashboard while
+    RLS happily allowed their queries. The two must be read together: if this
+    list and `is_admin()` ever disagree again, the symptom is exactly that
+    mismatch.
+
+    A suspended account is refused whatever its role, matching the SQL.
+  */
+  const ADMIN_ROLES = ["super_admin", "admin"] as const;
+
+  if (
+    !profile ||
+    !(ADMIN_ROLES as readonly string[]).includes(profile.role) ||
+    (profile.status ?? "active") !== "active"
+  ) {
+    throw new Error("FORBIDDEN");
+  }
 
   return { user, profile };
 }

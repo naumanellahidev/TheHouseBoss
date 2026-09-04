@@ -1699,4 +1699,76 @@ listing); StellarMLS adapter; and the per-module tests § 85 asks for.
 
 ---
 
+### 2026-09-04 — Admin platform wave 2: modules, auditing, logo infrastructure
+
+**Client credentials set.** Username `krasimira1`, role `super_admin`, verified
+in a real browser: signs in, lands on /admin, session persists.
+
+**Four new admin modules**, all rendering real data with zero page errors:
+
+| Route | What it shows |
+|---|---|
+| `/admin/audit-logs` | Every recorded action, newest first, with actor and IP |
+| `/admin/users` | Accounts plus the live grant matrix read from `role_permissions` |
+| `/admin/mls` | Sources and sync history |
+| `/admin/seo` | Page overrides, redirects, sitemap status |
+
+`lib/queries/platform.ts` backs all four and uses the SESSION client, not the
+service client, so RLS applies — a `content_manager` calling `getAuditLogs()`
+gets nothing back because the policy says so. The permission check on the page
+renders a useful message; the policy is what enforces it.
+
+Three things these screens do deliberately:
+
+- **`/admin/audit-logs` has no edit control** because there is no way to edit a
+  row: the table has SELECT and INSERT policies and no UPDATE or DELETE.
+- **`/admin/mls` shows Stellar MLS as "Not connected" and offers no Sync
+  button** while it is. A button that cannot work is worse than no button — it
+  invites a click, fails, and teaches the person using it that the dashboard
+  lies.
+- **`/admin/seo`'s empty state says an empty table is the healthy state.** Every
+  route already gets a title, description and canonical from
+  `lib/seo/metadata.ts`; a row here is an override, not a requirement.
+
+**Audit logging wired into the actions that carry consequences** — listing
+publish/unpublish and delete, article delete. Deletions record the address or
+title, not just the id: the row is gone by the time anyone reads the log, so the
+entry has to identify what was deleted on its own.
+
+**Three real bugs**
+
+1. **Widening the roles broke the dashboard for the widened role.** Migration
+   014 updated the SQL `is_admin()` to accept `super_admin`, but the TypeScript
+   `requireAdmin()` still checked `role !== "admin"` literally — so the new
+   super_admin was refused by every admin page while RLS happily allowed its
+   queries. The two lists must be read together, and now say so in both places.
+2. **The logo rewrite removed the accessible name from the logo link.** The
+   header renders two `Logo`s, one `lg:hidden` and one `hidden lg:inline-flex`.
+   `className` was landing on an inner span, so the `<a>` stayed visible around
+   text that was `display: none`. axe reported `link-name` on most public pages
+   and was exactly right — a link whose only label is hidden is announced as
+   nothing. Fixed by putting the class on the outermost element.
+3. **I misreported a passing suite.** The command piped Playwright through
+   `tail`, so the exit code observed was `tail`'s, not Playwright's — the run
+   had failed. **Never pipe a test command through `tail` when the exit code is
+   what you are reading.** Re-run with `--reporter=line` and read the summary.
+
+**Logo infrastructure** — `components/site/logo.tsx` renders real artwork from
+`public/logo/house-boss.png` with the type-set lockup as fallback, so a missing
+file degrades rather than breaks. `HAS_ARTWORK` is a single build-time constant.
+`public/logo/README.md` documents the handoff: trim the baked-in white margin,
+export at 3x, PNG with transparency (a white JPEG box shows on the inverted
+footer), and why SVG is not achievable from the raster source.
+
+**Open question for the client, not for code.** The supplied logo reads "BY
+KRISI HOMES LLC". The compliance footer names World Properties Group as the
+brokerage, per FREC advertising rules. Whether Krisi Homes LLC belongs in that
+disclosure is a licensing question for the broker.
+
+**Verified**: migration applied · types regenerated · typecheck, lint, build
+clean · all 8 admin routes 200 with real data and no page errors · a11y suite
+77 passed after the logo fix.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

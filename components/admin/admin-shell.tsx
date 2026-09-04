@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { ExternalLink, LogOut, Menu, User } from "lucide-react";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { adminNav, isActiveAdminRoute } from "@/lib/admin-nav";
+import { adminNav, isActiveAdminRoute, visibleAdminNav } from "@/lib/admin-nav";
+import type { Permission } from "@/lib/auth/permissions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,12 @@ export type AdminShellProps = {
   /** Drives the collapsed icon-rail meter, which cannot fit the full component. */
   storagePercent: number;
   storageBar: string;
+  /**
+   * The signed-in user's grants. Resolved on the server and passed down, so
+   * this component makes no authorization decision of its own — it only chooses
+   * what to draw.
+   */
+  permissions: readonly Permission[];
 };
 
 export function AdminShell({
@@ -42,8 +49,16 @@ export function AdminShell({
   storage,
   storagePercent,
   storageBar,
+  permissions,
 }: AdminShellProps) {
   const pathname = usePathname();
+
+  /*
+    Hiding an item the user cannot use is a courtesy, not a security control.
+    The route checks the permission itself and RLS refuses the rows regardless;
+    this only stops the sidebar offering a door that will not open.
+  */
+  const nav = React.useMemo(() => visibleAdminNav(permissions), [permissions]);
 
   // A route change must close the drawer, or navigating leaves it covering the
   // page it just navigated to. The route it was opened on is stored WITH the
@@ -53,7 +68,7 @@ export function AdminShell({
   const drawerOpen = drawer.open && drawer.at === pathname;
   const setDrawerOpen = (open: boolean) => setDrawer({ open, at: pathname });
 
-  const current = adminNav.find((item) => isActiveAdminRoute(pathname, item.href));
+  const current = nav.find((item) => isActiveAdminRoute(pathname, item.href));
 
   return (
     <div className="flex min-h-dvh bg-surface-sunken">
@@ -74,7 +89,7 @@ export function AdminShell({
 
         <nav aria-label="Dashboard" className="flex-1 overflow-y-auto p-2 lg:p-3">
           <ul className="flex flex-col gap-1">
-            {adminNav.map((item) => (
+            {nav.map((item) => (
               <li key={item.href}>
                 <NavLink
                   item={item}
@@ -136,7 +151,7 @@ export function AdminShell({
             >
               <nav aria-label="Dashboard sections" className="flex-1 overflow-y-auto p-3">
                 <ul className="flex flex-col gap-1">
-                  {adminNav.map((item) => (
+                  {nav.map((item) => (
                     <li key={item.href}>
                       <NavLink
                         item={item}

@@ -5,6 +5,7 @@ import { ShieldAlert } from "lucide-react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { StorageMeter } from "@/components/admin/storage-meter";
+import { getAdminIdentity } from "@/lib/auth/permissions";
 import { storageLevel } from "@/lib/storage/budget";
 import { Button } from "@/components/ui/button";
 import { countNewLeads } from "@/lib/queries/leads";
@@ -43,9 +44,10 @@ export default async function AdminShellLayout({
 
   // Both are admin-only reads and both are cheap; running them in parallel
   // keeps the shell off the critical path of the page inside it.
-  const [newLeads, usage] = await Promise.all([
+  const [newLeads, usage, identity] = await Promise.all([
     countNewLeads(),
     getStorageUsage(),
+    getAdminIdentity(),
   ]);
 
   const percent = Math.min(
@@ -61,6 +63,7 @@ export default async function AdminShellLayout({
       storage={<StorageMeter usage={usage} variant="sidebar" />}
       storagePercent={percent}
       storageBar={storageLevel(usage).bar}
+      permissions={identity?.permissions ?? []}
     >
       {children}
     </AdminShell>

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { deleteImages } from "@/lib/images/store";
+import { recordAudit } from "@/lib/auth/audit";
 import { getAdminListingById } from "@/lib/queries/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -232,6 +233,20 @@ export async function setListingPublished(raw: unknown): Promise<ActionResult> {
   if (error) return { ok: false, error: friendlyError(error.message) };
 
   const city = Array.isArray(data.cities) ? data.cities[0] : data.cities;
+
+  /*
+    Audited because publishing is the action with consequences outside this
+    dashboard: it puts a URL in front of the public, and HR11 makes that URL
+    permanent. "When did this go live, and who did it" is a question that gets
+    asked months later.
+  */
+  await recordAudit({
+    action: parsed.data.value ? "property_published" : "property_unpublished",
+    entityType: "listing",
+    entityId: parsed.data.id,
+    metadata: { slug: data.slug },
+  });
+
   revalidateListing(data.slug, [city?.slug ?? null]);
   return { ok: true };
 }
@@ -355,6 +370,20 @@ export async function deleteListing(
   const { error } = await db.from("listings").delete().eq("id", id);
 
   if (error) return { ok: false, error: friendlyError(error.message) };
+
+  /*
+    The address and slug are recorded, not just the id.
+
+    The row is gone by the time anyone reads this log, so an id alone would be
+    unresolvable — the audit entry has to carry enough to identify what was
+    deleted on its own.
+  */
+  await recordAudit({
+    action: "property_deleted",
+    entityType: "listing",
+    entityId: id,
+    metadata: { slug: listing.slug, address: listing.address, photos: keys.length },
+  });
 
   revalidateListing(listing.slug, [listing.city.slug]);
   return { ok: true };
