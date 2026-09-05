@@ -90,6 +90,30 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  /**
+   * Permanent route moves.
+   *
+   * `/new-construction-representation` was published, so HR11 makes its URL
+   * permanent — it may never 404. A 308 here is the right instrument rather
+   * than a row in the `redirects` table: that table is resolved only on a
+   * listing's not-found branch, deliberately, because reading it on every
+   * request would put a database round trip in front of the whole site. A
+   * static route rename is known at build time and costs nothing to serve.
+   *
+   * `permanent: true` emits 308, which preserves the method and tells search
+   * engines to transfer the old URL's standing to the new one. A 307 would
+   * leave both URLs alive in the index, which §46 explicitly forbids.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/new-construction-representation",
+        destination: "/hire-contractor",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

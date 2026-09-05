@@ -628,3 +628,107 @@ function trimKeyword(value: string): string {
   const space = cut.lastIndexOf(" ");
   return space > 40 ? cut.slice(0, space) : cut;
 }
+
+/* ── Service landing pages ────────────────────────────────────────────────── */
+
+/**
+ * Keywords for a service landing page (brief §22, §24).
+ *
+ * ── Why this is not the article generator ─────────────────────────────────
+ *
+ * §24 is explicit: do not use the old article's keywords as the foundation.
+ * An article generator derives its primary keyword from the TITLE, because for
+ * a piece of writing the title is the subject. A service page's subject is a
+ * SERVICE crossed with a PLACE, and its searches are transactional — somebody
+ * typing "remodeling contractor Lake Mary" is looking to hire, not to read.
+ *
+ * So the composition is service × place, from two lists the page itself
+ * supplies: the services it actually offers, and the areas it actually names.
+ * Neither is guessed and neither is expanded — §22 permits only locations and
+ * services that are genuinely applicable, and the only way to guarantee that is
+ * to compose from what the page says rather than from what would rank.
+ *
+ * ── Why the city is required ──────────────────────────────────────────────
+ *
+ * "Residential contractor" with no place attached competes with every
+ * contractor in the United States and helps nobody. Every phrase here names
+ * somewhere the graph connects.
+ */
+export function servicePageKeywords(
+  page: {
+    /** Short service nouns as a buyer would type them: "remodeling contractor". */
+    services: string[];
+    /** The one that leads. Used for the primary keyword. */
+    primaryService: string;
+  },
+  geo: GeoRelevance[],
+): GeneratedKeyword[] {
+  const usable = geo.filter((g) => g.usableInCopy);
+  const city = usable.find((g) => g.layer === 2);
+  const nearby = usable.filter((g) => g.layer === 3);
+  const region = usable.find((g) => g.layer === 5);
+
+  if (!city) return [];
+
+  const out: GeneratedKeyword[] = [
+    {
+      keyword: `${page.primaryService} in ${city.name} FL`,
+      kind: "primary",
+      intent: "transactional",
+      geoEntityId: city.entityId,
+      evidence: `The page offers ${page.primaryService} and names ${city.name} as a service area.`,
+      score: 100,
+    },
+    {
+      keyword: `${page.primaryService} ${city.name} Florida`,
+      kind: "secondary",
+      intent: "transactional",
+      geoEntityId: city.entityId,
+      evidence: `The page offers ${page.primaryService} and names ${city.name} as a service area.`,
+      score: 84,
+    },
+  ];
+
+  /*
+    One phrase per service the page actually lists. Not a matrix of every
+    service against every place — that is how a page ends up targeting forty
+    variations of the same query, which §22 calls keyword stuffing and §58 rules
+    out in favour of relevance.
+  */
+  for (const service of page.services) {
+    if (service.toLowerCase() === page.primaryService.toLowerCase()) continue;
+    out.push({
+      keyword: `${service} ${city.name} FL`,
+      kind: "feature",
+      intent: "commercial",
+      geoEntityId: city.entityId,
+      evidence: `The page lists ${service} among its services.`,
+      score: 76,
+    });
+  }
+
+  // The nearby cities, primary service only — one hop, from the graph.
+  for (const place of nearby) {
+    out.push({
+      keyword: `${page.primaryService} near ${place.name} FL`,
+      kind: "nearby",
+      intent: "local",
+      geoEntityId: place.entityId,
+      evidence: place.reason,
+      score: 56,
+    });
+  }
+
+  if (region) {
+    out.push({
+      keyword: `${page.primaryService} ${region.name}`,
+      kind: "regional",
+      intent: "local",
+      geoEntityId: region.entityId,
+      evidence: region.reason,
+      score: 48,
+    });
+  }
+
+  return dedupe(out);
+}

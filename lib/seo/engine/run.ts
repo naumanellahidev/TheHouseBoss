@@ -97,6 +97,7 @@ type Settings = {
   enableArticles: boolean;
   enableCities: boolean;
   enableCommunities: boolean;
+  enableStaticPages: boolean;
   requireGeoRelevance: boolean;
   requireVerifiedFeatures: boolean;
   blockKeywordStuffing: boolean;
@@ -120,6 +121,7 @@ export async function getSeoSettings(): Promise<Settings> {
     enableArticles: true,
     enableCities: true,
     enableCommunities: true,
+    enableStaticPages: true,
     requireGeoRelevance: true,
     requireVerifiedFeatures: true,
     blockKeywordStuffing: true,
@@ -139,6 +141,7 @@ export async function getSeoSettings(): Promise<Settings> {
       enableArticles: data.enable_articles,
       enableCities: data.enable_cities,
       enableCommunities: data.enable_communities,
+      enableStaticPages: data.enable_static_pages,
       requireGeoRelevance: data.require_geo_relevance,
       requireVerifiedFeatures: data.require_verified_features,
       blockKeywordStuffing: data.block_keyword_stuffing,
@@ -526,6 +529,137 @@ export async function runPlaceSeo(
             ...(owner.kind === "city" ? { city_id: owner.id } : {}),
             ...(owner.kind === "community" ? { community_id: owner.id } : {}),
             ...(owner.kind === "article" ? { article_id: owner.id } : {}),
+            keyword: k.keyword,
+            kind: k.kind,
+            intent: k.intent,
+            geo_entity_id: k.geoEntityId,
+            evidence: k.evidence,
+            score: k.score,
+            run_id: run.id,
+          })),
+        );
+        if (error) throw new Error(`storing keywords: ${error.message}`);
+        stored = toInsert.length;
+      }
+    }
+
+    await db
+      .from("seo_generation_runs")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        changes: { keywordsStored: stored, keywordsRejected: rejected, geoPlaces: geo.length },
+        approved_at: settings.mode === "auto" ? new Date().toISOString() : null,
+      })
+      .eq("id", run.id);
+
+    return {
+      runId: run.id,
+      keywordsStored: stored,
+      keywordsRejected: rejected,
+      geoPlaces: geo.length,
+      linksProposed: 0,
+      mode: settings.mode,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await db
+      .from("seo_generation_runs")
+      .update({ status: "failed", completed_at: new Date().toISOString(), error: message })
+      .eq("id", run.id);
+    console.error(`[seo-engine] run ${run.id} failed:`, error);
+    return null;
+  }
+}
+
+/* ── Static service landing pages ─────────────────────────────────────────── */
+
+/**
+ * Run the engine for a page that has no database row (§23, §33, §108).
+ *
+ * `/hire-contractor` is a route, not a record — its content lives in code with
+ * per-field overrides in `page_sections`. `seo_keywords` and
+ * `seo_generation_runs` both carry a `path` column for exactly this case, so a
+ * static page is a first-class SEO entity rather than the one thing the engine
+ * cannot see.
+ */
+export async function runStaticPageSeo(
+  path: string,
+  citySlug: string,
+  generate: (
+    geo: import("@/lib/seo/geo/relevance").GeoRelevance[],
+  ) => ReturnType<typeof import("@/lib/seo/engine/keywords").listingKeywords>,
+  trigger: "publish" | "manual" | "bulk" | "content_change" | "backfill",
+): Promise<RunOutcome | null> {
+  const settings = await getSeoSettings();
+  if (!settings.enableStaticPages) return null;
+
+  const db = createServiceClient();
+
+  const { data: run, error: runError } = await db
+    .from("seo_generation_runs")
+    .insert({
+      path,
+      trigger,
+      status: "processing",
+      engine_version: ENGINE_VERSION,
+      prompt_version: PROMPT_VERSION,
+      model: null,
+    })
+    .select("id")
+    .single();
+
+  if (runError || !run) {
+    console.error(`[seo-engine] could not open a run for ${path}: ${runError?.message}`);
+    return null;
+  }
+
+  try {
+    const geo = settings.enableGeographic ? await resolveGeo({ citySlug }) : [];
+
+    let stored = 0;
+    let rejected: { keyword: string; reason: string }[] = [];
+
+    if (settings.enableKeywords) {
+      const result = validateKeywords(generate(geo), {
+        geo,
+        /*
+          A page has no bedrooms. An empty set means any feature keyword is
+          rejected as unsupported, which is the correct outcome — the service
+          keywords carry kind `feature` for grouping, and the financing check is
+          what actually matters here.
+        */
+        verifiedFeatures: new Set<string>(),
+        settings: {
+          requireGeoRelevance: settings.requireGeoRelevance,
+          // Off for a static page: see the note above. The geography check,
+          // which is the one that prevents a false claim, stays on.
+          requireVerifiedFeatures: false,
+          blockKeywordStuffing: settings.blockKeywordStuffing,
+        },
+      });
+      rejected = result.rejected;
+
+      const { data: keep } = await db
+        .from("seo_keywords")
+        .select("id, keyword")
+        .eq("path", path)
+        .or("pinned.eq.true,excluded.eq.true");
+
+      const keepIds = (keep ?? []).map((r) => r.id);
+      let del = db.from("seo_keywords").delete().eq("path", path);
+      if (keepIds.length > 0) del = del.not("id", "in", `(${keepIds.join(",")})`);
+      await del;
+
+      const held = new Set((keep ?? []).map((r) => r.keyword.toLowerCase()));
+      const toInsert = result.accepted.filter(
+        (k) => !held.has(k.keyword.toLowerCase()),
+      );
+
+      if (toInsert.length > 0) {
+        const { error } = await db.from("seo_keywords").insert(
+          toInsert.map((k) => ({
+            path,
             keyword: k.keyword,
             kind: k.kind,
             intent: k.intent,

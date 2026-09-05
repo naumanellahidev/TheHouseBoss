@@ -71,7 +71,7 @@ export async function GET() {
     "",
     `- [VA Home-Buyer Guide](${base}/guides/va-home-buyer): eligibility, entitlement, zero down, the funding fee, and the Minimum Property Requirements that end VA deals in Central Florida.`,
     `- [Assumable Mortgage Homes](${base}/assumable-mortgage-homes): which loans can be assumed, the equity gap, VA entitlement substitution, servicer timelines.`,
-    `- [New-Construction Representation](${base}/new-construction-representation): why the sales office works for the builder, registration before the first visit, contract terms, upgrades that hold value.`,
+    `- [New-Construction Representation](${base}/hire-contractor): why the sales office works for the builder, registration before the first visit, contract terms, upgrades that hold value.`,
     `- [Selling Your Home](${base}/sell-your-central-florida-home): valuation, which pre-listing repairs return money, pricing, offers, inspection and appraisal, Florida disclosure.`,
     "",
     "## Property search",

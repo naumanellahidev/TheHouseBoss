@@ -622,6 +622,37 @@ export async function bulkAnalyseListings(): Promise<SeoActionResult> {
   }
 
   /*
+    §23, §47. The service landing pages, which have no record to enqueue.
+
+    Run inline rather than queued because there are two of them and no
+    provider call is involved — the composition is deterministic. Queuing would
+    add a job kind and a dispatch branch to save nothing.
+  */
+  const { runStaticPageSeo } = await import("@/lib/seo/engine/run");
+  const { servicePageKeywords } = await import("@/lib/seo/engine/keywords");
+  const { SERVICE_PAGES } = await import("@/lib/seo/engine/service-pages");
+
+  let staticPages = 0;
+  let staticKeywords = 0;
+
+  for (const page of SERVICE_PAGES) {
+    const outcome = await runStaticPageSeo(
+      page.path,
+      page.citySlug,
+      (geo) =>
+        servicePageKeywords(
+          { services: page.services, primaryService: page.primaryService },
+          geo,
+        ),
+      "bulk",
+    );
+    if (outcome) {
+      staticPages += 1;
+      staticKeywords += outcome.keywordsStored;
+    }
+  }
+
+  /*
     Wrapped, so a write failure is reported as one. `enqueue` throws now rather
     than returning 0 — the first version logged and returned 0, and the caller
     could not tell "nothing to do" from "nothing was written", so it cheerfully
@@ -654,7 +685,10 @@ export async function bulkAnalyseListings(): Promise<SeoActionResult> {
     message:
       `Queued ${queued} ${queued === 1 ? "page" : "pages"}. ` +
       `${first.processed} done already; ${counts.queued} still waiting — ` +
-      "they are picked up automatically every 15 minutes.",
+      "they are picked up automatically every 15 minutes." +
+      (staticKeywords > 0
+        ? ` Service pages: ${staticKeywords} phrases across ${staticPages}.`
+        : ""),
   };
 }
 

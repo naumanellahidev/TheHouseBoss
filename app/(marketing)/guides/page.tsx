@@ -40,11 +40,20 @@ const GUIDES = [
     detail: "Work out the gap between the price and the loan balance first. Everything else follows from that number.",
   },
   {
-    href: "/new-construction-representation",
+    /*
+      Relabelled when this route became the contractor landing page.
+
+      It is not a buyer guide any more and describing it as one would send
+      somebody looking for advice about builders to a page offering
+      construction work. It stays on this index because it is still where a
+      reader thinking about a property's condition should go next — which is
+      what this index is for.
+    */
+    href: "/hire-contractor",
     icon: HardHat,
-    title: "New-construction representation",
-    lead: "Why the sales office works for the builder, and why registering your own agent before your first visit matters more than anything else.",
-    detail: "The one thing to do before you visit a model home. It takes a single message.",
+    title: "Hire a contractor",
+    lead: "Remodeling, renovation and new residential construction, from a Certified Residential Building Contractor who is also a licensed Realtor.",
+    detail: "Two ways of looking at a property — what the work takes, and what it does to the value.",
   },
 ];
 

@@ -112,6 +112,90 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-06 — /hire-contractor: the contractor landing page
+
+The New Construction guide is gone. `/hire-contractor` replaces it as a service
+landing page for the construction side of the business.
+
+**Routing (§1, §46)**
+
+- `/new-construction-representation` → `/hire-contractor`, **308**, declared in
+  `next.config.ts`. Not a `redirects` table row: that table is resolved only on
+  a listing's not-found branch, deliberately, because reading it per request
+  would put a database round trip in front of the whole site. A static rename is
+  known at build time.
+- Nav label is **Hire Contractor**. Every internal link, the sitemap and
+  llms.txt point at the new path; the old URL appears in neither.
+- Canonical is `/hire-contractor`. Verified: 308 → 200, sitemap contains the new
+  URL once and the old one zero times.
+
+**The page (§2, §43)**
+
+Eleven composed sections, none of them the old article: hero, contractor
+difference, credential, services, remodeling, architectural break, new
+construction, process, Central Florida, Lake Mary, FAQ, final CTA. The old
+guide's *facts* survive where still true — pre-drywall is the moment that
+matters, this climate is hard on drainage and mechanicals — rewritten into the
+sections that needed them. The article structure does not.
+
+Measured: 13 h2s, one h1, axe clean at 360/768/1440, no horizontal overflow,
+canvas only on desktop.
+
+**Claims (§4, §44)**
+
+No project counts, awards, builder partnerships, guarantees or pricing. Every
+claim rests on the licence (verifiable against the DBPR) or describes method
+rather than results. Schema is `HomeAndConstructionBusiness`, **not**
+`GeneralContractor` — that is a different Florida licence class and claiming it
+in markup would be a licence misstatement. No `aggregateRating`, no `review`, no
+`priceRange`.
+
+**CMS (§34, §35, §36)**
+
+Migration 022 adds `page_sections`: one row per section, addressed by
+`(page_slug, section_key)`, with its own `enabled` flag. Defaults live in
+`lib/content/hire-contractor.ts` so the page ships complete and the database
+holds only what was changed. Verified: edited the hero headline in the admin →
+it appeared on the public page; pressed reset → the shipped copy returned.
+
+**SEO (§22, §23, §24)**
+
+`servicePageKeywords` composes service × place, from the services the page lists
+and the places the graph connects. Not the article generator, which derives its
+primary keyword from a title. Produced 10 phrases, 0 rejected:
+
+    100 primary    residential contractor in Lake Mary FL
+     76 feature    remodeling contractor Lake Mary FL
+     56 nearby     residential contractor near Longwood FL
+     48 regional   residential contractor Central Florida
+
+Editing the services or service areas re-runs it (§47).
+
+**Reciprocal links (§26)**
+
+Every city hub carries a "Residential construction and remodeling" band, and
+listings propose a link — on resale as well as new construction, because
+somebody looking at a 1990s house is the most likely to be weighing a
+renovation.
+
+**Two tests failed, and both were right to**
+
+`guides.spec.ts` asserted that this page opens its sections with `AnswerFirst`
+and that the guides index links to three *buyer guides*. Both encoded the old
+identity. The AnswerFirst rule is about long-form guides and no longer applies
+here; the index entry was relabelled from "New-construction representation" to
+"Hire a contractor", because describing it as a guide would send somebody
+looking for advice to a page offering construction work.
+
+**Open**
+
+- The services list is my reading of what a CRC licence permits and what the
+  client asserted. It is editable in Admin → Pages precisely so it stays the
+  client's assertion. **It should be confirmed before launch.**
+- §16 before/after project imagery: none exists, so the visual break is
+  typographic. §39 forbids stock contractor photography and fabricating project
+  results is worse.
+
 ### 2026-09-05 (tranche 5) — living SEO, status indexing, per-record controls, article FAQ
 
 **Shipped**

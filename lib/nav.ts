@@ -73,15 +73,22 @@ export const primaryNav: NavEntry[] = [
         description: "Take over a lower rate",
       },
       {
-        href: "/new-construction-representation",
-        label: "New-Construction Representation",
-        description: "Why you need your own agent",
+        href: "/hire-contractor",
+        label: "Hire Contractor",
+        description: "Remodeling, renovation and new construction",
       },
     ],
   },
   {
-    href: "/new-construction-representation",
-    label: "New Construction",
+    /*
+      "Hire Contractor", not "New Construction".
+
+      The old label described one guide. This route is now the contractor side
+      of the business — a service landing page, not a buyer guide — and the nav
+      label is what tells a visitor that side exists at all.
+    */
+    href: "/hire-contractor",
+    label: "Hire Contractor",
   },
   { href: "/market-updates", label: "Insights" },
   { href: "/about", label: "About" },
@@ -106,10 +113,7 @@ export const footerNav: { heading: string; items: NavLink[] }[] = [
     items: [
       { href: "/guides/va-home-buyer", label: "VA Home-Buyer Guide" },
       { href: "/assumable-mortgage-homes", label: "Assumable Mortgages" },
-      {
-        href: "/new-construction-representation",
-        label: "New-Construction Representation",
-      },
+      { href: "/hire-contractor", label: "Hire Contractor" },
       { href: "/market-updates", label: "Insights" },
     ],
   },

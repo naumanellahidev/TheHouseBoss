@@ -5,8 +5,8 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-05T18:08:51.747Z
- * Tables: 31 · Views: 3
+ * Generated: 2026-09-05T18:55:05.101Z
+ * Tables: 32 · Views: 3
  */
 
 export type Json =
@@ -794,6 +794,39 @@ export type Database = {
           severity?: "info" | "success" | "warning" | "error";
           read_at?: string | null;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      page_sections: {
+        Row: {
+          id: string;
+          page_slug: string;
+          section_key: string;
+          content: Json;
+          position: number;
+          enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          page_slug: string;
+          section_key: string;
+          content?: Json;
+          position?: number;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          page_slug?: string;
+          section_key?: string;
+          content?: Json;
+          position?: number;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

@@ -298,6 +298,34 @@ export function CityHub({
         </Section>
       ) : null}
 
+      {/*
+        §26. The contractor side, from every city page.
+
+        A city hub is where somebody is weighing whether to buy here or improve
+        what they already have, which makes it the most natural place on the
+        site to mention that the same person can do the second. Placed before
+        the lead form so it is an option rather than an afterthought.
+      */}
+      <Section tone="sunken">
+        <Container>
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-h3 text-foreground">
+                Residential construction and remodeling
+              </h2>
+              <p className="max-w-[62ch] text-body text-foreground-muted">
+                Remodeling, renovation and new construction in {city.name}, from
+                a Certified Residential Building Contractor who is also a
+                licensed Realtor.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="lg" className="shrink-0">
+              <Link href="/hire-contractor">Hire a contractor</Link>
+            </Button>
+          </div>
+        </Container>
+      </Section>
+
       {/* 9. Lead CTA */}
       <Section>
         <Container className="max-w-[68ch]">

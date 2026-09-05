@@ -111,7 +111,7 @@ const specialties = [
     hook: "Take over a seller's low-rate VA, FHA or USDA loan. The equity gap is the number that decides whether it works.",
   },
   {
-    href: "/new-construction-representation",
+    href: "/hire-contractor",
     icon: HardHat,
     title: "New construction",
     hook: "The sales office works for the builder. Register your own representation before your first model-home visit — it takes one message.",
@@ -161,7 +161,7 @@ const guides = [
     lead: "Which loans qualify, the equity gap, and what actually goes wrong.",
   },
   {
-    href: "/new-construction-representation",
+    href: "/hire-contractor",
     title: "New-construction representation",
     lead: "Why registering your agent before the first visit matters more than anything else.",
   },

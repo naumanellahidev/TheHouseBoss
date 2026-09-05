@@ -24,7 +24,7 @@ const DISCLAIMERS: { path: string; name: string; needs: RegExp[]; leadType: stri
     leadType: "assumable",
   },
   {
-    path: "/new-construction-representation",
+    path: "/hire-contractor",
     name: "new construction",
     needs: [/not legal advice/i, /do not replace a licensed home inspection/i],
     leadType: "new_construction",
@@ -71,10 +71,18 @@ test.describe("guides and compliance", () => {
   test("every guide opens its sections with a direct answer", async ({ page }) => {
     // docs/14 § 1, rule 1. The AnswerFirst component is the mechanism, so its
     // presence per section is the check.
+    /*
+      `/hire-contractor` is deliberately absent.
+
+      It used to be a buyer guide and this list used to include it. It is now a
+      service landing page — composed sections rather than a prose document —
+      and the AnswerFirst pattern this test enforces is a rule about long-form
+      guides. Asserting it there would be asserting that the redesign did not
+      happen.
+    */
     for (const path of [
       "/guides/va-home-buyer",
       "/assumable-mortgage-homes",
-      "/new-construction-representation",
       "/sell-your-central-florida-home",
     ]) {
       await page.goto(path, { waitUntil: "load" });
@@ -122,13 +130,19 @@ test.describe("guides and compliance", () => {
     search.spec.ts is what guards that; this one only asserts what the index
     offers.
   */
-  test("the guides index links to the three buyer guides", async ({ page }) => {
+  test("the guides index links to each guide exactly once", async ({ page }) => {
     await page.goto("/guides");
 
+    /*
+      `/hire-contractor` is on this index and is not a guide — it is the
+      contractor service page, listed because it is where a reader thinking
+      about a property's condition goes next. The assertion is that each link
+      appears once, not that each destination is a guide.
+    */
     for (const path of [
       "/guides/va-home-buyer",
       "/assumable-mortgage-homes",
-      "/new-construction-representation",
+      "/hire-contractor",
     ]) {
       // Scoped to main: the header nav links to every guide as well.
       await expect(page.locator(`main a[href="${path}"]`)).toHaveCount(1);

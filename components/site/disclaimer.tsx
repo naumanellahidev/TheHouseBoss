@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
  * in the table in docs/09 § 6:
  *
  *   lending   → /guides/va-home-buyer, /assumable-mortgage-homes
- *   legal     → /assumable-mortgage-homes, /new-construction-representation
+ *   legal     → /assumable-mortgage-homes, /hire-contractor
  *   estimate  → /sell-your-central-florida-home, /market-updates/*
  *   tax       → wherever tax treatment is discussed
  */

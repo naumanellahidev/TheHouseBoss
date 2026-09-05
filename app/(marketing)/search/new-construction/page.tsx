@@ -99,7 +99,7 @@ export default async function NewConstructionSearchPage({
               </p>
             </div>
             <Button asChild variant="accent" className="self-start">
-              <Link href="/new-construction-representation">
+              <Link href="/hire-contractor">
                 How new-construction representation works
               </Link>
             </Button>

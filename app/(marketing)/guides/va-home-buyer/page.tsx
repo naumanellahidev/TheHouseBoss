@@ -438,7 +438,7 @@ export default function VaGuidePage() {
         </p>
         <p>
           If you are considering a new build, read the{" "}
-          <Link href="/new-construction-representation">
+          <Link href="/hire-contractor">
             new-construction representation guide
           </Link>{" "}
           before your first site visit. Registering your own agent afterwards is

@@ -9,6 +9,7 @@ import {
   MapPin,
   MapPinned,
   ScrollText,
+  LayoutTemplate,
   Settings,
   Star,
   Users,
@@ -58,6 +59,12 @@ export const adminNav: AdminNavItem[] = [
     label: "MLS",
     icon: Database,
     startsGroup: "Integrations",
+  },
+  {
+    href: "/admin/pages",
+    label: "Pages",
+    icon: LayoutTemplate,
+    permission: "manage_settings",
   },
   { href: "/admin/seo", label: "SEO", icon: Globe, permission: "manage_seo" },
 

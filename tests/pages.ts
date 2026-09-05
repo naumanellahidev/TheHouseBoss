@@ -47,7 +47,7 @@ export const PAGES: TestPage[] = [
   { path: "/guides", name: "guides-index" },
   { path: "/guides/va-home-buyer", name: "va-guide" },
   { path: "/assumable-mortgage-homes", name: "assumable" },
-  { path: "/new-construction-representation", name: "new-construction" },
+  { path: "/hire-contractor", name: "hire-contractor" },
   { path: "/sell-your-central-florida-home", name: "sell" },
   { path: "/reviews", name: "reviews" },
   { path: "/contact", name: "contact" },

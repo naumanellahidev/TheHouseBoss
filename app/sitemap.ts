@@ -58,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
     },
     {
-      url: url("/new-construction-representation"),
+      url: url("/hire-contractor"),
       changeFrequency: "monthly",
       priority: 0.9,
       lastModified: now,

@@ -61,10 +61,21 @@ const GUIDES = [
     reason: "This listing is classified as having an assumable mortgage.",
   },
   {
-    path: "/new-construction-representation",
-    anchor: "new-construction representation",
-    matches: (ctx: LinkContext) => ctx.listingType === "new_construction",
-    reason: "This listing is new construction, where buyer representation works differently.",
+    path: "/hire-contractor",
+    anchor: "residential construction and remodeling",
+    /*
+      §26. Offered on new construction AND on resale.
+
+      On a new build the construction perspective is the obvious link. On a
+      resale it is arguably more useful — somebody looking at a 1990s house is
+      the person most likely to be weighing a renovation, which is the whole
+      subject of that page. It stays off `land`, where there is no house to
+      remodel.
+    */
+    matches: (ctx: LinkContext) =>
+      ctx.listingType === "new_construction" || ctx.listingType === "resale",
+    reason:
+      "Krisi is a Certified Residential Building Contractor as well as a Realtor, so construction and remodeling questions about this property can be answered directly.",
   },
 ];
 
