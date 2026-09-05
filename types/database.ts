@@ -5,8 +5,8 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-05T12:11:48.167Z
- * Tables: 24 · Views: 3
+ * Generated: 2026-09-05T12:49:11.448Z
+ * Tables: 30 · Views: 3
  */
 
 export type Json =
@@ -953,6 +953,234 @@ export type Database = {
         };
         Relationships: [];
       };
+      seo_generation_runs: {
+        Row: {
+          id: string;
+          listing_id: string | null;
+          article_id: string | null;
+          city_id: string | null;
+          community_id: string | null;
+          path: string | null;
+          trigger: unknown;
+          status: unknown;
+          model: string | null;
+          engine_version: string;
+          prompt_version: string;
+          approved_by: string | null;
+          approved_at: string | null;
+          rejected_at: string | null;
+          before_data: Json | null;
+          after_data: Json | null;
+          changes: Json | null;
+          error: string | null;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          path?: string | null;
+          trigger: unknown;
+          status?: unknown;
+          model?: string | null;
+          engine_version: string;
+          prompt_version: string;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          rejected_at?: string | null;
+          before_data?: Json | null;
+          after_data?: Json | null;
+          changes?: Json | null;
+          error?: string | null;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          path?: string | null;
+          trigger?: unknown;
+          status?: unknown;
+          model?: string | null;
+          engine_version?: string;
+          prompt_version?: string;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          rejected_at?: string | null;
+          before_data?: Json | null;
+          after_data?: Json | null;
+          changes?: Json | null;
+          error?: string | null;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      seo_internal_links: {
+        Row: {
+          id: string;
+          listing_id: string | null;
+          article_id: string | null;
+          city_id: string | null;
+          community_id: string | null;
+          from_path: string | null;
+          to_path: string;
+          anchor: string;
+          reason: string;
+          status: unknown;
+          run_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          from_path?: string | null;
+          to_path: string;
+          anchor: string;
+          reason: string;
+          status?: unknown;
+          run_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          from_path?: string | null;
+          to_path?: string;
+          anchor?: string;
+          reason?: string;
+          status?: unknown;
+          run_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      seo_keyword_cluster_members: {
+        Row: {
+          cluster_id: string;
+          keyword_id: string;
+          position: number;
+        };
+        Insert: {
+          cluster_id: string;
+          keyword_id: string;
+          position?: number;
+        };
+        Update: {
+          cluster_id?: string;
+          keyword_id?: string;
+          position?: number;
+        };
+        Relationships: [];
+      };
+      seo_keyword_clusters: {
+        Row: {
+          id: string;
+          listing_id: string | null;
+          article_id: string | null;
+          city_id: string | null;
+          community_id: string | null;
+          path: string | null;
+          label: string;
+          kind: unknown;
+          intent: unknown;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          path?: string | null;
+          label: string;
+          kind: unknown;
+          intent: unknown;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          path?: string | null;
+          label?: string;
+          kind?: unknown;
+          intent?: unknown;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      seo_keywords: {
+        Row: {
+          id: string;
+          listing_id: string | null;
+          article_id: string | null;
+          city_id: string | null;
+          community_id: string | null;
+          path: string | null;
+          keyword: string;
+          kind: unknown;
+          intent: unknown;
+          geo_entity_id: string | null;
+          evidence: string;
+          score: number;
+          pinned: boolean;
+          excluded: boolean;
+          run_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          path?: string | null;
+          keyword: string;
+          kind: unknown;
+          intent: unknown;
+          geo_entity_id?: string | null;
+          evidence: string;
+          score?: number;
+          pinned?: boolean;
+          excluded?: boolean;
+          run_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          listing_id?: string | null;
+          article_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          path?: string | null;
+          keyword?: string;
+          kind?: unknown;
+          intent?: unknown;
+          geo_entity_id?: string | null;
+          evidence?: string;
+          score?: number;
+          pinned?: boolean;
+          excluded?: boolean;
+          run_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       seo_pages: {
         Row: {
           id: string;
@@ -995,6 +1223,72 @@ export type Database = {
           nofollow?: boolean;
           updated_at?: string;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      seo_settings: {
+        Row: {
+          id: number;
+          mode: unknown;
+          enable_listings: boolean;
+          enable_articles: boolean;
+          enable_cities: boolean;
+          enable_communities: boolean;
+          enable_static_pages: boolean;
+          enable_geographic: boolean;
+          enable_keywords: boolean;
+          enable_internal_links: boolean;
+          enable_schema: boolean;
+          enable_image_alt: boolean;
+          enable_continuous: boolean;
+          require_verified_features: boolean;
+          require_geo_relevance: boolean;
+          block_keyword_stuffing: boolean;
+          require_review_for_major: boolean;
+          bulk_batch_size: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          mode?: unknown;
+          enable_listings?: boolean;
+          enable_articles?: boolean;
+          enable_cities?: boolean;
+          enable_communities?: boolean;
+          enable_static_pages?: boolean;
+          enable_geographic?: boolean;
+          enable_keywords?: boolean;
+          enable_internal_links?: boolean;
+          enable_schema?: boolean;
+          enable_image_alt?: boolean;
+          enable_continuous?: boolean;
+          require_verified_features?: boolean;
+          require_geo_relevance?: boolean;
+          block_keyword_stuffing?: boolean;
+          require_review_for_major?: boolean;
+          bulk_batch_size?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          mode?: unknown;
+          enable_listings?: boolean;
+          enable_articles?: boolean;
+          enable_cities?: boolean;
+          enable_communities?: boolean;
+          enable_static_pages?: boolean;
+          enable_geographic?: boolean;
+          enable_keywords?: boolean;
+          enable_internal_links?: boolean;
+          enable_schema?: boolean;
+          enable_image_alt?: boolean;
+          enable_continuous?: boolean;
+          require_verified_features?: boolean;
+          require_geo_relevance?: boolean;
+          block_keyword_stuffing?: boolean;
+          require_review_for_major?: boolean;
+          bulk_batch_size?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };

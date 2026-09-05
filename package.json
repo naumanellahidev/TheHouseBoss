@@ -21,7 +21,7 @@
     "db:reset": "supabase db reset",
     "db:push": "supabase db push",
     "gen:icons": "node scripts/generate-icons.mjs",
-    "guards": "npm run check:tokens && npm run check:contrast && npm run check:migrations && npm run typecheck && npm run lint",
+    "guards": "npm run check:tokens && npm run check:contrast && npm run check:migrations && npm run typecheck && npm run lint && npm run check:seo-engine",
     "db:seed": "node --env-file=.env.local scripts/db-seed.mjs",
     "db:verify": "node --env-file=.env.local scripts/db-verify.mjs",
     "db:probe": "node --env-file=.env.local scripts/db-probe.mjs",
@@ -38,7 +38,8 @@
     "seed:images": "tsx --env-file=.env.local scripts/seed-images.mts",
     "admin:credentials": "node --env-file=.env.local scripts/set-admin-credentials.mjs",
     "seo:backfill": "tsx --conditions=react-server --env-file=.env.local scripts/seo-backfill.mts",
-    "seed:geo": "tsx --conditions=react-server --env-file=.env.local scripts/seed-geo.mts"
+    "seed:geo": "tsx --conditions=react-server --env-file=.env.local scripts/seed-geo.mts",
+    "check:seo-engine": "tsx --conditions=react-server --env-file=.env.local scripts/check-seo-engine.mts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { ListingForm } from "@/components/admin/listings/listing-form";
+import { KeywordPanel } from "@/components/admin/seo/keyword-panel";
 import { Badge, listingStatusBadge } from "@/components/ui/badge";
 import { getAdminCities, getAdminCommunities, getAdminListingById, getKnownFeatures } from "@/lib/queries/admin";
+import { getListingKeywords, getListingSeoRuns } from "@/lib/queries/platform";
 
 import type { ListingInput } from "@/lib/validation/listing";
 
@@ -27,12 +29,16 @@ export default async function EditListingPage({
   const { id } = await params;
   const { tab } = await searchParams;
 
-  const [listing, cities, communities, knownFeatures] = await Promise.all([
-    getAdminListingById(id),
-    getAdminCities(),
-    getAdminCommunities(),
-    getKnownFeatures(),
-  ]);
+  const [listing, cities, communities, knownFeatures, keywords, seoRuns] =
+    await Promise.all([
+      getAdminListingById(id),
+      getAdminCities(),
+      getAdminCommunities(),
+      getKnownFeatures(),
+      // The engine's output for this listing, for the review surface (§32, §85).
+      getListingKeywords(id),
+      getListingSeoRuns(id),
+    ]);
 
   if (!listing) notFound();
 
@@ -104,6 +110,18 @@ export default async function EditListingPage({
         publishedAt={listing.publishedAt}
         initialTab={tab}
       />
+
+      {/*
+        Below the form, not inside it.
+
+        The engine's output is not a field: it is derived from what the form
+        contains and is rewritten whenever the listing is published. Putting it
+        in a tab would imply it can be edited there, and putting it inside the
+        <form> would submit it back on every save.
+      */}
+      <section className="flex flex-col gap-4 border-t border-border pt-8">
+        <KeywordPanel keywords={keywords} runs={seoRuns} />
+      </section>
     </div>
   );
 }

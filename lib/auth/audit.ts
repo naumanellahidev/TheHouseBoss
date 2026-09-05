@@ -59,6 +59,16 @@ export type AuditAction =
   | "media_deleted"
   | "lead_updated"
   | "seo_updated"
+  /*
+    The engine's own vocabulary, brief §78. `seo_generated` and
+    `seo_auto_applied` are separated because they mean different things to
+    whoever reads this log later: one produced a proposal a person still has to
+    look at, the other changed the site without anyone looking.
+  */
+  | "seo_generated"
+  | "seo_approved"
+  | "seo_rejected"
+  | "seo_auto_applied"
   | "sitemap_refreshed"
   | "redirect_created"
   | "redirect_deleted"

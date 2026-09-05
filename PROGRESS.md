@@ -112,6 +112,76 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-05 (tranche 2) — the SEO keyword engine
+
+**Shipped**
+
+- **Migration 019, the engine's data model** (§53, §54): `seo_keywords`,
+  `seo_keyword_clusters` + members, `seo_internal_links`,
+  `seo_generation_runs` (§34's exact fields plus §35's engine/prompt versions),
+  `seo_settings`. Relational, not a jsonb blob — §54 is right that the questions
+  are relational, and a blob cannot be constrained.
+  - Polymorphic ownership via four nullable FKs and a CHECK that exactly one is
+    set, rather than `entity_type` + `entity_id`. Real referential integrity,
+    real cascade deletes.
+- **`lib/seo/engine/keywords.ts`** — composes keywords from verified facts.
+  §100 forbids generating keyword lists from an LLM, and this is why: asked for
+  Lake Mary keywords a model returns `lake mary waterfront`, which is a claim
+  about a property that may not have any. Every phrase here is a template filled
+  from a place the graph connects and an attribute the database records. There
+  is nothing to invent because nothing is asked.
+- **`lib/seo/engine/validate.ts`** — §57. Geography checked against the graph by
+  entity id, features against the record, stuffing, filler words, repeated place
+  names, and evidence-or-reject.
+- **`lib/seo/engine/run.ts`** — one recorded run per record (§34), safe-by-
+  default settings, and human `pinned`/`excluded` keywords preserved across
+  regeneration.
+- **The review surface** — keywords with their evidence and the run history, in
+  the listing editor (§85, §90). The evidence sentences are the reasons the
+  engine recorded when deciding, not justifications written for display.
+- **`npm run check:seo-engine`** — 10 adversarial cases, each a claim the system
+  must refuse. Added to `npm run guards`.
+
+**Output, across the six seeded listings**
+
+43 keywords, 0 rejected — every one legitimately supportable. Notably:
+
+- the **sold** listing produces exactly one phrase, `recently sold homes in
+  Longwood FL`, and no "for sale" phrase at all
+- the `va_eligible` listing produces `townhomes for VA buyers in Sanford FL` —
+  naming the buyer, not a property status
+- property-type nouns are what buyers type: townhomes, condos, homes
+- no listing names a city the graph does not connect to it
+
+**Two defects found by running it**
+
+1. **Every run stored zero keywords and reported success.** The upsert used
+   `onConflict: "listing_id,keyword"` against a unique index on
+   `(listing_id, lower(keyword))` — case-insensitive on purpose, and PostgREST
+   cannot target an expression index by column list. It failed with "no unique
+   or exclusion constraint matching the ON CONFLICT specification", the error was
+   logged, `stored` stayed 0, and the run row said `completed`. Now a plain
+   INSERT with human-held keywords filtered out first, and a write failure
+   **throws** so the run is recorded as `failed` rather than as an empty success.
+
+2. **I asserted in two files that the schema records neither VA eligibility nor
+   assumable status, and refused to generate those keywords on that basis.**
+   `listings.listing_type` is a CHECK-constrained enum that includes
+   `va_eligible` and `assumable`, set deliberately by a licensed agent — which
+   is exactly the "verified information" §86 asks for. Corrected: the claim is
+   refused when *unsupported*, not refused outright, and the guard covers both
+   directions.
+
+**Open**
+
+- §16 internal-linking engine (the table exists, the engine does not)
+- §30–§31 SEO health dashboard and opportunities
+- §32 the approve/reject controls (`pinned`/`excluded` are honoured by the
+  engine and have no UI yet — the panel shows the state and says so)
+- §36 job queue; §37 bulk operations
+- §40–§46 New Construction rebuild
+- Article, city and community keyword generation — only listings so far
+
 ### 2026-09-05 (tranche 1 of the ULTIMATE brief) — client facts, geo graph, account security
 
 The 123-section brief is being delivered in tranches. This is the first: the

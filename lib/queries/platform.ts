@@ -396,3 +396,100 @@ export async function getSeoCoverage(): Promise<SeoCoverage> {
     orphaned: [...have].filter((p) => !allPaths.has(p)),
   };
 }
+
+/* ── SEO engine output ────────────────────────────────────────────────────── */
+
+export type EngineKeyword = {
+  id: string;
+  keyword: string;
+  kind: string;
+  intent: string;
+  evidence: string;
+  score: number;
+  pinned: boolean;
+  excluded: boolean;
+  place: string | null;
+};
+
+export type EngineRun = {
+  id: string;
+  trigger: string;
+  status: string;
+  engineVersion: string;
+  createdAt: string;
+  completedAt: string | null;
+  approvedAt: string | null;
+  rejectedAt: string | null;
+  error: string | null;
+  keywordsStored: number;
+  keywordsRejected: number;
+};
+
+/**
+ * What the engine produced for one listing, for the review surface (§32, §85).
+ *
+ * The `evidence` column comes back with the keyword deliberately. It is the
+ * answer to "why did the AI recommend this", which §85 asks to be available at
+ * the point of the recommendation — not on a separate screen an operator has to
+ * go looking for.
+ */
+export async function getListingKeywords(listingId: string): Promise<EngineKeyword[]> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("seo_keywords")
+    .select("id, keyword, kind, intent, evidence, score, pinned, excluded, geo_entities(name)")
+    .eq("listing_id", listingId)
+    .order("score", { ascending: false });
+
+  if (error) return [];
+
+  return (data ?? []).map((row) => {
+    const place = Array.isArray(row.geo_entities) ? row.geo_entities[0] : row.geo_entities;
+    return {
+      id: row.id,
+      keyword: row.keyword,
+      kind: String(row.kind),
+      intent: String(row.intent),
+      evidence: row.evidence,
+      score: row.score,
+      pinned: row.pinned,
+      excluded: row.excluded,
+      place: (place as { name?: string } | null)?.name ?? null,
+    };
+  });
+}
+
+/** The engine's history for one listing (§34, §90). Newest first. */
+export async function getListingSeoRuns(listingId: string): Promise<EngineRun[]> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("seo_generation_runs")
+    .select("id, trigger, status, engine_version, created_at, completed_at, approved_at, rejected_at, error, changes")
+    .eq("listing_id", listingId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) return [];
+
+  return (data ?? []).map((row) => {
+    const changes = (row.changes ?? {}) as {
+      keywordsStored?: number;
+      keywordsRejected?: unknown[];
+    };
+    return {
+      id: row.id,
+      trigger: String(row.trigger),
+      status: String(row.status),
+      engineVersion: row.engine_version,
+      createdAt: row.created_at,
+      completedAt: row.completed_at,
+      approvedAt: row.approved_at,
+      rejectedAt: row.rejected_at,
+      error: row.error,
+      keywordsStored: changes.keywordsStored ?? 0,
+      keywordsRejected: Array.isArray(changes.keywordsRejected)
+        ? changes.keywordsRejected.length
+        : 0,
+    };
+  });
+}

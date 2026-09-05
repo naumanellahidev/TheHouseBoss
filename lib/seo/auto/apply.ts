@@ -214,25 +214,20 @@ export async function syncListingSeo(slug: string): Promise<void> {
     if (!listing) throw new Error(`no published listing at ${slug}`);
 
     /*
-      Geography is recomputed before the copy is written, because the copy
-      depends on it (brief §6, §27). A listing that moved city must not keep
-      the old city's relevance rows for even one generation — that is exactly
-      how a false location claim reaches a page.
+      The engine runs before the copy is written, because the copy depends on
+      its geography (brief §6, §27). A listing that moved city must not keep the
+      old city's relevance rows for even one generation — that is exactly how a
+      false location claim reaches a page.
 
-      Its own try/catch: a graph that is not yet seeded should cost the listing
-      its local keywords, not its metadata.
+      Its own try/catch. An engine that is not yet configured, or a graph that
+      has not been seeded, should cost the listing its keywords — not its
+      metadata, and certainly not the publish that called this.
     */
     try {
-      const { resolveListingGeo, persistListingGeo } = await import(
-        "@/lib/seo/geo/relevance"
-      );
-      const relevance = await resolveListingGeo({
-        citySlug: listing.city.slug,
-        communitySlug: listing.community?.slug ?? null,
-      });
-      await persistListingGeo(listing.id, relevance);
+      const { runListingSeo } = await import("@/lib/seo/engine/run");
+      await runListingSeo(listing, "publish");
     } catch (error) {
-      console.error(`[geo] could not resolve ${slug}:`, error);
+      console.error(`[seo-engine] could not run for ${slug}:`, error);
     }
 
     return ensureListingSeo(listing);
