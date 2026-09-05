@@ -363,3 +363,258 @@ function dedupe(keywords: GeneratedKeyword[]): GeneratedKeyword[] {
   }
   return [...best.values()].sort((a, b) => b.score - a.score);
 }
+
+/* ── Articles, cities, communities ────────────────────────────────────────── */
+
+/**
+ * Keywords for a city hub page (§63).
+ *
+ * A city page is not inventory. It answers "what is it like to live here" and
+ * "what is for sale here", so its phrases are about the PLACE — and unlike a
+ * listing it may legitimately claim the whole city, because it is the page
+ * about the whole city.
+ *
+ * No feature keywords: a city has no bedrooms. Attaching "4 bedroom homes in
+ * Lake Mary" to the city page would compete with the search route that actually
+ * answers it, which is §89's duplicate problem created deliberately.
+ */
+export function cityKeywords(
+  city: { name: string; county: string },
+  geo: GeoRelevance[],
+): GeneratedKeyword[] {
+  const self = geo.find((g) => g.layer === 2 && g.usableInCopy);
+  if (!self) return [];
+
+  const nearby = geo.filter((g) => g.layer === 3 && g.usableInCopy);
+  const region = geo.find((g) => g.layer === 5 && g.usableInCopy);
+
+  const out: GeneratedKeyword[] = [
+    {
+      keyword: `homes for sale in ${city.name} FL`,
+      kind: "primary",
+      intent: "transactional",
+      geoEntityId: self.entityId,
+      evidence: `This is the hub page for ${city.name}.`,
+      score: 100,
+    },
+    {
+      keyword: `${city.name} FL real estate`,
+      kind: "primary",
+      intent: "commercial",
+      geoEntityId: self.entityId,
+      evidence: `This is the hub page for ${city.name}.`,
+      score: 96,
+    },
+    {
+      keyword: `living in ${city.name} FL`,
+      kind: "secondary",
+      intent: "informational",
+      geoEntityId: self.entityId,
+      evidence: "The city page covers the area, not a single property.",
+      score: 82,
+    },
+    {
+      keyword: `${city.name} FL neighborhoods`,
+      kind: "secondary",
+      intent: "neighborhood",
+      geoEntityId: self.entityId,
+      evidence: "The city page lists the communities inside it.",
+      score: 78,
+    },
+    {
+      keyword: `moving to ${city.name} Florida`,
+      kind: "long_tail",
+      intent: "informational",
+      geoEntityId: self.entityId,
+      evidence: "The city page is the relocation entry point for this market.",
+      score: 66,
+    },
+  ];
+
+  for (const place of nearby) {
+    out.push({
+      keyword: `${city.name} vs ${place.name} FL`,
+      kind: "nearby",
+      intent: "informational",
+      geoEntityId: place.entityId,
+      // A comparison is only honest between places a buyer would really weigh
+      // against each other, which is what an adjacency edge asserts.
+      evidence: place.reason,
+      score: 48,
+    });
+  }
+
+  if (region) {
+    out.push({
+      keyword: `${region.name} real estate agent`,
+      kind: "regional",
+      intent: "commercial",
+      geoEntityId: region.entityId,
+      evidence: region.reason,
+      score: 44,
+    });
+  }
+
+  return dedupe(out);
+}
+
+/**
+ * Keywords for a community page (§63).
+ *
+ * A community is named, and its name is the search. "Heathrow homes for sale"
+ * is the whole query — nobody adds the city, because the name already implies
+ * it. So the city appears only in the qualifying phrases.
+ */
+export function communityKeywords(
+  community: { name: string; cityName: string },
+  geo: GeoRelevance[],
+): GeneratedKeyword[] {
+  const self = geo.find((g) => g.layer === 1 && g.usableInCopy);
+  const city = geo.find((g) => g.layer === 2 && g.usableInCopy);
+  if (!self) return [];
+
+  const out: GeneratedKeyword[] = [
+    {
+      keyword: `${community.name} homes for sale`,
+      kind: "primary",
+      intent: "transactional",
+      geoEntityId: self.entityId,
+      evidence: `This is the page for the ${community.name} community.`,
+      score: 100,
+    },
+    {
+      keyword: `${community.name} ${community.cityName} FL`,
+      kind: "secondary",
+      intent: "community",
+      geoEntityId: self.entityId,
+      evidence: `${community.name} is in ${community.cityName}.`,
+      score: 84,
+    },
+    {
+      keyword: `homes in ${community.name} community`,
+      kind: "secondary",
+      intent: "community",
+      geoEntityId: self.entityId,
+      evidence: `This is the page for the ${community.name} community.`,
+      score: 80,
+    },
+    {
+      keyword: `${community.name} HOA and amenities`,
+      kind: "long_tail",
+      intent: "informational",
+      geoEntityId: self.entityId,
+      evidence: "Community pages carry HOA and amenity detail.",
+      score: 62,
+    },
+  ];
+
+  if (city) {
+    out.push({
+      keyword: `${community.name} homes for sale ${city.name} FL`,
+      kind: "long_tail",
+      intent: "transactional",
+      geoEntityId: city.entityId,
+      evidence: city.reason,
+      score: 70,
+    });
+  }
+
+  return dedupe(out);
+}
+
+/**
+ * Keywords for an article (§17, §18).
+ *
+ * ── Why an article's keywords come from its own words ─────────────────────
+ *
+ * A listing has attributes; an article has a subject, and the subject is
+ * whatever the author wrote about. So the primary keyword IS the title,
+ * normalised — not a phrase composed around it. §18 asks for keyword discovery
+ * rather than keyword invention, and the honest discovery for a piece of
+ * writing is what it is called.
+ *
+ * The rest are qualifiers the article's own metadata supports: the city it is
+ * filed under, the topic tags the author chose, and whether it is a market
+ * update. Nothing is added because it would rank.
+ */
+export function articleKeywords(
+  article: {
+    title: string;
+    kind: string;
+    tags: string[];
+    cityName: string | null;
+  },
+  geo: GeoRelevance[],
+): GeneratedKeyword[] {
+  const title = article.title.trim();
+  if (title.length < 3) return [];
+
+  const city = geo.find((g) => g.layer === 2 && g.usableInCopy);
+
+  const out: GeneratedKeyword[] = [
+    {
+      keyword: trimKeyword(title),
+      kind: "primary",
+      intent: "informational",
+      geoEntityId: city?.entityId ?? null,
+      evidence: "The article's own title is what it is about.",
+      score: 100,
+    },
+  ];
+
+  if (city) {
+    out.push({
+      keyword: `${city.name} FL real estate advice`,
+      kind: "secondary",
+      intent: "informational",
+      geoEntityId: city.entityId,
+      evidence: `The article is filed under ${city.name}.`,
+      score: 70,
+    });
+
+    if (article.kind === "market_update") {
+      out.push({
+        keyword: `${city.name} FL housing market`,
+        kind: "primary",
+        intent: "informational",
+        geoEntityId: city.entityId,
+        evidence: "The article is classified as a market update.",
+        score: 92,
+      });
+    }
+  }
+
+  /*
+    Tags become keywords only when combined with the city.
+
+    A tag on its own — "financing", "inspections" — is a topic, not a search
+    somebody performs on a local agent's site, and targeting it puts this
+    article in competition with the entire internet. With the city attached it
+    becomes the query a local reader actually types.
+  */
+  for (const tag of article.tags.slice(0, 4)) {
+    const clean = tag.trim().toLowerCase();
+    if (clean.length < 3) continue;
+    if (!city) continue;
+
+    out.push({
+      keyword: `${clean} ${city.name} FL`,
+      kind: "long_tail",
+      intent: "informational",
+      geoEntityId: city.entityId,
+      evidence: `The author tagged this article "${tag}".`,
+      score: 56,
+    });
+  }
+
+  return dedupe(out);
+}
+
+/** Titles run long; the column stops at 120 and a keyword should stop sooner. */
+function trimKeyword(value: string): string {
+  const clean = value.replace(/\s+/g, " ").trim();
+  if (clean.length <= 90) return clean;
+  const cut = clean.slice(0, 90);
+  const space = cut.lastIndexOf(" ");
+  return space > 40 ? cut.slice(0, space) : cut;
+}

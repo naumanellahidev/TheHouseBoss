@@ -1,10 +1,17 @@
 import { ShieldAlert } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { HealthPanel } from "@/components/admin/seo/health-panel";
 import { SeoConsole } from "@/components/admin/seo/seo-console";
 import { EmptyState } from "@/components/site/empty-state";
 import { getAdminIdentity } from "@/lib/auth/permissions";
-import { getRedirects, getSeoCoverage, getSeoPages } from "@/lib/queries/platform";
+import {
+  getEngineSettings,
+  getPendingLinks,
+  getRedirects,
+  getSeoCoverage,
+  getSeoPages,
+} from "@/lib/queries/platform";
 import { getAdminSettings } from "@/lib/queries/settings";
 
 export const dynamic = "force-dynamic";
@@ -38,12 +45,15 @@ export default async function SeoPage() {
     );
   }
 
-  const [pages, redirects, coverage, settings] = await Promise.all([
-    getSeoPages(),
-    getRedirects(),
-    getSeoCoverage(),
-    getAdminSettings(),
-  ]);
+  const [pages, redirects, coverage, settings, engineSettings, pendingLinks] =
+    await Promise.all([
+      getSeoPages(),
+      getRedirects(),
+      getSeoCoverage(),
+      getAdminSettings(),
+      getEngineSettings(),
+      getPendingLinks(),
+    ]);
 
   /*
     The static routes the sitemap always carries, plus one entry per published
@@ -62,6 +72,14 @@ export default async function SeoPage() {
         title="SEO"
         description="What search engines and AI assistants read: page titles, descriptions, redirects and the sitemap."
       />
+
+      {/*
+        Health, link review and engine settings come FIRST.
+
+        Someone opening this screen wants to know what is wrong. The metadata
+        table below is a reference — useful, and not what the visit is for.
+      */}
+      <HealthPanel initialSettings={engineSettings} pendingLinks={pendingLinks} />
 
       <SeoConsole
         pages={pages}

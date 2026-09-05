@@ -3,7 +3,7 @@ import "server-only";
 import { recordAudit } from "@/lib/auth/audit";
 import { ENGINE_VERSION, listingKeywords } from "@/lib/seo/engine/keywords";
 import { validateKeywords, verifiedFeaturesOf } from "@/lib/seo/engine/validate";
-import { persistListingGeo, resolveListingGeo } from "@/lib/seo/geo/relevance";
+import { persistListingGeo, resolveGeo, resolveListingGeo } from "@/lib/seo/geo/relevance";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { Listing } from "@/types/domain";
 
@@ -44,6 +44,7 @@ export type RunOutcome = {
   keywordsStored: number;
   keywordsRejected: { keyword: string; reason: string }[];
   geoPlaces: number;
+  linksProposed: number;
   mode: "review" | "auto";
 };
 
@@ -52,6 +53,10 @@ type Settings = {
   enableListings: boolean;
   enableGeographic: boolean;
   enableKeywords: boolean;
+  enableInternalLinks: boolean;
+  enableArticles: boolean;
+  enableCities: boolean;
+  enableCommunities: boolean;
   requireGeoRelevance: boolean;
   requireVerifiedFeatures: boolean;
   blockKeywordStuffing: boolean;
@@ -71,6 +76,10 @@ export async function getSeoSettings(): Promise<Settings> {
     enableListings: true,
     enableGeographic: true,
     enableKeywords: true,
+    enableInternalLinks: true,
+    enableArticles: true,
+    enableCities: true,
+    enableCommunities: true,
     requireGeoRelevance: true,
     requireVerifiedFeatures: true,
     blockKeywordStuffing: true,
@@ -86,6 +95,10 @@ export async function getSeoSettings(): Promise<Settings> {
       enableListings: data.enable_listings,
       enableGeographic: data.enable_geographic,
       enableKeywords: data.enable_keywords,
+      enableInternalLinks: data.enable_internal_links,
+      enableArticles: data.enable_articles,
+      enableCities: data.enable_cities,
+      enableCommunities: data.enable_communities,
       requireGeoRelevance: data.require_geo_relevance,
       requireVerifiedFeatures: data.require_verified_features,
       blockKeywordStuffing: data.block_keyword_stuffing,
@@ -232,6 +245,30 @@ export async function runListingSeo(
       }
     }
 
+    /* ── Internal links (§16, §87) ─────────────────────────────────────── */
+
+    let linksProposed = 0;
+
+    if (settings.enableInternalLinks) {
+      const { proposeListingLinks, persistLinks } = await import(
+        "@/lib/seo/engine/links"
+      );
+      const links = await proposeListingLinks(
+        {
+          id: listing.id,
+          slug: listing.slug,
+          citySlug: listing.city.slug,
+          cityName: listing.city.name,
+          communitySlug: listing.community?.slug ?? null,
+          communityName: listing.community?.name ?? null,
+          listingType: listing.listingType,
+          price: listing.price,
+        },
+        geo,
+      );
+      linksProposed = await persistLinks({ listingId: listing.id }, links, run.id);
+    }
+
     const after = await snapshot(db, listing.id);
 
     await db
@@ -245,6 +282,7 @@ export async function runListingSeo(
           keywordsStored: stored,
           keywordsRejected: rejected,
           geoPlaces: geo.length,
+          linksProposed,
         },
         /*
           §32. In auto mode the run is approved by the system as it completes;
@@ -266,6 +304,7 @@ export async function runListingSeo(
         keywordsStored: stored,
         keywordsRejected: rejected.length,
         geoPlaces: geo.length,
+        linksProposed,
         trigger,
       },
     });
@@ -275,6 +314,7 @@ export async function runListingSeo(
       keywordsStored: stored,
       keywordsRejected: rejected,
       geoPlaces: geo.length,
+      linksProposed,
       mode: settings.mode,
     };
   } catch (error) {
@@ -322,4 +362,161 @@ async function snapshot(
       intent: String(row.intent),
     })),
   };
+}
+
+/* ── Cities, communities, articles ────────────────────────────────────────── */
+
+/**
+ * The same run, for the record types that are not listings.
+ *
+ * One function rather than three near-copies. What differs between a city and
+ * an article is which generator produces the keywords and which column owns
+ * them; everything else — opening a run, validating, preserving human
+ * decisions, recording what changed — is identical, and three copies of it
+ * would drift.
+ *
+ * Features are an empty set for all three. A city has no bedrooms, so a feature
+ * keyword can never be supported and the validator will say so if one ever
+ * appears.
+ */
+export async function runPlaceSeo(
+  owner:
+    | { kind: "city"; id: string; citySlug: string }
+    | { kind: "community"; id: string; citySlug: string; communitySlug: string }
+    | { kind: "article"; id: string; citySlug: string | null },
+  generate: (geo: import("@/lib/seo/geo/relevance").GeoRelevance[]) => Awaited<
+    ReturnType<typeof import("@/lib/seo/engine/keywords").listingKeywords>
+  >,
+  trigger: "publish" | "manual" | "bulk" | "content_change" | "backfill",
+): Promise<RunOutcome | null> {
+  const settings = await getSeoSettings();
+  const enabled =
+    owner.kind === "city"
+      ? settings.enableCities
+      : owner.kind === "community"
+        ? settings.enableCommunities
+        : settings.enableArticles;
+  if (!enabled) return null;
+
+  const db = createServiceClient();
+  const column =
+    owner.kind === "city"
+      ? "city_id"
+      : owner.kind === "community"
+        ? "community_id"
+        : "article_id";
+
+  const { data: run, error: runError } = await db
+    .from("seo_generation_runs")
+    .insert({
+      ...(owner.kind === "city" ? { city_id: owner.id } : {}),
+      ...(owner.kind === "community" ? { community_id: owner.id } : {}),
+      ...(owner.kind === "article" ? { article_id: owner.id } : {}),
+      trigger,
+      status: "processing",
+      engine_version: ENGINE_VERSION,
+      prompt_version: PROMPT_VERSION,
+      model: null,
+    })
+    .select("id")
+    .single();
+
+  if (runError || !run) {
+    console.error(`[seo-engine] could not open a run: ${runError?.message}`);
+    return null;
+  }
+
+  try {
+    /*
+      An article with no city gets no geography, and therefore no local
+      keywords beyond its own title. That is correct rather than a gap: a piece
+      filed under no city is not about a place, and inventing one for it would
+      be the exact failure the graph exists to prevent.
+    */
+    const geo =
+      settings.enableGeographic && owner.citySlug
+        ? await resolveGeo({
+            citySlug: owner.citySlug,
+            communitySlug: owner.kind === "community" ? owner.communitySlug : null,
+          })
+        : [];
+
+    let stored = 0;
+    let rejected: { keyword: string; reason: string }[] = [];
+
+    if (settings.enableKeywords) {
+      const result = validateKeywords(generate(geo), {
+        geo,
+        verifiedFeatures: new Set<string>(),
+        settings: {
+          requireGeoRelevance: settings.requireGeoRelevance,
+          requireVerifiedFeatures: settings.requireVerifiedFeatures,
+          blockKeywordStuffing: settings.blockKeywordStuffing,
+        },
+      });
+      rejected = result.rejected;
+
+      const { data: keep } = await db
+        .from("seo_keywords")
+        .select("id, keyword")
+        .eq(column, owner.id)
+        .or("pinned.eq.true,excluded.eq.true");
+
+      const keepIds = (keep ?? []).map((r) => r.id);
+      let del = db.from("seo_keywords").delete().eq(column, owner.id);
+      if (keepIds.length > 0) del = del.not("id", "in", `(${keepIds.join(",")})`);
+      await del;
+
+      const held = new Set((keep ?? []).map((r) => r.keyword.toLowerCase()));
+      const toInsert = result.accepted.filter(
+        (k) => !held.has(k.keyword.toLowerCase()),
+      );
+
+      if (toInsert.length > 0) {
+        const { error } = await db.from("seo_keywords").insert(
+          toInsert.map((k) => ({
+            ...(owner.kind === "city" ? { city_id: owner.id } : {}),
+            ...(owner.kind === "community" ? { community_id: owner.id } : {}),
+            ...(owner.kind === "article" ? { article_id: owner.id } : {}),
+            keyword: k.keyword,
+            kind: k.kind,
+            intent: k.intent,
+            geo_entity_id: k.geoEntityId,
+            evidence: k.evidence,
+            score: k.score,
+            run_id: run.id,
+          })),
+        );
+        if (error) throw new Error(`storing keywords: ${error.message}`);
+        stored = toInsert.length;
+      }
+    }
+
+    await db
+      .from("seo_generation_runs")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        changes: { keywordsStored: stored, keywordsRejected: rejected, geoPlaces: geo.length },
+        approved_at: settings.mode === "auto" ? new Date().toISOString() : null,
+      })
+      .eq("id", run.id);
+
+    return {
+      runId: run.id,
+      keywordsStored: stored,
+      keywordsRejected: rejected,
+      geoPlaces: geo.length,
+      linksProposed: 0,
+      mode: settings.mode,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await db
+      .from("seo_generation_runs")
+      .update({ status: "failed", completed_at: new Date().toISOString(), error: message })
+      .eq("id", run.id);
+    console.error(`[seo-engine] run ${run.id} failed:`, error);
+    return null;
+  }
 }

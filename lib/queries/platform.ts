@@ -493,3 +493,73 @@ export async function getListingSeoRuns(listingId: string): Promise<EngineRun[]>
     };
   });
 }
+
+/** Engine settings for the admin panel (§33, §91). */
+export async function getEngineSettings() {
+  const db = await createSupabaseServerClient();
+  const { data } = await db.from("seo_settings").select("*").eq("id", 1).maybeSingle();
+
+  return {
+    mode: (data?.mode as "review" | "auto") ?? "review",
+    enableListings: data?.enable_listings ?? true,
+    enableArticles: data?.enable_articles ?? true,
+    enableCities: data?.enable_cities ?? true,
+    enableCommunities: data?.enable_communities ?? true,
+    enableGeographic: data?.enable_geographic ?? true,
+    enableKeywords: data?.enable_keywords ?? true,
+    enableInternalLinks: data?.enable_internal_links ?? true,
+    enableSchema: data?.enable_schema ?? true,
+    enableContinuous: data?.enable_continuous ?? true,
+    requireVerifiedFeatures: data?.require_verified_features ?? true,
+    requireGeoRelevance: data?.require_geo_relevance ?? true,
+    blockKeywordStuffing: data?.block_keyword_stuffing ?? true,
+    requireReviewForMajor: data?.require_review_for_major ?? true,
+  };
+}
+
+/**
+ * Links awaiting a decision (§32).
+ *
+ * The "from" label is resolved to something a person recognises — an address,
+ * an article title — rather than a uuid. A review queue that shows ids is a
+ * review queue nobody can review.
+ */
+export async function getPendingLinks(): Promise<
+  { id: string; fromLabel: string; toPath: string; anchor: string; reason: string }[]
+> {
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("seo_internal_links")
+    .select(
+      "id, to_path, anchor, reason, from_path, listings(address), articles(title), cities(name), communities(name)",
+    )
+    .eq("status", "proposed")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error || !data) return [];
+
+  const one = <T,>(value: T | T[] | null): T | null =>
+    Array.isArray(value) ? (value[0] ?? null) : value;
+
+  return data.map((row) => {
+    const listing = one(row.listings) as { address?: string } | null;
+    const article = one(row.articles) as { title?: string } | null;
+    const city = one(row.cities) as { name?: string } | null;
+    const community = one(row.communities) as { name?: string } | null;
+
+    return {
+      id: row.id,
+      fromLabel:
+        listing?.address ??
+        article?.title ??
+        city?.name ??
+        community?.name ??
+        row.from_path ??
+        "A page",
+      toPath: row.to_path,
+      anchor: row.anchor,
+      reason: row.reason,
+    };
+  });
+}

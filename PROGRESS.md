@@ -112,6 +112,55 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-05 (tranche 3) — internal links, health audit, engine settings
+
+**Shipped**
+
+- **The internal-linking engine** (§16, §87, §96). Proposes links from a listing
+  to its community, its city hub, its city search, the guide matching its
+  classification, price-banded siblings and the regional search. Every target is
+  looked up before it is proposed — a community link requires a *published*
+  community — so §87 is structural rather than aspirational. Capped at six per
+  page: §16 says contextual, and forty links is a directory.
+- **Links are proposed, never applied.** They land as `proposed` and the public
+  RLS policy admits only `accepted` — in auto mode too. A wrong description is a
+  bad description; a wrong link is the agent appearing to recommend something.
+- **`lib/seo/engine/audit.ts`** (§24, §29, §30, §88, §89, §95): missing and
+  duplicate metadata, pages with no phrases, orphans, broken accepted links,
+  thin articles, empty place pages, listings with photos lacking alt text, and
+  pending suggestions as an opportunity. **No health score** — §30 forbids
+  invented numbers, so every figure is a count and every finding names the
+  pages it found, as links.
+- **The health panel** on `/admin/seo`: the audit, the link review queue with
+  per-link reasons, **Add all**, and the engine settings (§33, §91) including
+  the three safety switches whose copy states plainly what turning one off
+  permits.
+- **Coverage extended to cities, communities and articles.** `runPlaceSeo`
+  handles all three through one function. Bulk analysis now covers every
+  published record, not only listings.
+- **`acceptAllLinks()`** — scoped to `status = 'proposed'`, so a link already
+  turned down is never swept back in by a later bulk approval.
+
+**Verified end to end**
+
+- 43 listing keywords, 62 city, 5 community; articles 0 because none are
+  published — correct, not a gap
+- 21 link proposals, all `proposed`; the new-construction listing proposes a
+  link to `/new-construction-representation`
+- 23 generation runs, all `completed`, none failed
+- Audit: 15 pages, 15 with a description, **15 with phrases**, findings reduce
+  to orphans and pending suggestions
+- Accept-all: queue 7 → 0, database `accepted` 21, `rejected` 0
+
+**Open**
+
+- §40–§46 the New Construction rebuild — the single largest remaining item
+- §36 a real job queue (bulk is capped and resumable, which is the honest
+  version at this deployment shape, but it is not a queue)
+- §65 AI-generated image alt text (the audit reports what is missing; nothing
+  writes it)
+- §21 FAQ generation, §22 schema beyond what already ships
+
 ### 2026-09-05 (tranche 2) — the SEO keyword engine
 
 **Shipped**

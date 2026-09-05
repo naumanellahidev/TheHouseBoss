@@ -58,13 +58,18 @@ type EntityRow = {
 };
 
 /**
- * Walk the graph for one listing.
+ * Walk the graph for one place.
+ *
+ * Named for a PLACE, not a listing, because articles, cities and communities
+ * need exactly the same walk — an article about Lake Mary may mention the same
+ * neighbours a Lake Mary listing may. `resolveListingGeo` below is the alias
+ * the listing path already uses.
  *
  * Pure read — it computes and returns, and `persistListingGeo` below is what
  * writes. Keeping them apart means the result can be shown in the admin for
  * review (§32) without committing anything.
  */
-export async function resolveListingGeo(listing: {
+export async function resolveGeo(place: {
   citySlug: string;
   communitySlug?: string | null;
 }): Promise<GeoRelevance[]> {
@@ -74,18 +79,18 @@ export async function resolveListingGeo(listing: {
     .from("geo_entities")
     .select("id, kind, name, slug, parent_id, usable_in_copy");
 
-  if (error) throw new Error(`resolveListingGeo: ${error.message}`);
+  if (error) throw new Error(`resolveGeo: ${error.message}`);
 
   const rows = (entities ?? []) as EntityRow[];
   const byId = new Map(rows.map((r) => [r.id, r]));
-  const cityRow = rows.find((r) => r.kind === "city" && r.slug === listing.citySlug);
+  const cityRow = rows.find((r) => r.kind === "city" && r.slug === place.citySlug);
 
   /*
     No city in the graph means no defensible geography at all. Returning an
-    empty list is correct: the generator then writes about the property without
-    a location claim, which is worse copy and not a false statement. Silently
-    falling back to the city NAME would be the failure this whole module exists
-    to prevent.
+    empty list is correct: the generator then writes about the record without a
+    location claim, which is worse copy and not a false statement. Silently
+    falling back to the city NAME would be the failure this module exists to
+    prevent.
   */
   if (!cityRow) return [];
 
@@ -107,17 +112,17 @@ export async function resolveListingGeo(listing: {
   };
 
   // Layer 1 — the community, when the listing is in one.
-  if (listing.communitySlug) {
+  if (place.communitySlug) {
     const community = rows.find(
-      (r) => r.kind === "community" && r.slug === listing.communitySlug,
+      (r) => r.kind === "community" && r.slug === place.communitySlug,
     );
     if (community) {
-      add(community, 1, `The property is in the ${community.name} community.`);
+      add(community, 1, `This is in the ${community.name} community.`);
     }
   }
 
   // Layer 2 — its city.
-  add(cityRow, 2, `The property is in ${cityRow.name}.`);
+  add(cityRow, 2, `This is in ${cityRow.name}.`);
 
   // Layer 3 — one hop of adjacency, and one hop only.
   const { data: links } = await db
@@ -239,3 +244,11 @@ export async function usableGeoForCopy(listingId: string): Promise<
       };
     });
 }
+
+/**
+ * The listing spelling of `resolveGeo`.
+ *
+ * Kept because the listing path reads better for it and because renaming a
+ * function used in a publish action to save one word is not worth the diff.
+ */
+export const resolveListingGeo = resolveGeo;

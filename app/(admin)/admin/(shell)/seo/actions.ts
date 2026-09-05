@@ -373,3 +373,374 @@ export async function deleteRedirect(id: string): Promise<SeoActionResult> {
       : "Removed.",
   };
 }
+
+/* ── §30, §93. The health audit ───────────────────────────────────────────── */
+
+/**
+ * Run the audit and return it.
+ *
+ * Not cached and not stored. §93 says do not fake progress, and the honest
+ * version of that is to compute it when asked: the report is a set of counts
+ * over the current rows, it takes well under a second, and a stored report is
+ * one that can be stale without saying so.
+ */
+export async function runAudit() {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return null;
+  }
+
+  const { runSeoAudit } = await import("@/lib/seo/engine/audit");
+  return runSeoAudit();
+}
+
+/* ── §32. Approving what the engine proposed ──────────────────────────────── */
+
+export async function setLinkStatus(
+  id: string,
+  status: "accepted" | "rejected",
+): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("seo_internal_links")
+    .update({ status })
+    .eq("id", id)
+    .select("to_path")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: "That could not be saved." };
+
+  await recordAudit({
+    action: status === "accepted" ? "seo_approved" : "seo_rejected",
+    entityType: "seo_internal_links",
+    entityId: id,
+    metadata: { to: data?.to_path ?? null, status },
+  });
+
+  revalidatePath("/admin/seo");
+  return {
+    ok: true,
+    message:
+      status === "accepted"
+        ? `The link to ${data?.to_path} will now appear on the page.`
+        : "Rejected. It will not be suggested again.",
+  };
+}
+
+/**
+ * Keep or drop one generated keyword (§32, §57).
+ *
+ * Both flags survive regeneration — that is the contract `run.ts` honours — so
+ * this is how an operator's judgement becomes permanent rather than being
+ * overwritten the next time the listing is saved.
+ */
+export async function setKeywordFlag(
+  id: string,
+  flag: "pinned" | "excluded",
+  value: boolean,
+): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const db = createServiceClient();
+
+  /*
+    Pinned and excluded are mutually exclusive. Setting one clears the other
+    rather than leaving a row that claims to be both kept and removed — a state
+    the engine would have to guess about.
+
+    Written as two explicit objects rather than one built with
+    `Object.fromEntries`: that widens to an index signature the generated types
+    reject, and the rejection is right — it also throws away the check that
+    these are real column names.
+  */
+  const { error } =
+    flag === "pinned"
+      ? await db
+          .from("seo_keywords")
+          .update(value ? { pinned: true, excluded: false } : { pinned: false })
+          .eq("id", id)
+      : await db
+          .from("seo_keywords")
+          .update(value ? { excluded: true, pinned: false } : { excluded: false })
+          .eq("id", id);
+
+  if (error) return { ok: false, error: "That could not be saved." };
+
+  await recordAudit({
+    action: value ? "seo_approved" : "seo_rejected",
+    entityType: "seo_keywords",
+    entityId: id,
+    metadata: { flag, value },
+  });
+
+  revalidatePath("/admin/seo");
+  return {
+    ok: true,
+    message:
+      flag === "excluded" && value
+        ? "Removed. It will not come back when the phrases are worked out again."
+        : "Saved.",
+  };
+}
+
+/* ── §33, §91. Engine settings ────────────────────────────────────────────── */
+
+const engineSettingsSchema = z.object({
+  mode: z.enum(["review", "auto"]),
+  enableListings: z.boolean(),
+  enableArticles: z.boolean(),
+  enableCities: z.boolean(),
+  enableCommunities: z.boolean(),
+  enableGeographic: z.boolean(),
+  enableKeywords: z.boolean(),
+  enableInternalLinks: z.boolean(),
+  enableSchema: z.boolean(),
+  enableContinuous: z.boolean(),
+  requireVerifiedFeatures: z.boolean(),
+  requireGeoRelevance: z.boolean(),
+  blockKeywordStuffing: z.boolean(),
+  requireReviewForMajor: z.boolean(),
+});
+
+export async function saveEngineSettings(raw: unknown): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const parsed = engineSettingsSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "Those settings are not valid." };
+  const v = parsed.data;
+
+  const db = createServiceClient();
+  const { error } = await db
+    .from("seo_settings")
+    .update({
+      mode: v.mode,
+      enable_listings: v.enableListings,
+      enable_articles: v.enableArticles,
+      enable_cities: v.enableCities,
+      enable_communities: v.enableCommunities,
+      enable_geographic: v.enableGeographic,
+      enable_keywords: v.enableKeywords,
+      enable_internal_links: v.enableInternalLinks,
+      enable_schema: v.enableSchema,
+      enable_continuous: v.enableContinuous,
+      require_verified_features: v.requireVerifiedFeatures,
+      require_geo_relevance: v.requireGeoRelevance,
+      block_keyword_stuffing: v.blockKeywordStuffing,
+      require_review_for_major: v.requireReviewForMajor,
+    })
+    .eq("id", 1);
+
+  if (error) {
+    console.error(`[saveEngineSettings] ${error.message}`);
+    return { ok: false, error: "Those settings could not be saved." };
+  }
+
+  /*
+    Audited, and the mode is named in the metadata. Switching from review to
+    auto is the single most consequential setting on this screen — it is the
+    moment the system starts changing the site without anyone looking — and
+    "who turned that on, and when" needs an answer.
+  */
+  await recordAudit({
+    action: "settings_updated",
+    entityType: "seo_settings",
+    entityId: "1",
+    metadata: { mode: v.mode },
+  });
+
+  revalidatePath("/admin/seo");
+  return {
+    ok: true,
+    message:
+      v.mode === "auto"
+        ? "Saved. New phrases will be applied automatically; suggested links still wait for you."
+        : "Saved. Nothing is applied until you approve it.",
+  };
+}
+
+/* ── §37. Bulk analysis ───────────────────────────────────────────────────── */
+
+/**
+ * Re-run the engine across every published record, in batches.
+ *
+ * Capped and resumable for the same reason `generateMissingSeo` is: a server
+ * action that runs for minutes times out on Vercel with half the work done and
+ * no way to tell which half.
+ */
+export async function bulkAnalyseListings(): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const { getListingBySlug, getListingSlugsForStaticParams } = await import(
+    "@/lib/queries/listings"
+  );
+  const { runListingSeo } = await import("@/lib/seo/engine/run");
+
+  const slugs = (await getListingSlugsForStaticParams()).slice(0, BATCH);
+  let analysed = 0;
+  let keywords = 0;
+
+  for (const slug of slugs) {
+    const listing = await getListingBySlug(slug);
+    if (!listing) continue;
+    const outcome = await runListingSeo(listing, "bulk");
+    if (outcome) {
+      analysed += 1;
+      keywords += outcome.keywordsStored;
+    }
+  }
+
+  /*
+    Cities, communities and articles too. §91 scopes the engine across all four,
+    and analysing only listings would leave the pages that carry the local
+    topical authority (§39) with nothing worked out at all — which is exactly
+    what the audit was reporting as "9 pages with no search phrases".
+  */
+  const { getCities, getCommunities } = await import("@/lib/queries/cities");
+  const { getArticles } = await import("@/lib/queries/articles");
+  const { runPlaceSeo } = await import("@/lib/seo/engine/run");
+  const { articleKeywords, cityKeywords, communityKeywords } = await import(
+    "@/lib/seo/engine/keywords"
+  );
+
+  for (const city of await getCities()) {
+    const outcome = await runPlaceSeo(
+      { kind: "city", id: city.id, citySlug: city.slug },
+      (geo) => cityKeywords({ name: city.name, county: city.county }, geo),
+      "bulk",
+    );
+    if (outcome) {
+      analysed += 1;
+      keywords += outcome.keywordsStored;
+    }
+  }
+
+  for (const community of await getCommunities()) {
+    const outcome = await runPlaceSeo(
+      {
+        kind: "community",
+        id: community.id,
+        citySlug: community.city.slug,
+        communitySlug: community.slug,
+      },
+      (geo) =>
+        communityKeywords(
+          { name: community.name, cityName: community.city.name },
+          geo,
+        ),
+      "bulk",
+    );
+    if (outcome) {
+      analysed += 1;
+      keywords += outcome.keywordsStored;
+    }
+  }
+
+  for (const article of await getArticles({ limit: 200 })) {
+    const outcome = await runPlaceSeo(
+      { kind: "article", id: article.id, citySlug: article.city?.slug ?? null },
+      (geo) =>
+        articleKeywords(
+          {
+            title: article.title,
+            kind: article.kind,
+            tags: article.tags,
+            cityName: article.city?.name ?? null,
+          },
+          geo,
+        ),
+      "bulk",
+    );
+    if (outcome) {
+      analysed += 1;
+      keywords += outcome.keywordsStored;
+    }
+  }
+
+  revalidatePath("/admin/seo");
+  return {
+    ok: true,
+    message: `Analysed ${analysed} ${analysed === 1 ? "page" : "pages"} and wrote ${keywords} search phrases.`,
+  };
+}
+
+/**
+ * Accept every suggested link at once (§32, §37).
+ *
+ * ── Why this is safe to offer as one button ───────────────────────────────
+ *
+ * Each proposal was already verified when it was made: the target had to be a
+ * PUBLISHED page that exists, the anchor comes from that page's own name, and
+ * the reason is recorded. So "accept all" is not "trust the machine" — it is
+ * "apply the twenty checks that already passed", which is a different and much
+ * smaller act of faith.
+ *
+ * ── Why rejected ones stay rejected ───────────────────────────────────────
+ *
+ * Scoped to `status = 'proposed'`. A link the operator has already turned down
+ * is not swept back in by a later bulk approval, which would quietly reverse a
+ * decision they made deliberately.
+ */
+export async function acceptAllLinks(): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("seo_internal_links")
+    .update({ status: "accepted" })
+    .eq("status", "proposed")
+    .select("id");
+
+  if (error) {
+    console.error(`[acceptAllLinks] ${error.message}`);
+    return { ok: false, error: "They could not be accepted. Try again." };
+  }
+
+  const count = data?.length ?? 0;
+
+  await recordAudit({
+    action: "seo_approved",
+    entityType: "seo_internal_links",
+    entityId: "bulk",
+    metadata: { accepted: count },
+  });
+
+  /*
+    Every page that now carries a new link has to be revalidated, not just the
+    admin screen. Revalidating the layout is the blunt instrument, and it is the
+    right one here: the links are spread across listings, city pages and
+    community pages, and enumerating them would be slower than the rebuild.
+  */
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/seo");
+
+  return {
+    ok: true,
+    message:
+      count === 0
+        ? "There was nothing waiting."
+        : `Added ${count} ${count === 1 ? "link" : "links"}. They appear on their pages now.`,
+  };
+}
