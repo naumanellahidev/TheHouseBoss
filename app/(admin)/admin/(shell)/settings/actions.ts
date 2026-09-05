@@ -67,6 +67,7 @@ export async function saveSettings(raw: unknown): Promise<SettingsResult> {
       announcement: v.announcement ?? null,
       announcement_href: v.announcementHref ?? null,
       brokerage_name: v.brokerageName ?? null,
+      whatsapp: v.whatsapp ?? null,
       license_re: v.licenseRe ?? null,
       license_contractor: v.licenseContractor ?? null,
       disclosure_text: v.disclosureText ?? null,

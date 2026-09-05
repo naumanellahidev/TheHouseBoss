@@ -31,7 +31,18 @@ export function StickyActionBar({
   const phone = isPending(siteConfig.contact.phone) ? null : siteConfig.contact.phone;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 px-4 py-3 backdrop-blur-md safe-bottom lg:hidden">
+    <div
+      /*
+        Read by `app/globals.css`, which lifts the floating WhatsApp button
+        above this bar wherever it is present. The button lives in the marketing
+        LAYOUT and this bar lives in a page, so neither can offset the other in
+        JavaScript without lifting state to a place neither belongs; a `:has()`
+        selector on the document is the honest way to say "when this bar exists,
+        that button moves".
+      */
+      data-sticky-action-bar
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 px-4 py-3 backdrop-blur-md safe-bottom lg:hidden"
+    >
       <div className="flex items-center gap-3">
         <p className="text-h4 font-semibold text-foreground tabular">
           {formatPrice(price)}

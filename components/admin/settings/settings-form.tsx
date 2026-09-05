@@ -56,6 +56,7 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
     announcement: settings.announcement ?? "",
     announcementHref: settings.announcementHref ?? "",
     brokerageName: settings.brokerageName ?? "",
+    whatsapp: settings.whatsapp ?? "",
     brandName: settings.brandName ?? "",
     legalName: settings.legalName ?? "",
     licenseReLabel: settings.licenseReLabel ?? "",
@@ -141,6 +142,23 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
                 Shown in the footer as a tap-to-call link, and in the structured
                 data. Left blank, the whole block is hidden rather than showing a
                 placeholder.
+              </FieldDescription>
+            </Field>
+
+            <Field error={errorOf("whatsapp")}>
+              <FieldLabel>WhatsApp</FieldLabel>
+              <Input
+                type="tel"
+                inputMode="tel"
+                value={form.whatsapp}
+                onChange={(event) => set("whatsapp")(event.target.value)}
+                placeholder="Same as phone, unless different"
+              />
+              <FieldDescription>
+                Adds a WhatsApp button to the bottom corner of every page. Leave
+                it blank to use the phone number above; clear both and the
+                button does not appear at all. Write it however you like — the
+                spaces and brackets are stripped automatically.
               </FieldDescription>
             </Field>
 

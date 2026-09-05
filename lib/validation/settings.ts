@@ -79,6 +79,9 @@ export const settingsSchema = z.object({
   // compliance — legally required, editable with a warning in the UI
   brokerageName: optionalText(200),
 
+  /** WhatsApp, migration 017. Free-format; normalised to digits at render. */
+  whatsapp: optionalText(40),
+
   /*
     Branding, migration 015. Editable with no restrictions, by the client's
     decision — including the fields that carry legal weight.

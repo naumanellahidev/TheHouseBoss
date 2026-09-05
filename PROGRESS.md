@@ -112,6 +112,75 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-05 (later) — WhatsApp button, GSAP off the critical path
+
+**Shipped**
+
+- **Floating WhatsApp button**, bottom-right, every public page. A server
+  component rendering a link — no widget script, no hydration, no client
+  bundle. Migration 017 adds `site_settings.whatsapp` (and exposes it through
+  the public view); the component falls back to `phone` and renders **nothing**
+  when neither is set, rather than a button that opens WhatsApp with no
+  recipient. The number is typed in any format and normalised to bare E.164
+  digits at render, so `+1 (407) 555-0142` works.
+- **GSAP is no longer in the critical path.** It was a static import in three
+  components mounted in the marketing layout, so a 111 kB chunk shipped with
+  every public page. `loadGsap()` now fetches it inside the effect, *after* the
+  reduced-motion and pointer checks. Measured on the home page:
+
+  | context | JS files | JS transferred |
+  |---|---|---|
+  | desktop | 20 | 475 kB |
+  | mobile | 16 | 233 kB |
+  | desktop, reduced motion | 16 | 200 kB |
+
+  A visitor who asked for less motion now downloads **no** animation library at
+  all, rather than downloading one and being told not to use it.
+
+**Defects fixed**
+
+- **The WhatsApp button sat on top of the listing pages' sticky action bar** on
+  mobile — measured at 390px, the bar is 73px tall and the button covered its
+  right-hand end. The two live in different trees (button in the layout, bar in
+  a page), so the fix is a `body:has([data-sticky-action-bar])` rule in
+  `globals.css` that lifts the button clear, plus `env(safe-area-inset-bottom)`
+  because the bar's own `safe-bottom` grows it on a device with a home
+  indicator.
+
+**Decisions made this session**
+
+- **The button is WhatsApp's dark teal `#128c7e`, not the familiar
+  `#25d366`.** Measured against this palette, the bright green is 1.96:1 against
+  the page and gives a white glyph 1.98:1 — both well under the 3:1 WCAG 1.4.11
+  requires of a control's boundary and its non-text content. The teal is
+  4.10:1 / 4.14:1 / 4.12:1 against page, glyph and navy footer respectively. The
+  teal is also a WhatsApp brand colour, so recognition survives.
+- The button is **last in the DOM**, after the footer. A fixed control placed
+  early is reached by Tab before the page's own navigation, which puts a
+  persistent shortcut ahead of the content it shortcuts past.
+- `revealOnScroll` is async and returns a promise of its cleanup. Each caller
+  keeps a `cancelled` flag, because a component that unmounts during the import
+  would otherwise create a ScrollTrigger nothing can kill — the exact leak the
+  cleanup exists to prevent.
+
+**Open / deferred**
+
+- **No WhatsApp number is set.** A placeholder was used to verify the whole path
+  and then cleared, because a live button pointing at a number that is not hers
+  opens a stranger's chat. It is entered in Admin → Settings → Contact and the
+  button appears immediately. Owner: the client.
+- Unchanged: Vercel has no Supabase environment variables; the Ollama key should
+  be rotated; the footer logo needs a light-text version; FAQ suggestions from
+  question-shaped H2s are still not built; `.github/workflows/backup.yml` cannot
+  be pushed without a `workflow`-scoped token.
+
+**Next session must know**
+
+- One webkit axe test timed out on the first full run and passed on a targeted
+  re-run and again on the next full run. It is the same networkidle/slow-image
+  flake seen before, not a regression — but it is worth watching, and a failing
+  full run should be re-checked per-project before being treated as real.
+
 ### 2026-09-05 — Homepage close, listing-form steps, generation reliability
 
 **Shipped**

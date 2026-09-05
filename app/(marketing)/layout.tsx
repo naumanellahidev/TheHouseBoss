@@ -7,6 +7,7 @@ import { Header } from "@/components/site/header";
 import { PageTransition } from "@/components/site/page-transition";
 import { JsonLd } from "@/components/site/json-ld";
 import { agentJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
+import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { getSiteSettings } from "@/lib/queries/settings";
 import { EMPTY_SETTINGS, safeQuery } from "@/lib/queries/safe";
 
@@ -53,6 +54,19 @@ export default async function MarketingLayout({
       </main>
 
       <Footer settings={settings} />
+
+      {/*
+        Site-wide, and last in the DOM on purpose.
+
+        A fixed control placed early in the source is reached by Tab before the
+        page's own content, which puts "message on WhatsApp" ahead of the
+        navigation for a keyboard user. Rendering it after the footer keeps the
+        visual position and puts it last in the tab order, where a persistent
+        shortcut belongs.
+
+        It renders nothing at all when no number is configured.
+      */}
+      <WhatsAppButton settings={settings} />
 
       {/*
         Decorative, desktop-only, and it never hides the real cursor — see the

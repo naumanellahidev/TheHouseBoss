@@ -3,7 +3,7 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 
-import { gsap, prefersReducedMotion } from "@/lib/motion/gsap";
+import { loadGsap, prefersReducedMotion } from "@/lib/motion/gsap";
 
 /**
  * Route transitions.
@@ -47,25 +47,34 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     }
 
     const element = container.current;
+    // Before the import: a reduced-motion visitor never downloads GSAP at all.
     if (!element || prefersReducedMotion()) return;
 
-    const tween = gsap.fromTo(
-      element,
-      { opacity: 0, y: 8 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.32,
-        ease: "power2.out",
-        // Clear the inline transform when finished. Left in place it creates a
-        // containing block, which silently breaks `position: fixed` descendants
-        // — the sticky header and the mobile nav sheet both live inside here.
-        clearProps: "transform",
-      },
-    );
+    let cancelled = false;
+    let tween: gsap.core.Tween | null = null;
+
+    void loadGsap().then((gsap) => {
+      if (cancelled) return;
+      tween = gsap.fromTo(
+        element,
+        { opacity: 0, y: 8 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.32,
+          ease: "power2.out",
+          // Clear the inline transform when finished. Left in place it creates
+          // a containing block, which silently breaks `position: fixed`
+          // descendants — the sticky header and the mobile nav sheet both live
+          // inside here.
+          clearProps: "transform",
+        },
+      );
+    });
 
     return () => {
-      tween.kill();
+      cancelled = true;
+      tween?.kill();
     };
   }, [pathname]);
 

@@ -338,6 +338,11 @@ export type SiteSettings = {
   licenseRe: string | null;
   licenseContractor: string | null;
   disclosureText: string | null;
+  /**
+   * WhatsApp number, any readable format (migration 017). NULL falls back to
+   * `phone`; when both are null the floating button is not rendered.
+   */
+  whatsapp: string | null;
   updatedAt: string | null;
 };
 

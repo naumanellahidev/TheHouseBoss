@@ -205,6 +205,23 @@
   --header-h-lg: 5rem; /* 80 desktop */
 
   /*
+    WhatsApp.
+
+    `#128c7e`, WhatsApp's dark brand teal — NOT the familiar `#25d366`.
+    Measured against this palette, that lighter green is 1.96:1 against the page
+    and gives a white glyph 1.98:1, both well under the 3:1 that WCAG 1.4.11
+    requires of a control's boundary and its non-text content. The teal is
+    4.10:1 against the page, 4.14:1 for the white glyph and 4.12:1 against the
+    navy footer, so it passes wherever the button lands.
+
+    Brand recognition survives: the teal is one of WhatsApp's own colours and
+    the glyph is the real mark. A recognisable button nobody with low vision can
+    see is not a better trade.
+  */
+  --color-whatsapp: #128c7e;
+  --color-whatsapp-hover: #0f7a6c;
+
+  /*
     Logo heights.
 
     The uploaded artwork is a full lockup — brand name, licensee, brokerage and
@@ -491,6 +508,29 @@
 }
 
 /* sticky bottom bars must clear the iOS home indicator */
+/*
+  The floating WhatsApp button clears the listing page's sticky action bar.
+
+  Measured at 390px: the bar is 73px tall and the button sat directly on top of
+  its right-hand end, covering a control. The bar is `lg:hidden`, so this only
+  applies below that breakpoint — above it there is no bar and the button keeps
+  its normal position.
+
+  `:has()` because the two elements are in different trees: the button is in the
+  marketing layout and the bar is inside a page. Supported everywhere this
+  project already requires (Tailwind v4 needs Safari 16.4+; `:has()` shipped in
+  15.4).
+
+  `env(safe-area-inset-bottom)` is added rather than assumed, because the bar's
+  own `safe-bottom` grows it on a device with a home indicator and a fixed
+  offset would under-shoot there.
+*/
+@media (width < 64rem) {
+  body:has([data-sticky-action-bar]) [data-floating-cta] {
+    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @utility safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }

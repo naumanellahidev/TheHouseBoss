@@ -5,7 +5,7 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-04T12:26:57.514Z
+ * Generated: 2026-09-05T10:33:22.831Z
  * Tables: 21 · Views: 3
  */
 
@@ -932,6 +932,7 @@ export type Database = {
           license_contractor_label: string | null;
           license_contractor_authority: string | null;
           years_experience: number | null;
+          whatsapp: string | null;
         };
         Insert: {
           id?: number;
@@ -968,6 +969,7 @@ export type Database = {
           license_contractor_label?: string | null;
           license_contractor_authority?: string | null;
           years_experience?: number | null;
+          whatsapp?: string | null;
         };
         Update: {
           id?: number;
@@ -1004,6 +1006,7 @@ export type Database = {
           license_contractor_label?: string | null;
           license_contractor_authority?: string | null;
           years_experience?: number | null;
+          whatsapp?: string | null;
         };
         Relationships: [];
       };
@@ -1121,6 +1124,11 @@ export type Database = {
           license_contractor_label: string | null;
           license_contractor_authority: string | null;
           years_experience: number | null;
+          logo_w: number | null;
+          logo_h: number | null;
+          logo_invert_w: number | null;
+          logo_invert_h: number | null;
+          whatsapp: string | null;
         };
         Relationships: [];
       };

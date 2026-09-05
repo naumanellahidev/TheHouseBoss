@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { gsap, prefersReducedMotion } from "@/lib/motion/gsap";
+import { loadGsap, prefersReducedMotion } from "@/lib/motion/gsap";
 
 /**
  * The custom cursor.
@@ -32,52 +32,73 @@ export function CustomCursor() {
   const [active, setActive] = React.useState(false);
 
   React.useEffect(() => {
+    /*
+      Both checks BEFORE the import, which is the point of the change.
+
+      A coarse pointer or a reduced-motion preference means this component never
+      draws anything — and now it also means GSAP is never downloaded. It used
+      to be a static import in a component mounted in the marketing layout, so
+      every phone paid 111 kB for a cursor ring it could not use.
+    */
     const fine = window.matchMedia("(pointer: fine)").matches;
     if (!fine || prefersReducedMotion()) return;
 
     const element = ring.current;
     if (!element) return;
 
-    gsap.set(element, { xPercent: -50, yPercent: -50, opacity: 0 });
+    let cancelled = false;
+    let teardown: (() => void) | null = null;
 
-    const moveX = gsap.quickTo(element, "x", { duration: 0.35, ease: "power3" });
-    const moveY = gsap.quickTo(element, "y", { duration: 0.35, ease: "power3" });
+    void loadGsap().then((gsap) => {
+      if (cancelled) return;
 
-    let shown = false;
-    const onMove = (event: PointerEvent) => {
-      if (!shown) {
-        shown = true;
-        gsap.to(element, { opacity: 1, duration: 0.2 });
-      }
-      moveX(event.clientX);
-      moveY(event.clientY);
+      gsap.set(element, { xPercent: -50, yPercent: -50, opacity: 0 });
 
-      // Read the label from whatever is under the pointer. `closest` walks up,
-      // so a nested link inside a card still reports the card's label.
-      const target = event.target as Element | null;
-      const holder = target?.closest?.("[data-cursor]") as HTMLElement | null;
-      const next = holder?.dataset.cursor ?? null;
+      const moveX = gsap.quickTo(element, "x", { duration: 0.35, ease: "power3" });
+      const moveY = gsap.quickTo(element, "y", { duration: 0.35, ease: "power3" });
 
-      setLabel((current) => (current === next ? current : next));
-      const interactive = Boolean(
-        next || target?.closest?.("a, button, [role='button'], input, select, textarea"),
-      );
-      setActive((current) => (current === interactive ? current : interactive));
-    };
+      let shown = false;
+      const onMove = (event: PointerEvent) => {
+        if (!shown) {
+          shown = true;
+          gsap.to(element, { opacity: 1, duration: 0.2 });
+        }
+        moveX(event.clientX);
+        moveY(event.clientY);
 
-    // Leaving the window entirely should hide it, or it strands at the edge.
-    const onLeave = () => {
-      shown = false;
-      gsap.to(element, { opacity: 0, duration: 0.2 });
-    };
+        // Read the label from whatever is under the pointer. `closest` walks
+        // up, so a nested link inside a card still reports the card's label.
+        const target = event.target as Element | null;
+        const holder = target?.closest?.("[data-cursor]") as HTMLElement | null;
+        const next = holder?.dataset.cursor ?? null;
 
-    window.addEventListener("pointermove", onMove, { passive: true });
-    document.addEventListener("pointerleave", onLeave);
+        setLabel((current) => (current === next ? current : next));
+        const interactive = Boolean(
+          next ||
+            target?.closest?.("a, button, [role='button'], input, select, textarea"),
+        );
+        setActive((current) => (current === interactive ? current : interactive));
+      };
+
+      // Leaving the window entirely should hide it, or it strands at the edge.
+      const onLeave = () => {
+        shown = false;
+        gsap.to(element, { opacity: 0, duration: 0.2 });
+      };
+
+      window.addEventListener("pointermove", onMove, { passive: true });
+      document.addEventListener("pointerleave", onLeave);
+
+      teardown = () => {
+        window.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerleave", onLeave);
+        gsap.killTweensOf(element);
+      };
+    });
 
     return () => {
-      window.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerleave", onLeave);
-      gsap.killTweensOf(element);
+      cancelled = true;
+      teardown?.();
     };
   }, []);
 

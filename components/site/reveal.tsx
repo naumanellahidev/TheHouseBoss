@@ -16,8 +16,9 @@ import { revealOnScroll } from "@/lib/motion/gsap";
  * choreography instead of a fade: an overline, a heading and a grid arriving
  * 80ms apart feels authored; the same three arriving together does not.
  *
- * Reduced motion is handled inside `revealOnScroll` — the elements are set to
- * their final state immediately, never left invisible. That matters more here
+ * Reduced motion is handled inside `revealOnScroll`, which returns before it
+ * even imports GSAP — so a visitor who asked for less motion does not download
+ * an animation library. The elements are never left invisible. That matters more here
  * than usual, because GSAP writes inline styles and an inline style beats the
  * `prefers-reduced-motion` block in `globals.css`; the CSS guard cannot save us.
  *
@@ -55,7 +56,26 @@ export function Reveal({
         ? [element]
         : (Array.from(element.children) as Element[]);
 
-    return revealOnScroll(targets, { stagger, y });
+    /*
+      `revealOnScroll` is async now — it fetches GSAP on demand rather than
+      having it in the page's critical path. An effect cannot be async, so the
+      cleanup is captured in a mutable slot and a `cancelled` flag covers the
+      unmount-before-load case. Without that flag a component that unmounts
+      during the import would create a ScrollTrigger with no way to kill it,
+      which is the exact leak this cleanup exists to prevent.
+    */
+    let cancelled = false;
+    let dispose: (() => void) | null = null;
+
+    void revealOnScroll(targets, { stagger, y }).then((cleanup) => {
+      if (cancelled) cleanup();
+      else dispose = cleanup;
+    });
+
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
   }, [stagger, y, mode]);
 
   return (

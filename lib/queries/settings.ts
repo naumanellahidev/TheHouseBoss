@@ -61,6 +61,7 @@ function toSiteSettings(row: Row | null): SiteSettings {
     ogKey: str(row?.og_key),
     heroKey: str(row?.hero_key),
     brokerageName: str(row?.brokerage_name),
+    whatsapp: str(row?.whatsapp),
     licenseRe: str(row?.license_re),
     licenseContractor: str(row?.license_contractor),
     disclosureText: str(row?.disclosure_text),
