@@ -112,6 +112,72 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-05 (tranche 4) — link rendering, New Construction rebuild, job queue, alt text, FAQ
+
+**Shipped**
+
+- **Accepted links now render.** The previous tranche stored them and told the
+  operator "they appear on their pages now" while nothing read the table —
+  the message was ahead of the behaviour. `lib/queries/links.ts` +
+  `components/site/related-links.tsx`, rendered as a labelled block rather than
+  injected into the agent's prose.
+- **`/new-construction-representation` rebuilt** (§40–§46, §109). Cinematic
+  hero with the desktop-only 3D, both licence numbers in the hero, a
+  three-column advantage section whose third card is the **limits**, the guide
+  body preserved verbatim, current new-construction listings, the FAQ, and a
+  lead form. Axe clean and no horizontal overflow at 360 / 768 / 1440; exactly
+  one h1; all 8 FAQ questions in the markup are rendered on the page (§21).
+- **A real job queue** (§36, §94). Migration 020: `seo_jobs` with a partial
+  unique index on outstanding work, `started_at` doubling as the claim lock,
+  and `requeue_stuck_seo_jobs()` to reclaim from a dead worker. The worker is
+  `/api/cron/seo-queue`, scheduled every 15 minutes and callable on demand.
+  Bulk analysis enqueues instead of looping — the 25-record cap is gone.
+- **§65 alt text** — and the honest version of it. **Nothing in this system has
+  seen the photograph**: there is no vision model, and Ollama's text endpoint
+  cannot look at an image. So the suggester writes only what position and record
+  establish (the cover is the exterior, by convention) and never claims content.
+  Alt text describing the wrong thing is worse than alt text describing less,
+  because a screen-reader user cannot check it.
+- **§21 FAQ discovery** — finds question-shaped headings the author already
+  wrote and pairs each with the prose beneath. Does not invent questions, and
+  skips a question with nothing under it. Because every question IS a heading on
+  the page, the markup describes the page by construction.
+- `npm run check:seo-engine` now covers all three: 10 validation rules, FAQ
+  discovery, alt-text restraint.
+
+**Defects found by running it**
+
+1. **The `<dl>` in the new hero produced `definition-list` and `dlitem` axe
+   violations at every breakpoint.** A `<div>` inside a `<dl>` may contain only
+   a dt/dd pair — no sibling icon, no nested layout div. `docs/03` lists this
+   exact trap and I walked into it anyway. Fixed by moving the icon inside the
+   `<dt>`.
+2. **The hero's primary CTA was navy on navy** and effectively invisible. The
+   default `primary` variant is right on a white page and wrong on an inverted
+   one; the homepage hero uses `accent` for the same reason.
+3. **`enqueue` wrote nothing and reported "everything is already queued or
+   done".** `onConflict: "kind,entity_id"` cannot target a **partial** unique
+   index — PostgREST needs the predicate — so the upsert failed, the error was
+   logged, and 0 was returned, which the caller could not distinguish from
+   "nothing to do". **This is the second time in three tranches that an upsert
+   against an index PostgREST cannot name silently produced zero rows.** Fixed
+   by reading outstanding work, filtering, and plain-inserting; `enqueue` now
+   throws so a caller can report a failure as one.
+4. The guard printed its success summary before two of its checks had run.
+
+**Verified**
+
+Queue: 15 jobs enqueued, drained by the cron route to `queued 0, processing 0,
+completed 15, failed 0`. Second call correctly processed 0.
+
+**Open**
+
+- §22 schema beyond what already ships; §65 real image understanding needs a
+  vision model, which is not configured and is not Ollama-text-endpoint work
+- Article/city/community keyword generation runs on demand and on bulk, but is
+  not yet wired into their publish actions the way listings are
+- The FAQ suggester is not yet surfaced in the article editor
+
 ### 2026-09-05 (tranche 3) — internal links, health audit, engine settings
 
 **Shipped**

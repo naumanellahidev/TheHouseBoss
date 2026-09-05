@@ -576,11 +576,18 @@ export async function saveEngineSettings(raw: unknown): Promise<SeoActionResult>
 /* ── §37. Bulk analysis ───────────────────────────────────────────────────── */
 
 /**
- * Re-run the engine across every published record, in batches.
+ * Queue every published record for analysis (§36, §37, §94).
  *
- * Capped and resumable for the same reason `generateMissingSeo` is: a server
- * action that runs for minutes times out on Vercel with half the work done and
- * no way to tell which half.
+ * ── Why this enqueues rather than processes ───────────────────────────────
+ *
+ * It used to loop, capped at 25, and the cap was the honest admission that a
+ * server action cannot run for minutes. A queue removes the cap instead of
+ * apologising for it: four hundred records are enqueued in one round trip, the
+ * worker drains ten at a time, and nothing is lost when a function is killed
+ * mid-batch — the rows are still `queued`.
+ *
+ * One drain is kicked off immediately so a person pressing the button sees
+ * movement rather than a number that only changes in fifteen minutes.
  */
 export async function bulkAnalyseListings(): Promise<SeoActionResult> {
   try {
@@ -589,96 +596,115 @@ export async function bulkAnalyseListings(): Promise<SeoActionResult> {
     return { ok: false, error: "You do not have permission to do that." };
   }
 
-  const { getListingBySlug, getListingSlugsForStaticParams } = await import(
+  const { enqueue, drain, jobCounts } = await import("@/lib/seo/engine/queue");
+  const { getListingSlugsForStaticParams, getListingBySlug } = await import(
     "@/lib/queries/listings"
   );
-  const { runListingSeo } = await import("@/lib/seo/engine/run");
+  const { getCities, getCommunities } = await import("@/lib/queries/cities");
+  const { getArticles } = await import("@/lib/queries/articles");
 
-  const slugs = (await getListingSlugsForStaticParams()).slice(0, BATCH);
-  let analysed = 0;
-  let keywords = 0;
+  const jobs: { kind: "listing" | "city" | "community" | "article"; entityId: string; label: string }[] = [];
 
-  for (const slug of slugs) {
+  for (const slug of await getListingSlugsForStaticParams()) {
     const listing = await getListingBySlug(slug);
-    if (!listing) continue;
-    const outcome = await runListingSeo(listing, "bulk");
-    if (outcome) {
-      analysed += 1;
-      keywords += outcome.keywordsStored;
+    if (listing) {
+      jobs.push({ kind: "listing", entityId: listing.id, label: listing.address });
     }
+  }
+  for (const city of await getCities()) {
+    jobs.push({ kind: "city", entityId: city.id, label: city.name });
+  }
+  for (const community of await getCommunities()) {
+    jobs.push({ kind: "community", entityId: community.id, label: community.name });
+  }
+  for (const article of await getArticles({ limit: 500 })) {
+    jobs.push({ kind: "article", entityId: article.id, label: article.title });
   }
 
   /*
-    Cities, communities and articles too. §91 scopes the engine across all four,
-    and analysing only listings would leave the pages that carry the local
-    topical authority (§39) with nothing worked out at all — which is exactly
-    what the audit was reporting as "9 pages with no search phrases".
+    Wrapped, so a write failure is reported as one. `enqueue` throws now rather
+    than returning 0 — the first version logged and returned 0, and the caller
+    could not tell "nothing to do" from "nothing was written", so it cheerfully
+    said everything was already done while the queue was empty.
   */
-  const { getCities, getCommunities } = await import("@/lib/queries/cities");
-  const { getArticles } = await import("@/lib/queries/articles");
-  const { runPlaceSeo } = await import("@/lib/seo/engine/run");
-  const { articleKeywords, cityKeywords, communityKeywords } = await import(
-    "@/lib/seo/engine/keywords"
-  );
-
-  for (const city of await getCities()) {
-    const outcome = await runPlaceSeo(
-      { kind: "city", id: city.id, citySlug: city.slug },
-      (geo) => cityKeywords({ name: city.name, county: city.county }, geo),
-      "bulk",
-    );
-    if (outcome) {
-      analysed += 1;
-      keywords += outcome.keywordsStored;
-    }
+  let queued: number;
+  try {
+    queued = await enqueue(jobs, "bulk");
+  } catch (error) {
+    console.error("[bulkAnalyse]", error);
+    return { ok: false, error: "The pages could not be queued. Try again." };
   }
 
-  for (const community of await getCommunities()) {
-    const outcome = await runPlaceSeo(
-      {
-        kind: "community",
-        id: community.id,
-        citySlug: community.city.slug,
-        communitySlug: community.slug,
-      },
-      (geo) =>
-        communityKeywords(
-          { name: community.name, cityName: community.city.name },
-          geo,
-        ),
-      "bulk",
-    );
-    if (outcome) {
-      analysed += 1;
-      keywords += outcome.keywordsStored;
-    }
+  /*
+    Drain once, here, so the button does something visible. The rest is the
+    scheduled worker's job — which is what makes this safe to press with four
+    hundred records waiting.
+  */
+  const first = await drain();
+  const counts = await jobCounts();
+
+  revalidatePath("/admin/seo");
+
+  if (queued === 0 && counts.queued === 0) {
+    return { ok: true, message: "Everything is already queued or done." };
   }
 
-  for (const article of await getArticles({ limit: 200 })) {
-    const outcome = await runPlaceSeo(
-      { kind: "article", id: article.id, citySlug: article.city?.slug ?? null },
-      (geo) =>
-        articleKeywords(
-          {
-            title: article.title,
-            kind: article.kind,
-            tags: article.tags,
-            cityName: article.city?.name ?? null,
-          },
-          geo,
-        ),
-      "bulk",
-    );
-    if (outcome) {
-      analysed += 1;
-      keywords += outcome.keywordsStored;
-    }
+  return {
+    ok: true,
+    message:
+      `Queued ${queued} ${queued === 1 ? "page" : "pages"}. ` +
+      `${first.processed} done already; ${counts.queued} still waiting — ` +
+      "they are picked up automatically every 15 minutes.",
+  };
+}
+
+/** Drain the queue now, rather than waiting for the schedule (§94). */
+export async function drainQueueNow(): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
   }
+
+  const { drain, jobCounts } = await import("@/lib/seo/engine/queue");
+  const result = await drain();
+  const counts = await jobCounts();
 
   revalidatePath("/admin/seo");
   return {
     ok: true,
-    message: `Analysed ${analysed} ${analysed === 1 ? "page" : "pages"} and wrote ${keywords} search phrases.`,
+    message:
+      counts.queued === 0
+        ? `Processed ${result.processed}. The queue is empty.`
+        : `Processed ${result.processed}. ${counts.queued} still waiting.`,
+  };
+}
+
+/** Put failed jobs back in the queue with their attempts reset (§94). */
+export async function retryFailedJobs(): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("seo_jobs")
+    .update({ status: "queued", attempts: 0, error: null, started_at: null })
+    .eq("status", "failed")
+    .select("id");
+
+  if (error) return { ok: false, error: "They could not be retried." };
+
+  revalidatePath("/admin/seo");
+  const count = data?.length ?? 0;
+  return {
+    ok: true,
+    message:
+      count === 0
+        ? "Nothing has failed."
+        : `${count} put back in the queue. They will be tried again shortly.`,
   };
 }
 
@@ -690,8 +716,7 @@ export async function bulkAnalyseListings(): Promise<SeoActionResult> {
  * Each proposal was already verified when it was made: the target had to be a
  * PUBLISHED page that exists, the anchor comes from that page's own name, and
  * the reason is recorded. So "accept all" is not "trust the machine" — it is
- * "apply the twenty checks that already passed", which is a different and much
- * smaller act of faith.
+ * "apply the checks that already passed", which is a much smaller act of faith.
  *
  * ── Why rejected ones stay rejected ───────────────────────────────────────
  *
@@ -729,9 +754,9 @@ export async function acceptAllLinks(): Promise<SeoActionResult> {
 
   /*
     Every page that now carries a new link has to be revalidated, not just the
-    admin screen. Revalidating the layout is the blunt instrument, and it is the
-    right one here: the links are spread across listings, city pages and
-    community pages, and enumerating them would be slower than the rebuild.
+    admin screen. Revalidating the layout is the blunt instrument and the right
+    one here: the links are spread across listings, city pages and community
+    pages, and enumerating them would cost more than the rebuild.
   */
   revalidatePath("/", "layout");
   revalidatePath("/admin/seo");

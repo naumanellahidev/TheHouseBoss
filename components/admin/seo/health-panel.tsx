@@ -7,6 +7,7 @@ import {
   Check,
   Info,
   Link2,
+  ListChecks,
   Play,
   Sparkles,
   X,
@@ -15,6 +16,8 @@ import {
 import {
   acceptAllLinks,
   bulkAnalyseListings,
+  drainQueueNow,
+  retryFailedJobs,
   runAudit,
   saveEngineSettings,
   setLinkStatus,
@@ -98,9 +101,12 @@ const SEVERITY: Record<Finding["severity"], { tone: "pending" | "neutral"; label
 export function HealthPanel({
   initialSettings,
   pendingLinks,
+  queue,
 }: {
   initialSettings: EngineSettings;
   pendingLinks: PendingLink[];
+  /** Real counts from `seo_jobs` (§36). Never a simulated progress bar. */
+  queue: { queued: number; processing: number; completed: number; failed: number };
 }) {
   const toast = useToast();
   const [report, setReport] = React.useState<Report | null>(null);
@@ -150,10 +156,81 @@ export function HealthPanel({
               }}
             >
               <Sparkles aria-hidden="true" />
-              Re-analyse all listings
+              Re-analyse everything
             </Button>
           </div>
         </div>
+
+        {/*
+          §36. The queue, with its real counts.
+
+          Shown only when there is something in it. A permanently visible
+          "0 queued" panel is noise on a screen that already has a lot on it,
+          and the moment it matters is the moment it is non-zero.
+        */}
+        {queue.queued + queue.processing + queue.failed > 0 ? (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border border-border bg-surface p-4">
+            <span className="flex items-center gap-2 text-sm">
+              <ListChecks className="size-4 text-foreground-subtle" aria-hidden="true" />
+              <span className="font-semibold text-foreground">Queue</span>
+            </span>
+
+            {(
+              [
+                ["Waiting", queue.queued],
+                ["Running", queue.processing],
+                ["Done", queue.completed],
+                ["Failed", queue.failed],
+              ] as const
+            ).map(([label, value]) => (
+              <span key={label} className="text-sm text-foreground-muted">
+                {label}{" "}
+                <span className="tabular font-semibold text-foreground">{value}</span>
+              </span>
+            ))}
+
+            <span className="ml-auto flex flex-wrap gap-2">
+              {queue.queued > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  loading={busy === "drain"}
+                  onClick={async () => {
+                    setBusy("drain");
+                    const r = await drainQueueNow();
+                    setBusy(null);
+                    if (r.ok) toast.success(r.message);
+                    else toast.error(r.error);
+                  }}
+                >
+                  Process a batch now
+                </Button>
+              ) : null}
+
+              {queue.failed > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  loading={busy === "retry"}
+                  onClick={async () => {
+                    setBusy("retry");
+                    const r = await retryFailedJobs();
+                    setBusy(null);
+                    if (r.ok) toast.success(r.message);
+                    else toast.error(r.error);
+                  }}
+                >
+                  Try the failed ones again
+                </Button>
+              ) : null}
+            </span>
+
+            <p className="w-full text-xs text-foreground-subtle">
+              Anything waiting is picked up automatically every 15 minutes. You
+              do not need to stay on this page.
+            </p>
+          </div>
+        ) : null}
 
         {report ? (
           <>

@@ -188,6 +188,12 @@ ${views.map((v) => renderTable(v.name, byTable.get(v.name) ?? [], true)).join("\
         }[];
       };
       tiptap_to_text: { Args: { doc: Json }; Returns: string };
+      // Migration 020. Returns unfinished SEO jobs to the queue; the argument
+      // has a default, so calling it with no args is valid.
+      requeue_stuck_seo_jobs: {
+        Args: { older_than?: string } | Record<string, never>;
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

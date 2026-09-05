@@ -45,7 +45,7 @@ export default async function SeoPage() {
     );
   }
 
-  const [pages, redirects, coverage, settings, engineSettings, pendingLinks] =
+  const [pages, redirects, coverage, settings, engineSettings, pendingLinks, queue] =
     await Promise.all([
       getSeoPages(),
       getRedirects(),
@@ -53,6 +53,8 @@ export default async function SeoPage() {
       getAdminSettings(),
       getEngineSettings(),
       getPendingLinks(),
+      // §36. Real counts, so the panel never animates a fictional progress bar.
+      import("@/lib/seo/engine/queue").then((m) => m.jobCounts()),
     ]);
 
   /*
@@ -79,7 +81,11 @@ export default async function SeoPage() {
         Someone opening this screen wants to know what is wrong. The metadata
         table below is a reference — useful, and not what the visit is for.
       */}
-      <HealthPanel initialSettings={engineSettings} pendingLinks={pendingLinks} />
+      <HealthPanel
+        initialSettings={engineSettings}
+        pendingLinks={pendingLinks}
+        queue={queue}
+      />
 
       <SeoConsole
         pages={pages}

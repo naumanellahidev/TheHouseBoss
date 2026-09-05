@@ -109,14 +109,89 @@ for (const c of cases) {
   }
 }
 
+/*
+  No summary here.
+
+  There was one, and it printed "N validation rules behave as specified" before
+  the FAQ and alt-text checks below had run — so a failure in those produced a
+  success line followed by a failure. The summary belongs after every check,
+  which is at the bottom of the file.
+*/
+const validationCases = cases.length;
+
+/* ── §21 FAQ discovery, and §65 alt text ─────────────────────────────────── */
+
+/*
+  Both of these exist to NOT invent things, so the cases that matter are the
+  ones where they decline. A generator that always produces output is easy to
+  demonstrate and impossible to trust.
+*/
+
+const { suggestFaqFromDocument } = await import("@/lib/seo/engine/faq");
+
+const doc = {
+  type: "doc",
+  content: [
+    { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "What should buyers know about new construction?" }] },
+    { type: "paragraph", content: [{ type: "text", text: "The sales office works for the builder, and registration on the first visit is what governs whether you can be represented at all." }] },
+    // A question with nothing under it — must be skipped.
+    { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Is Lake Mary a good area for buyers?" }] },
+    { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Where to start" }] },
+    { type: "paragraph", content: [{ type: "text", text: "Somewhere sensible, with enough words to clear the minimum length that this check enforces." }] },
+  ],
+};
+
+const faqs = suggestFaqFromDocument(doc);
+const faqOk =
+  faqs.length === 1 &&
+  faqs[0].q.startsWith("What should buyers know") &&
+  !faqs.some((f) => f.q.startsWith("Is Lake Mary")) &&
+  !faqs.some((f) => f.q === "Where to start");
+
+console.log(
+  `\n  ${faqOk ? "\u2713" : "\u2717"} FAQ discovery takes answered questions only`,
+);
+if (!faqOk) {
+  console.error(`      got ${faqs.length}: ${faqs.map((f) => f.q).join(" | ")}`);
+  failures += 1;
+}
+
+const { suggestAltText } = await import("@/lib/seo/engine/alt-text");
+
+const fakeListing = {
+  address: "123 Lakeview Dr",
+  city: { name: "Lake Mary" },
+  community: null,
+  photos: [
+    { alt: "" },
+    { alt: "A written description somebody typed" },
+    { alt: "  " },
+  ],
+} as unknown as Parameters<typeof suggestAltText>[0];
+
+const alts = suggestAltText(fakeListing);
+const altOk =
+  alts.length === 2 &&
+  alts[0].index === 0 &&
+  alts[1].index === 2 &&
+  // Nothing has seen the image, so nothing may claim what is in it.
+  !alts.some((a) => /pool|granite|kitchen|spacious|modern|beautiful/i.test(a.suggestion));
+
+console.log(`  ${altOk ? "\u2713" : "\u2717"} Alt text skips written descriptions and claims no content`);
+if (!altOk) {
+  console.error(`      got: ${alts.map((a) => `${a.index}:${a.suggestion}`).join(" | ")}`);
+  failures += 1;
+}
+
 if (failures > 0) {
   console.error(`
-✗ seo engine guard: ${failures} case(s) behaved wrongly
+✗ seo engine guard: ${failures} check(s) behaved wrongly
 `);
   process.exit(1);
 }
 
 console.log(
   `
-✓ seo engine guard: ${cases.length} validation rules behave as specified`,
+✓ seo engine guard: ${validationCases} validation rules, FAQ discovery ` +
+    "and alt-text suggestion all behave as specified",
 );

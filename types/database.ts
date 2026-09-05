@@ -5,8 +5,8 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-05T12:49:11.448Z
- * Tables: 30 · Views: 3
+ * Generated: 2026-09-05T14:26:23.758Z
+ * Tables: 31 · Views: 3
  */
 
 export type Json =
@@ -1067,6 +1067,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      seo_jobs: {
+        Row: {
+          id: string;
+          kind: unknown;
+          entity_id: string;
+          label: string;
+          status: unknown;
+          trigger: unknown;
+          attempts: number;
+          max_attempts: number;
+          error: string | null;
+          run_id: string | null;
+          queued_at: string;
+          started_at: string | null;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          kind: unknown;
+          entity_id: string;
+          label: string;
+          status?: unknown;
+          trigger?: unknown;
+          attempts?: number;
+          max_attempts?: number;
+          error?: string | null;
+          run_id?: string | null;
+          queued_at?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          kind?: unknown;
+          entity_id?: string;
+          label?: string;
+          status?: unknown;
+          trigger?: unknown;
+          attempts?: number;
+          max_attempts?: number;
+          error?: string | null;
+          run_id?: string | null;
+          queued_at?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Relationships: [];
+      };
       seo_keyword_cluster_members: {
         Row: {
           cluster_id: string;
@@ -1542,6 +1590,12 @@ export type Database = {
         }[];
       };
       tiptap_to_text: { Args: { doc: Json }; Returns: string };
+      // Migration 020. Returns unfinished SEO jobs to the queue; the argument
+      // has a default, so calling it with no args is valid.
+      requeue_stuck_seo_jobs: {
+        Args: { older_than?: string } | Record<string, never>;
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

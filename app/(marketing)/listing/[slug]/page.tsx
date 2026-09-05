@@ -23,6 +23,8 @@ import {
   getSimilarListings,
   resolveRedirect,
 } from "@/lib/queries/listings";
+import { getAcceptedLinks } from "@/lib/queries/links";
+import { RelatedLinks } from "@/components/site/related-links";
 import { listingAnswerFirst } from "@/lib/seo/auto/answer-first";
 import { breadcrumbJsonLd, listingJsonLd } from "@/lib/seo/jsonld";
 import { getSeoOverride } from "@/lib/queries/seo";
@@ -164,6 +166,13 @@ export default async function ListingPage({
     text and the markup drift apart.
   */
   const answerFirst = listingAnswerFirst(listing);
+
+  /*
+    The links an operator accepted in Admin → SEO. Only `accepted` rows are
+    readable by the anon key, so a proposal awaiting review cannot appear here
+    even by mistake.
+  */
+  const relatedLinks = await getAcceptedLinks({ listingId: listing.id });
 
   const crumbs = [
     { href: `/${listing.city.slug}/homes-for-sale`, label: `${listing.city.name} Homes for Sale` },
@@ -355,6 +364,16 @@ export default async function ListingPage({
 
             {/* 11. Compliance */}
             <Disclaimer type="legal" />
+
+            {/*
+              Accepted internal links, at the end of the main column.
+
+              After the disclaimer rather than before it, and outside the
+              similar-listings section below: those are properties, these are
+              pages. Mixing them would make "living in Lake Mary" look like
+              another house for sale.
+            */}
+            <RelatedLinks links={relatedLinks} />
           </div>
 
           {/* 9. Sticky contact card, desktop */}
