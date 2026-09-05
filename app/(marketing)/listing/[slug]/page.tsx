@@ -95,8 +95,30 @@ export async function generateMetadata({
 
   const override = await getSeoOverride(`/listing/${listing.slug}`);
 
+  /*
+    §28. Status decides how this page is indexed.
+
+    HR11 makes a published URL permanent and HR10 keeps a sold listing's page
+    forever, and neither is in tension with this: the page stays, it stays
+    reachable, and its 400w photograph stays. What changes is whether it is
+    offered to somebody searching for a home to buy.
+
+      sold        indexed. It is a record of a completed sale, it is what
+                  "recently sold homes in Longwood" should find, and the page
+                  says plainly that it sold.
+      off_market  NOT indexed. The property is not for sale and there is no
+                  transaction to record, so a search result for it wastes a
+                  buyer's click and tells a search engine the site lists homes
+                  it does not.
+
+    `follow` stays true in both cases. Removing a page from the index is not a
+    reason to stop crawlers reaching the city page and the listings it links to.
+  */
+  const noindex = listing.status === "off_market";
+
   return buildMetadata({
     override,
+    noindex,
     title:
       listing.metaTitle ||
       `${listing.address}, ${listing.city.name}, FL — ${formatPrice(price)}`,

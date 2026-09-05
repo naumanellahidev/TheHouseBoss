@@ -5,7 +5,7 @@ import { ArticleView } from "@/components/site/article-view";
 import { Container, Section } from "@/components/site/container";
 import { Disclaimer } from "@/components/site/disclaimer";
 import { JsonLd } from "@/components/site/json-ld";
-import { articleJsonLd, breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/seo/jsonld";
 import { getSeoOverride } from "@/lib/queries/seo";
 import { autoArticleDescription } from "@/lib/seo/auto/generate";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -110,6 +110,12 @@ export default async function MarketUpdatePage({
               : undefined,
             section: "Market updates",
           }),
+          /*
+            §21, §22. FAQPage ONLY when the page renders those questions.
+            `ArticleView` reads the same `article.faq` array, so the markup
+            cannot describe something the reader does not see.
+          */
+          ...(article.faq.length > 0 ? [faqJsonLd(article.faq)] : []),
           breadcrumbJsonLd(crumbs),
         ]}
       />

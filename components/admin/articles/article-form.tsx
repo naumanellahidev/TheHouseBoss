@@ -9,8 +9,12 @@ import {
   saveArticle,
   suggestArticleSlug,
 } from "@/app/(admin)/admin/(shell)/content-actions";
-import { suggestArticleSeo } from "@/app/(admin)/admin/(shell)/seo-suggest";
+import {
+  suggestArticleFaq,
+  suggestArticleSeo,
+} from "@/app/(admin)/admin/(shell)/seo-suggest";
 import { ArticleEditor } from "@/components/admin/articles/editor";
+import { FaqRepeater } from "@/components/admin/faq-repeater";
 import { ImageField } from "@/components/admin/image-field";
 import { TagInput } from "@/components/admin/tag-input";
 import { Button } from "@/components/ui/button";
@@ -86,6 +90,44 @@ export function ArticleForm({
   const saveChain = React.useRef<Promise<unknown>>(Promise.resolve());
 
   const [writingSeo, setWritingSeo] = React.useState(false);
+  const [findingFaq, setFindingFaq] = React.useState(false);
+
+  /*
+    §21. Finds question-shaped headings and the prose beneath each.
+
+    Merges rather than replaces: a question the author already added by hand
+    survives, because the suggester has no way to know it was deliberate and
+    overwriting it would lose work silently.
+  */
+  async function findFaq() {
+    setFindingFaq(true);
+    const result = await suggestArticleFaq({
+      bodyJson: values.bodyJson,
+      bodyText: values.bodyText,
+    });
+    setFindingFaq(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    const existing = values.faq ?? [];
+    const seen = new Set(existing.map((item) => item.q.trim().toLowerCase()));
+    const added = result.items.filter(
+      (item) => !seen.has(item.q.trim().toLowerCase()),
+    );
+
+    if (added.length === 0) {
+      toast.success("Everything it found is already in your list.");
+      return;
+    }
+
+    set("faq", [...existing, ...added.map(({ q, a }) => ({ q, a }))]);
+    toast.success(
+      `Added ${added.length} ${added.length === 1 ? "question" : "questions"}. Edit the answers — they are your own words, trimmed.`,
+    );
+  }
 
   /*
     Same contract as the listing editor's: fill the two fields, save nothing.
@@ -409,6 +451,39 @@ export function ArticleForm({
                 paragraphs when you publish. Type here only to override that.
               </FieldDescription>
             </Field>
+          </div>
+
+          {/* ── §21. Questions this article answers ───────────────────── */}
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-h4 font-semibold">
+                  Questions this article answers
+                </h3>
+                <p className="max-w-[68ch] text-sm text-foreground-muted">
+                  These appear at the end of the article and are what an AI
+                  assistant quotes when somebody asks one of them. Nothing is
+                  invented — the button finds headings you wrote as questions and
+                  pairs each with what you wrote underneath.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                loading={findingFaq}
+                onClick={findFaq}
+              >
+                <Sparkles aria-hidden="true" />
+                Find them in my article
+              </Button>
+            </div>
+
+            <FaqRepeater
+              value={values.faq ?? []}
+              onChange={(next) => set("faq", next)}
+              description="Only include a question the article genuinely answers. The markup search engines read is built from this list, so a question here that the page does not answer is a policy problem, not just a bad answer."
+            />
           </div>
 
           {/* ── Pre-publish checklist ─────────────────────────────────── */}

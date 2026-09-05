@@ -587,7 +587,7 @@ export async function getAdminArticleById(id: string) {
   const db = await createSupabaseServerClient();
   const { data, error } = await db
     .from("articles")
-    .select(`${ADMIN_ARTICLE_COLUMNS}, body_json, body_text`)
+    .select(`${ADMIN_ARTICLE_COLUMNS}, body_json, body_text, faq_json`)
     .eq("id", id)
     .maybeSingle();
 

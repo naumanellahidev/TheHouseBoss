@@ -248,6 +248,9 @@ export function toArticle(row: Row): Article {
     ...toArticleCard(row),
     bodyJson: row.body_json ?? {},
     bodyText: str(row.body_text),
+    // Migration 021. The same shape cities and communities already use, so
+    // FaqRepeater, FaqAccordion and faqJsonLd all work unchanged.
+    faq: toFaq(row.faq_json),
     community: row.communities
       ? {
           id: row.community_id,

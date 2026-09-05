@@ -206,6 +206,14 @@ export type ArticleCard = {
 };
 
 export type Article = ArticleCard & {
+  /**
+   * Questions this article answers (migration 021, brief §21).
+   *
+   * Rendered on the page AND emitted as FAQPage markup, from this one array.
+   * Two sources would let the markup describe questions the page does not show,
+   * which is a structured-data policy violation.
+   */
+  faq: FaqItem[];
   /** Tiptap document. Rendered by the rich-text renderer, never dangerouslySet. */
   bodyJson: unknown;
   bodyText: string | null;

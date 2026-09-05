@@ -6,6 +6,7 @@ import { Container, Section } from "@/components/site/container";
 import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { LeadForm } from "@/components/site/lead-form";
+import { FaqAccordion } from "@/components/site/faq-accordion";
 import { RichText, headingsOf } from "@/components/site/rich-text";
 import { ShareRow } from "@/components/site/share-row";
 import { TableOfContents, MobileToc } from "@/components/site/table-of-contents";
@@ -115,6 +116,27 @@ export function ArticleView({
 
           <div className={toc.length >= 3 ? "lg:col-span-9" : "lg:col-span-8"}>
             <RichText doc={article.bodyJson} />
+
+            {/*
+              §21. The questions this article answers.
+
+              Rendered from `article.faq`, which is the SAME array the page's
+              `faqJsonLd` reads. That is not a convenience — FAQ markup
+              describing questions the page does not show is a structured-data
+              policy violation, and one array is the only arrangement in which
+              the two cannot disagree.
+            */}
+            {article.faq.length > 0 ? (
+              <section
+                aria-labelledby="article-faq"
+                className="mt-12 flex flex-col gap-4 border-t border-border pt-8"
+              >
+                <h2 id="article-faq" className="text-h3">
+                  Questions this answers
+                </h2>
+                <FaqAccordion items={article.faq} />
+              </section>
+            ) : null}
 
             <div className="mt-10 flex flex-col gap-6 border-t border-border pt-6">
               <ShareRow title={article.title} />

@@ -2,6 +2,7 @@ import "server-only";
 
 import { recordAudit } from "@/lib/auth/audit";
 import { ENGINE_VERSION, listingKeywords } from "@/lib/seo/engine/keywords";
+import { listingFingerprint } from "@/lib/seo/engine/changes";
 import { validateKeywords, verifiedFeaturesOf } from "@/lib/seo/engine/validate";
 import { persistListingGeo, resolveGeo, resolveListingGeo } from "@/lib/seo/geo/relevance";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -38,6 +39,45 @@ import type { Listing } from "@/types/domain";
  */
 
 export const PROMPT_VERSION = "listing-seo/2026-09-05";
+
+/**
+ * The fingerprint of one listing, from the domain object.
+ *
+ * `listingFingerprint` takes a raw row because the publish actions have one;
+ * this adapts the domain shape to the same key names so both sides produce a
+ * comparable string. If they drifted, every save would look like a change and
+ * change detection would quietly stop working — which is why the mapping is
+ * here, once, rather than at each call site.
+ */
+function fingerprintOf(listing: Listing): string {
+  return listingFingerprint({
+    address: listing.address,
+    unit: listing.unit,
+    city_id: listing.city.id,
+    community_id: listing.communityId,
+    zip: listing.zip,
+    status: listing.status,
+    listing_type: listing.listingType,
+    property_type: listing.propertyType,
+    price: listing.price,
+    sold_price: listing.soldPrice,
+    sold_at: listing.soldAt,
+    beds: listing.beds,
+    baths: listing.baths,
+    half_baths: listing.halfBaths,
+    sqft: listing.sqft,
+    lot_size: listing.lotSize,
+    year_built: listing.yearBuilt,
+    garage_spaces: listing.garageSpaces,
+    pool: listing.pool,
+    waterfront: listing.waterfront,
+    hoa_fee: listing.hoaFee,
+    taxes_annual: listing.taxesAnnual,
+    description: listing.description,
+    contractors_take: listing.contractorsTake,
+    published: true,
+  });
+}
 
 export type RunOutcome = {
   runId: string;
@@ -283,6 +323,14 @@ export async function runListingSeo(
           keywordsRejected: rejected,
           geoPlaces: geo.length,
           linksProposed,
+          /*
+            §27. The fingerprint of the fields the generators read, so the next
+            save can tell whether anything that affects the wording actually
+            changed. Stored in `changes` rather than as a column because it is
+            a property of this run, and a column would have to be kept in step
+            with a schema that has no other reason to know about it.
+          */
+          fingerprint: fingerprintOf(listing),
         },
         /*
           §32. In auto mode the run is approved by the system as it completes;

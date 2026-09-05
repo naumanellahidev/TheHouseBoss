@@ -128,6 +128,16 @@ export function listingKeywords(
   const sold = listing.status === "sold";
 
   /*
+    §28. An off-market listing gets no keywords at all.
+
+    Its page is `noindex` (see the listing route's metadata), so a keyword for
+    it is targeting a page that has asked not to be found — and if it is ever
+    re-listed, the keywords are rebuilt from the record as it is then rather
+    than as it was when it was withdrawn.
+  */
+  if (listing.status === "off_market") return out;
+
+  /*
     A sold listing is not for sale, and every "for sale" phrase attached to one
     is a false statement to a search engine and a wasted click for a buyer. Its
     page stays published forever (HR11) — as a record, which is what it should

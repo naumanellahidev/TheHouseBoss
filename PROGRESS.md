@@ -112,6 +112,56 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-05 (tranche 5) — living SEO, status indexing, per-record controls, article FAQ
+
+**Shipped**
+
+- **§26 living SEO.** Cities, communities and articles now queue the engine on
+  publish, the way listings already did. Enqueued rather than run inline: a
+  publish should return as soon as the row is written.
+- **§27 change detection.** `lib/seo/engine/changes.ts` fingerprints exactly the
+  fields the generators read and records it on each run, so a save that changes
+  a photo caption does not rewrite metadata. Three reasons, in increasing order:
+  cost, **churn** (metadata that flaps is metadata search engines trust less),
+  and the audit log — a run recorded on every save buries the three that
+  mattered under four hundred that changed nothing.
+- **§28 status-aware indexing.** `off_market` listings are `noindex` and get no
+  keywords; `sold` stays indexed, because it is a record of a completed sale and
+  is what "recently sold homes in Longwood" should find. HR10 and HR11 are
+  untouched — the page stays, permanently, with its 400w photograph.
+- **§92 per-record controls** in the listing editor, above their own output.
+- **§65 alt text**, applied from the editor. The button is labelled "Describe
+  the photos" and the toast says nothing has looked at the images — a button
+  labelled "AI alt text" would imply a vision model that is not configured, and
+  the descriptions would be trusted more than they deserve.
+- **§21 the Article FAQ engine, complete.** Migration 021 adds
+  `articles.faq_json`; the editor gains a section with **Find them in my
+  article**, which merges rather than replaces; `ArticleView` renders them; and
+  `faqJsonLd` is emitted **only** when `article.faq` is non-empty — from the
+  same array the page renders.
+
+**Verified end to end**
+
+Created a real published article with one answered and one unanswered question
+heading, then: the suggester found 1 and skipped the unanswered one; it survived
+the column, the domain mapper and the render; the page returned 200 with the
+question visible and `"@type":"FAQPage"` in the markup. Cleaned up afterwards.
+
+**Note on the test suite**
+
+One webkit axe test timed out in the full run and passed in isolation
+immediately afterwards — the same networkidle flake recorded in earlier
+sessions, not a regression. 357 passed either way.
+
+**Open**
+
+- Real image understanding needs a vision model. Not configured, and not
+  something Ollama's text endpoint can do — recorded as a limit rather than a
+  gap to paper over.
+- §22 schema beyond what already ships (RealEstateAgent, WebSite, WebPage,
+  Article, BreadcrumbList, FAQPage, Residence, Offer, Service are all emitted)
+- §105 an SEO snapshot on the admin home dashboard
+
 ### 2026-09-05 (tranche 4) — link rendering, New Construction rebuild, job queue, alt text, FAQ
 
 **Shipped**

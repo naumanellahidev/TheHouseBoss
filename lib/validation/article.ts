@@ -46,7 +46,18 @@ export const articleSchema = z
     coverKey: z.string().max(200).nullable().optional(),
     coverAlt: z.string().trim().max(300).nullable().optional(),
 
-    metaTitle: z.string().trim().max(70).nullable().optional(),
+    /* Migration 021, brief §21. Same shape cities and communities already use. */
+  faq: z
+    .array(
+      z.object({
+        q: z.string().trim().min(3).max(300),
+        a: z.string().trim().min(3).max(2000),
+      }),
+    )
+    .max(20)
+    .default([]),
+
+  metaTitle: z.string().trim().max(70).nullable().optional(),
     metaDesc: z.string().trim().max(180).nullable().optional(),
 
     status: z.enum(ARTICLE_STATUSES),

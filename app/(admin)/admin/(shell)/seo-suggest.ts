@@ -108,3 +108,51 @@ export async function suggestArticleSeo(facts: ArticleFacts): Promise<Suggestion
     usedModel,
   };
 }
+
+/**
+ * FAQ suggestions from an article's own body (brief §21).
+ *
+ * ── Why it returns rather than saves ──────────────────────────────────────
+ *
+ * Every suggestion is a question the author already wrote as a heading, paired
+ * with the prose they wrote under it — so the words are theirs and the pairing
+ * is mechanical. Even so it lands in the editor for review, because §21's rule
+ * is that FAQ markup may only describe questions the page actually renders, and
+ * the person who decides what the page renders is the author.
+ *
+ * ── Why the Tiptap document is preferred ──────────────────────────────────
+ *
+ * It has heading structure, so "the answer" is exactly the prose between this
+ * question and the next heading of the same rank. The plain-text fallback has
+ * to guess from sentence order and is noticeably worse; it exists for the case
+ * where the document has not been loaded.
+ */
+export async function suggestArticleFaq(input: {
+  bodyJson?: unknown;
+  bodyText?: string | null;
+}): Promise<
+  { ok: true; items: { q: string; a: string; basis: string }[] } | { ok: false; error: string }
+> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Your session has expired. Sign in again." };
+  }
+
+  const { suggestFaqFromDocument, suggestFaqFromText } = await import(
+    "@/lib/seo/engine/faq"
+  );
+
+  const fromDoc = input.bodyJson ? suggestFaqFromDocument(input.bodyJson) : [];
+  const items = fromDoc.length > 0 ? fromDoc : suggestFaqFromText(input.bodyText ?? null);
+
+  if (items.length === 0) {
+    return {
+      ok: false,
+      error:
+        "No answered questions found. Write a heading that ends in a question mark and answer it underneath, and it will appear here.",
+    };
+  }
+
+  return { ok: true, items };
+}

@@ -33,6 +33,13 @@ export default async function EditArticlePage({
     cityId: article.city_id,
     communityId: article.community_id,
     tags: article.tags ?? [],
+    /*
+      Read straight off the row rather than through a domain mapper: the admin
+      article query returns the raw shape, and this form edits the row.
+    */
+    faq: Array.isArray(article.faq_json)
+      ? (article.faq_json as { q: string; a: string }[])
+      : [],
     coverKey: article.cover_key,
     coverAlt: article.cover_alt,
     metaTitle: article.meta_title,

@@ -11,7 +11,7 @@ import type { Article, ArticleCard, ArticleKind, Review } from "@/types/domain";
 const CARD_COLUMNS =
   "id, slug, title, excerpt, kind, cover_key, cover_alt, city_id, tags, published_at, reading_min, cities(id, slug, name)";
 
-const FULL_COLUMNS = `${CARD_COLUMNS}, body_json, body_text, community_id, meta_title, meta_desc, og_key, updated_at, communities(id, slug, name)`;
+const FULL_COLUMNS = `${CARD_COLUMNS}, body_json, body_text, community_id, meta_title, meta_desc, og_key, faq_json, updated_at, communities(id, slug, name)`;
 
 export async function getArticles(opts: {
   kind?: ArticleKind;

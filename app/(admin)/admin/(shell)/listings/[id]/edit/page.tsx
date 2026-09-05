@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { ListingForm } from "@/components/admin/listings/listing-form";
 import { KeywordPanel } from "@/components/admin/seo/keyword-panel";
+import { RecordSeoActions } from "@/components/admin/seo/record-seo-actions";
 import { Badge, listingStatusBadge } from "@/components/ui/badge";
 import { getAdminCities, getAdminCommunities, getAdminListingById, getKnownFeatures } from "@/lib/queries/admin";
 import { getListingKeywords, getListingSeoRuns } from "@/lib/queries/platform";
@@ -119,7 +120,17 @@ export default async function EditListingPage({
         in a tab would imply it can be edited there, and putting it inside the
         <form> would submit it back on every save.
       */}
-      <section className="flex flex-col gap-4 border-t border-border pt-8">
+      <section className="flex flex-col gap-6 border-t border-border pt-8">
+        {/*
+          §92. The controls sit above their own output, so pressing one and
+          seeing what it produced is a single glance rather than a scroll.
+        */}
+        <RecordSeoActions
+          listingId={listing.id}
+          photosMissingAlt={
+            listing.photos.filter((photo) => !photo.alt?.trim()).length
+          }
+        />
         <KeywordPanel keywords={keywords} runs={seoRuns} />
       </section>
     </div>

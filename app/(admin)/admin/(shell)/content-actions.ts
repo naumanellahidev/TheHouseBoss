@@ -7,6 +7,30 @@ import {
   syncCitySeo,
   syncCommunitySeo,
 } from "@/lib/seo/auto/apply";
+
+/**
+ * Queue the engine for a record that has just been published (§26).
+ *
+ * Enqueued rather than run inline. A publish should return as soon as the row
+ * is written — the operator is waiting on it — and the keyword work is not
+ * something they need to watch. The worker picks it up within fifteen minutes,
+ * or immediately if somebody presses the button in Admin → SEO.
+ *
+ * Its own try/catch, and deliberately silent on failure: an engine that is not
+ * configured must never be the reason an article fails to publish.
+ */
+async function queueSeo(
+  kind: "article" | "city" | "community",
+  entityId: string,
+  label: string,
+) {
+  try {
+    const { enqueue } = await import("@/lib/seo/engine/queue");
+    await enqueue([{ kind, entityId, label }], "content_change");
+  } catch (error) {
+    console.error(`[seo-queue] could not queue ${kind} ${entityId}:`, error);
+  }
+}
 import { z } from "zod";
 
 import { deleteImages } from "@/lib/images/store";
@@ -104,6 +128,7 @@ function revalidateArticle(
 
 function articleRow(input: ArticleInput) {
   return {
+    faq_json: input.faq ?? [],
     slug: input.slug,
     title: input.title,
     excerpt: input.excerpt ?? null,
@@ -156,7 +181,10 @@ export async function createArticle(
   const city = Array.isArray(data.cities) ? data.cities[0] : data.cities;
 
   // Before the revalidate, so the first render of the new page already has it.
-  if (parsed.data.status === "published") await syncArticleSeo(data.slug);
+  if (parsed.data.status === "published") {
+    await syncArticleSeo(data.slug);
+    await queueSeo("article", data.id, parsed.data.title);
+  }
 
   revalidateArticle(data.slug, data.kind, [city?.slug ?? null]);
 
@@ -202,7 +230,10 @@ export async function saveArticle(
   if (before?.slug && before.slug !== data.slug) {
     revalidateArticle(before.slug, before.kind, [beforeCity?.slug ?? null]);
   }
-  if (parsed.data.status === "published") await syncArticleSeo(data.slug);
+  if (parsed.data.status === "published") {
+    await syncArticleSeo(data.slug);
+    await queueSeo("article", id, parsed.data.title);
+  }
 
   revalidateArticle(data.slug, data.kind, [
     beforeCity?.slug ?? null,
@@ -322,7 +353,10 @@ export async function saveCity(id: string, raw: unknown): Promise<ContentResult>
 
   if (error) return { ok: false, error: friendly(error.message, "saveCity") };
 
-  if (parsed.data.published) await syncCitySeo(data.slug);
+  if (parsed.data.published) {
+    await syncCitySeo(data.slug);
+    await queueSeo("city", id, parsed.data.name);
+  }
 
   for (const slug of new Set([before?.slug, data.slug].filter(Boolean))) {
     revalidatePath(`/${slug}`);
@@ -431,7 +465,10 @@ export async function saveCommunity(id: string, raw: unknown): Promise<ContentRe
   if (before?.slug && before.slug !== data.slug) {
     revalidatePath(`/communities/${before.slug}`);
   }
-  if (parsed.data.published) await syncCommunitySeo(data.slug);
+  if (parsed.data.published) {
+    await syncCommunitySeo(data.slug);
+    await queueSeo("community", id, parsed.data.name);
+  }
 
   revalidateCommunity(data.slug, [beforeCity?.slug ?? null, afterCity?.slug ?? null]);
   return { ok: true };

@@ -769,3 +769,109 @@ export async function acceptAllLinks(): Promise<SeoActionResult> {
         : `Added ${count} ${count === 1 ? "link" : "links"}. They appear on their pages now.`,
   };
 }
+
+/* ── §92. Per-record controls ─────────────────────────────────────────────── */
+
+/**
+ * Regenerate one record now (§92).
+ *
+ * Runs inline rather than queuing. The operator is looking at this record and
+ * pressed a button about it — a two-second wait with the answer is better than
+ * an instant "queued" and a page they have to come back to.
+ */
+export async function regenerateListingSeo(
+  listingId: string,
+): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const { getAdminListingById } = await import("@/lib/queries/admin");
+  const { getListingBySlug } = await import("@/lib/queries/listings");
+  const { runListingSeo } = await import("@/lib/seo/engine/run");
+
+  const admin = await getAdminListingById(listingId);
+  if (!admin) return { ok: false, error: "That listing could not be found." };
+
+  const listing = await getListingBySlug(admin.slug);
+  if (!listing) {
+    return {
+      ok: false,
+      error: "Publish this listing first — the phrases are worked out from the live page.",
+    };
+  }
+
+  const outcome = await runListingSeo(listing, "manual");
+  if (!outcome) {
+    return { ok: false, error: "The engine is switched off for listings." };
+  }
+
+  revalidatePath(`/admin/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listing.slug}`);
+
+  return {
+    ok: true,
+    message:
+      `${outcome.keywordsStored} search ${outcome.keywordsStored === 1 ? "phrase" : "phrases"} written` +
+      (outcome.linksProposed > 0
+        ? `, ${outcome.linksProposed} links suggested.`
+        : ".") +
+      (outcome.keywordsRejected.length > 0
+        ? ` ${outcome.keywordsRejected.length} rejected as unsupported.`
+        : ""),
+  };
+}
+
+/**
+ * Suggest alt text for a listing's photographs, and apply it (§65, §92).
+ *
+ * The copy the operator sees says plainly that nothing has looked at the
+ * images. That is not a disclaimer bolted on — it is the reason the suggestions
+ * are shaped the way they are, and hiding it would let somebody assume the
+ * descriptions are better than they are and stop editing them.
+ */
+export async function fillMissingAltText(
+  listingId: string,
+): Promise<SeoActionResult> {
+  try {
+    await requirePermission("manage_seo");
+  } catch {
+    return { ok: false, error: "You do not have permission to do that." };
+  }
+
+  const { getAdminListingById } = await import("@/lib/queries/admin");
+  const { getListingBySlug } = await import("@/lib/queries/listings");
+  const { suggestAltText, applyAltText } = await import("@/lib/seo/engine/alt-text");
+
+  const admin = await getAdminListingById(listingId);
+  if (!admin) return { ok: false, error: "That listing could not be found." };
+
+  const listing = await getListingBySlug(admin.slug);
+  if (!listing) {
+    return { ok: false, error: "Publish this listing first." };
+  }
+
+  const suggestions = suggestAltText(listing);
+  if (suggestions.length === 0) {
+    return { ok: true, message: "Every photo already has a description." };
+  }
+
+  const changed = await applyAltText(listingId, suggestions);
+
+  await recordAudit({
+    action: "seo_generated",
+    entityType: "listings",
+    entityId: listingId,
+    metadata: { altTextFilled: changed },
+  });
+
+  revalidatePath(`/admin/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listing.slug}`);
+
+  return {
+    ok: true,
+    message: `Described ${changed} ${changed === 1 ? "photo" : "photos"}. Nothing has looked at the images, so these say which property it is rather than what is in the picture — edit any you can describe properly.`,
+  };
+}

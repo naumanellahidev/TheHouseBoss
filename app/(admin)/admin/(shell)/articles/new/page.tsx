@@ -25,6 +25,7 @@ export default async function NewArticlePage() {
     cityId: null,
     communityId: null,
     tags: [],
+    faq: [],
     coverKey: null,
     coverAlt: null,
     metaTitle: null,
