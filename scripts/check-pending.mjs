@@ -74,17 +74,42 @@ async function runtimeValues() {
 const read = (row, path) =>
   path.split(".").reduce((value, part) => value?.[part], row);
 
+/*
+  Block-comment state, tracked line by line.
+
+  Filtering on how a line STARTS is not enough. A block comment explaining which
+  values are outstanding contains the word PENDING on continuation lines that
+  begin with ordinary prose, and this guard counted two of its own
+  documentation lines as findings. A line inside a comment is not a value,
+  whatever it begins with.
+*/
+let inBlockComment = false;
+
 const pending = source
   .split("\n")
-  .map((line, i) => ({ line: i + 1, text: line.trim() }))
+  .map((line, i) => {
+    const text = line.trim();
+    const wasInComment = inBlockComment;
+
+    if (inBlockComment) {
+      if (text.includes("*/")) inBlockComment = false;
+    } else if (text.includes("/*") && !text.includes("*/")) {
+      inBlockComment = true;
+    }
+
+    const isComment =
+      wasInComment ||
+      inBlockComment ||
+      text.startsWith("*") ||
+      text.startsWith("/*") ||
+      text.startsWith("//");
+
+    return { line: i + 1, text, isComment };
+  })
   .filter(
-    ({ text }) =>
+    ({ text, isComment }) =>
       text.includes("PENDING") &&
-      // Comment forms, including the `/* ── PENDING: ... */` section headers,
-      // which this guard has been counting as findings since it was written.
-      !text.startsWith("*") &&
-      !text.startsWith("/*") &&
-      !text.startsWith("//") &&
+      !isComment &&
       !text.startsWith("export const PENDING") &&
       !text.includes("isPending") &&
       !text.includes("value === PENDING"),

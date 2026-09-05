@@ -53,11 +53,21 @@ export const siteConfig = {
 
   yearsExperience: 13,
 
-  /* ── PENDING: client to supply ─────────────────────────────────────── */
+  /*
+    Supplied by the client, 2026-09-05. These were PENDING from Phase 0 and
+    blocked `check:pending`, the WhatsApp button, the JSON-LD contact points and
+    every `tel:`/`mailto:` link on the site.
+
+    The street address and postcode are still outstanding and stay PENDING —
+    they feed `PostalAddress` in the agent JSON-LD, and a partial address there
+    is worse than none: it tells a search engine the wrong location for the
+    business. `addressLocality` alone is valid schema, and that is what renders
+    until the rest arrives.
+  */
   contact: {
-    phone: PENDING, // e.g. "+1 407 555 0142"
-    phoneHref: PENDING, // e.g. "tel:+14075550142"
-    email: PENDING, // e.g. "krisi@thehousebossfl.com"
+    phone: "+1 240 506 5959",
+    phoneHref: "tel:+12405065959",
+    email: "krisirealtor@gmail.com",
     address: {
       street: PENDING,
       locality: "Lake Mary",

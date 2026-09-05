@@ -8,6 +8,7 @@ import {
   saveSettings,
 } from "@/app/(admin)/admin/(shell)/settings/actions";
 import { runOrphanSweep } from "@/app/(admin)/admin/(shell)/media/actions";
+import { AccountPanel } from "@/components/admin/settings/account-panel";
 import { ImageField } from "@/components/admin/image-field";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +40,22 @@ import type { AdminSettings } from "@/types/domain";
  * required to be accurate (docs/09 § 1) and this is the one screen where a
  * casual edit has a regulatory consequence.
  */
-export function SettingsForm({ settings }: { settings: AdminSettings }) {
+export function SettingsForm({
+  settings,
+  account,
+}: {
+  settings: AdminSettings;
+  /**
+   * The signed-in admin, for the Account & Security tab. Null only if the
+   * session evaporated between the page rendering and this component — in
+   * which case the tab is hidden rather than shown with blank fields.
+   */
+  account: {
+    username: string;
+    email: string;
+    role: string;
+  } | null;
+}) {
   const toast = useToast();
   const [saving, setSaving] = React.useState(false);
   const [busy, setBusy] = React.useState<null | "purge" | "orphans">(null);
@@ -121,6 +137,9 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="profiles">Profiles</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
+          {account ? (
+            <TabsTrigger value="account">Account &amp; Security</TabsTrigger>
+          ) : null}
           <TabsTrigger value="site">Site</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -383,6 +402,25 @@ export function SettingsForm({ settings }: { settings: AdminSettings }) {
             </p>
           </div>
         </TabsContent>
+
+        {/* ── Account & Security ───────────────────────────────────────── */}
+        {/*
+          Rendered OUTSIDE the form's save flow. Everything else on this screen
+          is edited together and committed by the one sticky Save; account
+          changes are individually confirmed with a password and take effect on
+          their own. Putting them inside the same <form> would mean pressing
+          Save could change a password as a side effect of editing a phone
+          number.
+        */}
+        {account ? (
+          <TabsContent value="account">
+            <AccountPanel
+              username={account.username}
+              email={account.email}
+              role={account.role}
+            />
+          </TabsContent>
+        ) : null}
 
         {/* ── Site ─────────────────────────────────────────────────────── */}
         <TabsContent value="site">

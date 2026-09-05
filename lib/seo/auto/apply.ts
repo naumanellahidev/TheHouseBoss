@@ -212,6 +212,29 @@ export async function syncListingSeo(slug: string): Promise<void> {
   await ensureSeoQuietly(async () => {
     const listing = await getListingBySlug(slug);
     if (!listing) throw new Error(`no published listing at ${slug}`);
+
+    /*
+      Geography is recomputed before the copy is written, because the copy
+      depends on it (brief §6, §27). A listing that moved city must not keep
+      the old city's relevance rows for even one generation — that is exactly
+      how a false location claim reaches a page.
+
+      Its own try/catch: a graph that is not yet seeded should cost the listing
+      its local keywords, not its metadata.
+    */
+    try {
+      const { resolveListingGeo, persistListingGeo } = await import(
+        "@/lib/seo/geo/relevance"
+      );
+      const relevance = await resolveListingGeo({
+        citySlug: listing.city.slug,
+        communitySlug: listing.community?.slug ?? null,
+      });
+      await persistListingGeo(listing.id, relevance);
+    } catch (error) {
+      console.error(`[geo] could not resolve ${slug}:`, error);
+    }
+
     return ensureListingSeo(listing);
   }, `/listing/${slug}`);
 }

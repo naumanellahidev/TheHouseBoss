@@ -112,6 +112,80 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-05 (tranche 1 of the ULTIMATE brief) — client facts, geo graph, account security
+
+The 123-section brief is being delivered in tranches. This is the first: the
+foundations everything else in it depends on. **The AI Local SEO Intelligence
+Engine itself (§4–§39), the SEO health dashboard (§30), approval modes (§32),
+the job queue (§36) and the New Construction rebuild (§40–§46) are NOT built.**
+
+**Shipped**
+
+- **The client's real details.** Phone `+1 240 506 5959`, email
+  `krisirealtor@gmail.com`, 13 years — PENDING since Phase 0. These were
+  blocking `check:pending`, the WhatsApp button, the JSON-LD contact points and
+  every `tel:`/`mailto:` on the site. All now live. Street and postcode stay
+  PENDING deliberately: a partial `PostalAddress` in the agent JSON-LD tells a
+  search engine the wrong location for the business, and `addressLocality`
+  alone is valid schema.
+- **The geographic entity graph** (§55, §56) — migration 018. `geo_entities`
+  (self-referencing containment), `geo_entity_links` (adjacency and
+  co-search, each carrying a written reason per §7), `listing_geo_relevance`
+  (the five layers of §6, with human `pinned`/`excluded` overrides). Seeded with
+  the real Central Florida geography: 12 entities, 14 directed adjacency edges.
+- **The relevance resolver** — `lib/seo/geo/relevance.ts`, wired into publish.
+  Proven on the seeded listings: the Sanford listing may name Lake Mary and
+  Central Florida and **may not name Orlando**, which is the §6 guardrail
+  working. Counties resolve but are barred from copy — real entities, not
+  phrases buyers search.
+- **Account & Security** (§47–§51, §106, §107). Username, email and password
+  changes, each confirmed with the current password; sign-out-everywhere; the
+  security events in the audit log.
+
+**The defect this session existed to catch**
+
+`admin.auth.admin.signOut(userId, "global")` takes a **JWT, not a user id**. The
+call failed with "invalid JWT" on every single run — and other devices were
+still being evicted, because GoTrue revokes sessions as a side effect of a
+password change. So the §49 requirement *appeared* to work while resting
+entirely on an implementation accident, and the code reported failure while
+succeeding.
+
+Corrected to `db.auth.signOut({ scope: "global" })` on the session client, and
+the ORDER reversed: revoke first (while this session's token is still valid),
+then update the password with the service role, which needs no session. If the
+update then fails, the user is signed out everywhere with their old password
+still working — inconvenient and safe. The reverse order fails the other way.
+
+Verified with two independent browser contexts: device B, which was never
+touched, is evicted when device A changes the password; the wrong current
+password is rejected; device A lands on the login screen with an explanation of
+why; the new password works. Zero revoke errors in the server log.
+
+**Also fixed**
+
+- `check-pending.mjs` counted its own documentation as findings. It filtered on
+  how a line STARTS, so prose continuation lines inside a block comment that
+  mention PENDING were reported as unsupplied values. It now tracks block-comment
+  state. 11 findings → 8, all of them real.
+
+**Open — the bulk of the brief**
+
+Not built, and not to be mistaken for built:
+
+- §4–§39 the AI Local SEO Intelligence Engine: keyword clusters, search-intent
+  classification, the internal-linking engine, `seo_keywords`,
+  `seo_keyword_clusters`, `seo_entities`, `seo_links`, `seo_audits`,
+  `seo_generation_runs`, `seo_settings`
+- §30–§31 SEO health dashboard and opportunities
+- §32 review/auto approval modes; §36 the job queue; §37 bulk operations
+- §40–§46 the New Construction rebuild
+- §53 article_categories, article_tags, community_images, social_links,
+  property_features as normalised tables
+
+The geo graph is deliberately first because §6, §7 and §57 all depend on it: a
+keyword engine without it cannot tell a valid location from a popular one.
+
 ### 2026-09-05 (later) — WhatsApp button, GSAP off the critical path
 
 **Shipped**

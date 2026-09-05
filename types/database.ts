@@ -5,8 +5,8 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-05T10:33:22.831Z
- * Tables: 21 · Views: 3
+ * Generated: 2026-09-05T12:11:48.167Z
+ * Tables: 24 · Views: 3
  */
 
 export type Json =
@@ -257,6 +257,78 @@ export type Database = {
         };
         Relationships: [];
       };
+      geo_entities: {
+        Row: {
+          id: string;
+          kind: unknown;
+          name: string;
+          slug: string;
+          parent_id: string | null;
+          city_id: string | null;
+          community_id: string | null;
+          lat: number | null;
+          lng: number | null;
+          usable_in_copy: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          kind: unknown;
+          name: string;
+          slug: string;
+          parent_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          usable_in_copy?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          kind?: unknown;
+          name?: string;
+          slug?: string;
+          parent_id?: string | null;
+          city_id?: string | null;
+          community_id?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          usable_in_copy?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      geo_entity_links: {
+        Row: {
+          id: string;
+          from_id: string;
+          to_id: string;
+          kind: unknown;
+          reason: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          from_id: string;
+          to_id: string;
+          kind: unknown;
+          reason: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          from_id?: string;
+          to_id?: string;
+          kind?: unknown;
+          reason?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       lead_notes: {
         Row: {
           id: string;
@@ -322,6 +394,36 @@ export type Database = {
           utm?: Json | null;
           status?: "new" | "contacted" | "qualified" | "closed" | "spam";
           notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      listing_geo_relevance: {
+        Row: {
+          listing_id: string;
+          entity_id: string;
+          layer: number;
+          reason: string;
+          pinned: boolean;
+          excluded: boolean;
+          created_at: string;
+        };
+        Insert: {
+          listing_id: string;
+          entity_id: string;
+          layer: number;
+          reason: string;
+          pinned?: boolean;
+          excluded?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          listing_id?: string;
+          entity_id?: string;
+          layer?: number;
+          reason?: string;
+          pinned?: boolean;
+          excluded?: boolean;
           created_at?: string;
         };
         Relationships: [];

@@ -17,10 +17,23 @@ export const metadata: Metadata = {
  * sidebar, the storage meter, the user menu — is meaningless to someone who is
  * not signed in yet, so the layout renders the login tree bare.
  */
+/**
+ * Messages this screen is willing to display, keyed by a parameter.
+ *
+ * Deliberately a closed set. See the note at the render site.
+ */
+const REASONS: Record<string, string> = {
+  "password-changed":
+    "Your password was changed, so every device was signed out — including this one. Sign in with your new password.",
+  "signed-out-everywhere":
+    "You signed out on every device. Sign in again to continue.",
+  expired: "Your session expired. Sign in again to continue.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; reason?: string }>;
 }) {
   const params = await searchParams;
 
@@ -39,6 +52,26 @@ export default async function LoginPage({
               the heading below does not repeat it. */}
           <Logo variant="stacked" href={null} />
           <h1 className="text-h3">Dashboard sign-in</h1>
+
+          {/*
+            Why you are here, when you did not expect to be.
+
+            Changing a password revokes every session including the one that
+            changed it (brief §49), so the operator lands back on this screen a
+            second after a successful action. Without this line that reads as a
+            failure — the natural conclusion is that the change did not work
+            and the natural next step is to try it again.
+
+            A fixed lookup rather than rendering the parameter: `reason` comes
+            from the URL, and echoing a URL parameter into the page is how a
+            sign-in screen ends up displaying an attacker's sentence above a
+            password field.
+          */}
+          {REASONS[params.reason ?? ""] ? (
+            <p className="rounded-md border border-info/30 bg-info-bg px-4 py-3 text-sm text-foreground">
+              {REASONS[params.reason ?? ""]}
+            </p>
+          ) : null}
         </div>
 
         <UsernameLoginForm next={next} error={params.error} />

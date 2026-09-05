@@ -37,7 +37,8 @@
     "check:lighthouse": "node scripts/lighthouse.mjs",
     "seed:images": "tsx --env-file=.env.local scripts/seed-images.mts",
     "admin:credentials": "node --env-file=.env.local scripts/set-admin-credentials.mjs",
-    "seo:backfill": "tsx --conditions=react-server --env-file=.env.local scripts/seo-backfill.mts"
+    "seo:backfill": "tsx --conditions=react-server --env-file=.env.local scripts/seo-backfill.mts",
+    "seed:geo": "tsx --conditions=react-server --env-file=.env.local scripts/seed-geo.mts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

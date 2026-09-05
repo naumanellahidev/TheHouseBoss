@@ -1,4 +1,4 @@
-import { siteConfig } from "@/lib/site-config";
+import { isPending, siteConfig } from "@/lib/site-config";
 import type { SiteSettings } from "@/types/domain";
 
 /**
@@ -56,10 +56,17 @@ export function WhatsAppButton({
 }: {
   settings?: SiteSettings | null;
 }) {
+  /*
+    `isPending` rather than a literal comparison. Now that the client has
+    supplied a real phone number, TypeScript narrows `siteConfig.contact.phone`
+    to that exact string and a `=== "PENDING"` check is a type error — correctly,
+    because the two can never be equal. The helper reads the value at runtime,
+    which is what a guard against a placeholder actually needs to do.
+  */
   const configured =
     settings?.whatsapp ??
     settings?.phone ??
-    (siteConfig.contact.phone === "PENDING" ? null : siteConfig.contact.phone);
+    (isPending(siteConfig.contact.phone) ? null : siteConfig.contact.phone);
 
   const number = toWaNumber(configured);
   if (!number) return null;

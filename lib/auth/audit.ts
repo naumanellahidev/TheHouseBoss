@@ -29,6 +29,17 @@ export type AuditAction =
   | "user_created"
   | "user_updated"
   | "user_deactivated"
+  /*
+    Account and security, brief §51. `password_change_failed` is here
+    deliberately: a run of failures against one account is the signature of
+    someone at an unlocked machine guessing, and it is invisible unless it is
+    recorded.
+  */
+  | "password_changed"
+  | "password_change_failed"
+  | "username_changed"
+  | "email_changed"
+  | "session_revoked"
   | "property_created"
   | "property_updated"
   | "property_deleted"
