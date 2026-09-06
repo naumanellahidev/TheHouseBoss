@@ -20,6 +20,7 @@ import { getDashboardStats, getNeedsAttention } from "@/lib/queries/admin";
 import { getLeads } from "@/lib/queries/leads";
 import { formatDateTime, relativeTime } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";
+import { getSeoSnapshot } from "@/lib/queries/platform";
 import type { AttentionItem } from "@/types/domain";
 
 /**
@@ -30,10 +31,12 @@ import type { AttentionItem } from "@/types/domain";
  * from real rows and it is given the most space.
  */
 export default async function AdminDashboardPage() {
-  const [stats, attention, recentLeads] = await Promise.all([
+  const [stats, attention, recentLeads, seo] = await Promise.all([
     getDashboardStats(),
     getNeedsAttention(),
     getLeads({ limit: 5 }),
+    // §105. Four counts, no audit — this page is opened many times a day.
+    getSeoSnapshot().catch(() => null),
   ]);
 
   const tiles = [
@@ -91,6 +94,51 @@ export default async function AdminDashboardPage() {
           </li>
         ))}
       </ul>
+
+      {/*
+        §105. The SEO snapshot.
+
+        A strip rather than a panel, and only where there is something to say:
+        a permanent row of zeroes is noise on the screen an operator opens most
+        often. Every number is a count and each links to where it is acted on —
+        the same rule as §30, which forbids inventing a score.
+      */}
+      {seo && (seo.pendingLinks > 0 || seo.queued > 0 || seo.failedJobs > 0) ? (
+        <Link
+          href="/admin/seo"
+          className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border border-border bg-surface px-4 py-3 text-sm transition-colors hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          <span className="font-semibold text-foreground">Search visibility</span>
+
+          {seo.pendingLinks > 0 ? (
+            <span className="text-foreground-muted">
+              <span className="tabular font-semibold text-foreground">
+                {seo.pendingLinks}
+              </span>{" "}
+              suggested {seo.pendingLinks === 1 ? "link" : "links"} waiting
+            </span>
+          ) : null}
+
+          {seo.queued > 0 ? (
+            <span className="text-foreground-muted">
+              <span className="tabular font-semibold text-foreground">
+                {seo.queued}
+              </span>{" "}
+              queued
+            </span>
+          ) : null}
+
+          {seo.failedJobs > 0 ? (
+            <span className="text-danger">
+              <span className="tabular font-semibold">{seo.failedJobs}</span> failed
+            </span>
+          ) : null}
+
+          <span className="ml-auto text-xs text-foreground-subtle">
+            {seo.keywords} search phrases written · open SEO
+          </span>
+        </Link>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* ── Needs attention ──────────────────────────────────────────── */}

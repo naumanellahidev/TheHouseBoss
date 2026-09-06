@@ -563,3 +563,64 @@ export async function getPendingLinks(): Promise<
     };
   });
 }
+
+/**
+ * The dashboard's SEO snapshot (brief §105).
+ *
+ * ── Why it is counts and not an audit ─────────────────────────────────────
+ *
+ * The full audit walks every published record and is worth a second; this runs
+ * on the admin home page, which somebody opens twenty times a day. So it is
+ * four count-only queries — `head: true` returns no rows at all — and it links
+ * to the SEO screen for anything that needs looking at.
+ *
+ * Same rule as §30: no score. Each number is a count of rows that matched.
+ */
+export async function getSeoSnapshot(): Promise<{
+  keywords: number;
+  pendingLinks: number;
+  queued: number;
+  failedJobs: number;
+  lastRun: string | null;
+}> {
+  const db = await createSupabaseServerClient();
+
+  /*
+    Written out rather than routed through a generic helper.
+
+    A helper taking a callback to apply the filter has to name the builder's
+    type, and PostgREST's query builder and filter builder are different types —
+    the callback receives one and returns the other. Five explicit queries are
+    longer and they type-check, which is the trade worth making for something
+    read this often.
+  */
+  const [keywords, pendingLinks, queued, failedJobs, lastRunRow] = await Promise.all([
+    db.from("seo_keywords").select("id", { count: "exact", head: true }),
+    db
+      .from("seo_internal_links")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "proposed"),
+    db
+      .from("seo_jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "queued"),
+    db
+      .from("seo_jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "failed"),
+    db
+      .from("seo_generation_runs")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    keywords: keywords.count ?? 0,
+    pendingLinks: pendingLinks.count ?? 0,
+    queued: queued.count ?? 0,
+    failedJobs: failedJobs.count ?? 0,
+    lastRun: lastRunRow.data?.created_at ?? null,
+  };
+}

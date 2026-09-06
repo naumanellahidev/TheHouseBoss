@@ -112,6 +112,50 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-09-06 (final) — dashboard SEO snapshot, Vercel handover
+
+**Shipped**
+
+- **§105 SEO snapshot** on the admin home page. A strip, not a panel, and only
+  rendered when there is something to say — a permanent row of zeroes is noise
+  on the screen an operator opens most often. Every number is a count and each
+  links to where it is acted on.
+- **`.env.vercel`** — the complete deployment environment, generated from the
+  working local config and **verified by building the project with `.env.local`
+  temporarily replaced by it**. Twelve variables set, five documented and
+  commented out. Local-only tooling (`SUPABASE_PROJECT_REF`,
+  `SUPABASE_DB_PASSWORD`, `CHROME_PATH`, `BASE_URL`) deliberately excluded.
+- `DRAFT_PREVIEW_SECRET` generated — it was absent from `.env.local` entirely,
+  so article preview links would have 403'd in production.
+
+**Final state**
+
+358 Playwright tests pass, clean run. Every guard green: tokens, contrast,
+bundle, migrations, seo-engine, seo, compliance, typecheck, lint, build.
+
+**What genuinely remains, and who owns it**
+
+Not code. Five things, all needing the client or an account:
+
+1. **Vercel environment variables** — `.env.vercel` is ready to import. Redeploy
+   with the build cache **disabled**: `NEXT_PUBLIC_*` values are inlined at
+   build time, so a cached build keeps the old absent values.
+2. **Rotate the Ollama key.** It was pasted into a chat transcript.
+3. **8 `PENDING` values** — street, postcode and six profile URLs. Everything
+   else the client supplied is live.
+4. **Resend** — leads save and appear in the admin without it; what does not
+   happen is the email saying one arrived.
+5. **`.github/workflows/backup.yml`** — needs a `workflow`-scoped token.
+
+**Client confirmations still outstanding**
+
+- The `/hire-contractor` services list is my reading of what a CRC licence
+  permits plus what the client asserted. Editable in Admin → Pages, and it
+  should be confirmed before launch.
+- A light-text logo for the dark footer, and a WhatsApp number, both in Settings.
+- The Stellar MLS deferral still needs written client acknowledgement
+  (`docs/11`).
+
 ### 2026-09-06 — /hire-contractor: the contractor landing page
 
 The New Construction guide is gone. `/hire-contractor` replaces it as a service
