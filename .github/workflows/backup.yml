@@ -49,11 +49,26 @@ jobs:
             echo "ran=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # The runner's client must not be older than the server.
-          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          # The runner's client must not be older than the server. Supabase is
+          # on 17.x; the runner ships 16.x as its default `pg_dump`.
+          #
+          # `jammy-pgdg` was also wrong: the runner is Ubuntu 24.04 (noble), and
+          # pinning the wrong codename installs a package built for a different
+          # release. Derived from the runner now, so an image upgrade cannot
+          # silently break this again.
+          CODENAME="$(lsb_release -cs)"
+          sudo sh -c "echo 'deb https://apt.postgresql.org/pub/repos/apt ${CODENAME}-pgdg main' > /etc/apt/sources.list.d/pgdg.list"
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
           sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
-          pg_dump "$SUPABASE_DB_URL" \
+
+          # Installing the package is NOT enough. Ubuntu keeps its own 16.x on
+          # PATH through update-alternatives, so a bare `pg_dump` still resolves
+          # to the older binary and aborts with a server version mismatch —
+          # which is exactly what the first run did. Call the versioned binary.
+          PGDUMP=/usr/lib/postgresql/17/bin/pg_dump
+          "$PGDUMP" --version
+
+          "$PGDUMP" "$SUPABASE_DB_URL" \
             --no-owner --no-privileges --clean --if-exists \
             -f "backup-$(date +%F).sql"
           gzip "backup-$(date +%F).sql"
