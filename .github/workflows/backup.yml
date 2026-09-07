@@ -1,0 +1,93 @@
+# Nightly backup — docs/12-env-deployment.md § 5.
+#
+# The Supabase free tier has no automatic backups, which PROGRESS.md records as
+# the single largest operational risk in the project. This is the mitigation.
+#
+# Two dumps, deliberately, because they fail differently:
+#
+#   pg_dump  — carries schema, constraints, triggers and RLS policies. This is
+#              what a real restore uses. It needs SUPABASE_DB_URL.
+#   JSON     — carries rows only, but is readable and partially restorable
+#              without a Postgres client, and it self-verifies. It needs only
+#              the keys the application already uses.
+#
+# If a secret is absent the corresponding step is skipped rather than failing
+# the run, so the workflow is useful from the first commit and gets stronger as
+# secrets are added. The final step fails the run if BOTH were skipped — a
+# backup workflow that quietly backs up nothing is worse than none at all.
+
+name: backup
+
+on:
+  schedule:
+    # 05:00 UTC — midnight or 1am in America/New_York, after the nightly crons.
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Logical dump (pg_dump)
+        id: pgdump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL is not set — skipping pg_dump"
+            echo "ran=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The runner's client must not be older than the server.
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-17
+          pg_dump "$SUPABASE_DB_URL" \
+            --no-owner --no-privileges --clean --if-exists \
+            -f "backup-$(date +%F).sql"
+          gzip "backup-$(date +%F).sql"
+          echo "ran=true" >> "$GITHUB_OUTPUT"
+
+      - name: Row dump (JSON) and verify
+        id: json
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning::SUPABASE_SERVICE_ROLE_KEY is not set — skipping the JSON dump"
+            echo "ran=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          node scripts/backup.mjs
+          # An unverified backup is a hope, not a backup.
+          node scripts/backup.mjs --verify "$(ls -d backups/* | tail -1)"
+          echo "ran=true" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if nothing was actually backed up
+        if: steps.pgdump.outputs.ran != 'true' && steps.json.outputs.ran != 'true'
+        run: |
+          echo "::error::No secrets are configured, so this run backed up nothing."
+          echo "Add SUPABASE_DB_URL and/or NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY"
+          echo "under Settings -> Secrets and variables -> Actions."
+          exit 1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ github.run_id }}
+          path: |
+            backup-*.sql.gz
+            backups/
+          retention-days: 90
+          if-no-files-found: error
