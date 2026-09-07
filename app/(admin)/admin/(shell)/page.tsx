@@ -263,8 +263,6 @@ export default async function AdminDashboardPage() {
               />
             </div>
           ) : null}
-
-          <ActivityFeed entries={activity} />
         </section>
 
         {/* ── Storage detail ───────────────────────────────────────────── */}
@@ -317,11 +315,10 @@ export default async function AdminDashboardPage() {
                       {stats.upcomingPurge.count === 1 ? "listing" : "listings"}
                     </span>{" "}
                     on {formatDateTime(stats.upcomingPurge.date, { dateOnly: true })}, freeing about{" "}
-                    {formatBytes(stats.upcomingPurge.freesBytes)}. The page stays
-                    live and keeps its ranking.
+                    {formatBytes(stats.upcomingPurge.freesBytes)}. 
                   </>
                 ) : (
-                  "No sold listings are waiting to purge. Large photos are removed 7 days after a sale; the 400px version and the page itself are kept forever."
+                  "Nothing waiting to purge."
                 )}
               </p>
             </div>
@@ -337,13 +334,13 @@ export default async function AdminDashboardPage() {
       <section aria-labelledby="recent-leads-heading" className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
           <h3 id="recent-leads-heading" className="text-h4">
-            Recent leads
+            Recent enquiries
           </h3>
           <Link
             href="/admin/leads"
             className="inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-medium text-accent-quiet underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            All leads
+            All enquiries
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </div>
@@ -352,40 +349,64 @@ export default async function AdminDashboardPage() {
           <EmptyState
             icon={Info}
             title="No enquiries yet"
-            description="Every form on the public site writes here. The contact page, each guide, and every listing enquiry all land in this inbox."
+            description="Every form on the site lands here."
           />
         ) : (
-          <ul className="flex flex-col gap-3">
+          /*
+            Cards, not full-width rows.
+
+            A lead is four short facts — who, what about, when, and whether it
+            has been answered. Stretched across a 1440px row those four facts
+            sit in the left quarter with a button marooned at the far right, and
+            the eye has to travel the whole width to connect them. Three to a
+            row keeps each one readable as a unit and shows more of them at once.
+          */
+          <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {recentLeads.map((lead) => (
               <li
                 key={lead.id}
-                className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-xs"
               >
-                <div className="flex min-w-0 flex-col gap-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/admin/leads?lead=${lead.id}`}
-                      className="rounded-sm text-sm font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >
-                      {lead.name}
-                    </Link>
-                    <Badge tone={lead.status === "new" ? "accent" : "neutral"}>
-                      {lead.status}
-                    </Badge>
-                  </div>
-                  <p className="truncate text-xs text-foreground-muted">
-                    {leadTypeLabel(lead.leadType)} · {relativeTime(lead.createdAt)}
-                  </p>
+                <div className="flex items-start justify-between gap-3">
+                  <Link
+                    href={`/admin/leads?lead=${lead.id}`}
+                    className="rounded-sm text-body font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    {lead.name}
+                  </Link>
+                  <Badge tone={lead.status === "new" ? "accent" : "neutral"}>
+                    {lead.status}
+                  </Badge>
                 </div>
 
+                <p className="text-sm text-foreground-muted">
+                  {leadTypeLabel(lead.leadType)}
+                  <span className="block text-xs text-foreground-subtle">
+                    {relativeTime(lead.createdAt)}
+                  </span>
+                </p>
+
                 {lead.status === "new" ? (
-                  <MarkContactedButton leadId={lead.id} />
+                  <div className="mt-auto pt-1">
+                    <MarkContactedButton leadId={lead.id} />
+                  </div>
                 ) : null}
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {/* ── Recent activity, last ──────────────────────────────────────── */}
+      {/*
+        The bottom of the page, deliberately.
+
+        It is a record of what already happened, so it answers "what changed"
+        rather than "what needs me". Everything above is actionable and this is
+        not, which is the order they belong in.
+      */}
+      <ActivityFeed entries={activity} />
+
     </div>
   );
 }

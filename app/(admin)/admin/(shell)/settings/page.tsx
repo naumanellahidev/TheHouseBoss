@@ -48,7 +48,7 @@ export default async function AdminSettingsPage() {
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         title="Settings"
-        description="Contact details, branding, your own account, compliance text and where enquiries are sent. Anything left blank falls back to the values built into the site."
+        description="Contact details, branding, your account and where enquiries are sent."
       />
       <SettingsForm
         settings={settings}

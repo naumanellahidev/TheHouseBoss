@@ -447,8 +447,7 @@ export function ArticleForm({
               />
               <FieldDescription>
                 <span className="tabular">{(values.metaDesc ?? "").length}</span> / 155.
-                Optional — leave it blank and one is written from your opening
-                paragraphs when you publish. Type here only to override that.
+                Optional. Written from your opening paragraphs on publish.
               </FieldDescription>
             </Field>
           </div>

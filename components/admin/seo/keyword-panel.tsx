@@ -52,10 +52,7 @@ export function KeywordPanel({
           No keywords yet
         </p>
         <p className="max-w-[70ch] text-sm text-foreground-muted">
-          They are worked out from this listing&rsquo;s own details and the
-          places genuinely near it, the moment you publish. Nothing is invented:
-          a listing with no pool recorded never gets a pool keyword.
-        </p>
+          Worked out from this listing&rsquo;s own details when you publish.</p>
       </div>
     );
   }
@@ -76,9 +73,7 @@ export function KeywordPanel({
         </div>
 
         <p className="max-w-[70ch] text-sm text-foreground-muted">
-          Each one is built from something this listing actually records and a
-          place genuinely connected to it. The line underneath says what.
-        </p>
+          The line under each one says what supports it.</p>
 
         <ul className="flex flex-col gap-2">
           {shown.map((keyword) => (
@@ -106,8 +101,7 @@ export function KeywordPanel({
         <div className="flex flex-col gap-3 border-t border-border pt-6">
           <h3 className="text-h4 font-semibold">History</h3>
           <p className="max-w-[70ch] text-sm text-foreground-muted">
-            Every time the phrases were worked out, and what happened.
-          </p>
+            Every time the phrases were worked out.</p>
 
           <ul className="flex flex-col gap-2">
             {runs.slice(0, 5).map((run) => (

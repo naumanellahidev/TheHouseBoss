@@ -92,7 +92,7 @@ export function SectionEditor({
 
       <SwitchField
         label="Show this section on the page"
-        description="Turning it off hides it. Nothing is deleted, and turning it back on restores what you wrote."
+        description="Hides it. Nothing is deleted."
         checked={on}
         onCheckedChange={setOn}
       />
@@ -221,8 +221,7 @@ function FieldFor({
           }
         />
         <FieldDescription>
-          One paragraph per block, separated by a blank line.
-        </FieldDescription>
+          One paragraph per block, blank line between.</FieldDescription>
       </Field>
     );
   }
@@ -248,8 +247,7 @@ function FieldFor({
         }}
       />
       <FieldDescription>
-        Structured content, edited as JSON. Keep the shape — change the words.
-      </FieldDescription>
+        Keep the shape, change the words.</FieldDescription>
     </Field>
   );
 }

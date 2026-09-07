@@ -171,10 +171,7 @@ export function SeoConsole({
           <div className="flex flex-col gap-1">
             <h2 className="text-h4 font-semibold">Coverage</h2>
             <p className="max-w-[70ch] text-sm text-foreground-muted">
-              Every published page gets a title and description written for it
-              automatically when you publish. This is what has actually been
-              written so far.
-            </p>
+              Titles and descriptions written automatically on publish.</p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -383,10 +380,7 @@ export function SeoConsole({
       <section className="flex flex-col gap-4">
         <h2 className="text-h4 font-semibold">Redirects</h2>
         <p className="max-w-[70ch] text-sm text-foreground-muted">
-          Written automatically whenever a published address changes, so a link
-          someone already has never breaks. You can also add one by hand for a
-          page that moved before this site existed.
-        </p>
+          Old links keep working. Added automatically when an address changes.</p>
 
         <form
           className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4"
@@ -485,16 +479,9 @@ export function SeoConsole({
       <section className="flex flex-col gap-3">
         <h2 className="text-h4 font-semibold">Sitemap and AI files</h2>
         <p className="max-w-[70ch] text-sm text-foreground-muted">
-          Built from the published rows in this database, so they can never
-          disagree with the content. They are cached for an hour, which is the
-          only reason the button exists: it clears that cache so a listing you
-          published a minute ago appears now rather than within the hour.
-        </p>
+          Cached for an hour. Refresh to publish a change straight away.</p>
         <p className="max-w-[70ch] text-sm text-foreground-muted">
-          Search engines are not notified. Google retired the sitemap ping in
-          2023 and the request now simply fails, so pretending to send one would
-          be worse than not sending it. They re-crawl on their own schedule.
-        </p>
+          Search engines re-crawl on their own schedule.</p>
 
         <dl className="grid gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">

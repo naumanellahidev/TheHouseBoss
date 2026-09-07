@@ -987,7 +987,7 @@ export function ListingForm({
           rows={3}
           maxLength={155}
           currentLength={(values.metaDesc ?? "").length}
-          description="Optional. Leave it blank and one is written for you when you publish, from this listing's own facts. Type here only to override that — and give it at least 140 characters, or it is regenerated anyway."
+          description="Optional. Written for you on publish unless you fill it in."
         />
 
         {/* Search-result preview. Shows what the page will actually look like

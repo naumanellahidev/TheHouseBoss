@@ -102,7 +102,7 @@ export default async function AdminArticlesPage({
           <EmptyState
             icon={FileText}
             title="Write your first article"
-            description="A market update, a neighbourhood piece, or an answer to a question you get asked every week. The last one is usually the most valuable — it is what an assistant can quote."
+            description="Market updates, neighbourhood pieces, and answers to questions you get asked."
             actions={
               <Button asChild variant="accent">
                 <Link href="/admin/articles/new">Write an article</Link>

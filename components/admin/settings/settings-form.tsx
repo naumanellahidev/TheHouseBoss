@@ -174,11 +174,7 @@ export function SettingsForm({
                 placeholder="Same as phone, unless different"
               />
               <FieldDescription>
-                Adds a WhatsApp button to the bottom corner of every page. Leave
-                it blank to use the phone number above; clear both and the
-                button does not appear at all. Write it however you like — the
-                spaces and brackets are stripped automatically.
-              </FieldDescription>
+                Adds a WhatsApp button to every page. Blank uses the phone number above.</FieldDescription>
             </Field>
 
             <Field error={errorOf("email")}>
@@ -248,13 +244,7 @@ export function SettingsForm({
         {/* ── Profiles ─────────────────────────────────────────────────── */}
         <TabsContent value="profiles">
           <div className="flex max-w-3xl flex-col gap-5">
-            <p className="max-w-[70ch] rounded-md border border-info/30 bg-info-bg p-4 text-sm text-foreground">
-              These links do two jobs. They appear in the footer, and they go into
-              the structured data as the list of profiles that are verifiably the
-              same person. That second job is what helps search engines and AI
-              assistants connect this site to your Google and Zillow presence, so
-              a real URL here is worth more than a social icon.
-            </p>
+            <p className="max-w-[70ch] rounded-md border border-info/30 bg-info-bg p-4 text-sm text-foreground">Shown in the footer and read by search engines. Leave blank what you do not have.</p>
 
             <div className="grid gap-5 md:grid-cols-2">
               {PROFILE_FIELDS.map((field) => (
@@ -281,11 +271,7 @@ export function SettingsForm({
         <TabsContent value="branding">
           <div className="flex max-w-3xl flex-col gap-6">
             <p className="max-w-[70ch] text-sm text-foreground-muted">
-              Everything here is optional. A field left blank uses the value
-              built into the site, so clearing one restores the default rather
-              than emptying the page. Changes appear on the live site as soon as
-              you save.
-            </p>
+              All optional. Blank uses the built-in default.</p>
 
             <div className="grid gap-5 md:grid-cols-2">
               <Field error={errorOf("brandName")}>
@@ -296,8 +282,7 @@ export function SettingsForm({
                   placeholder={siteConfig.name}
                 />
                 <FieldDescription>
-                  The trading name in the header, the footer and the browser tab.
-                </FieldDescription>
+                  Shown in the header, footer and browser tab.</FieldDescription>
               </Field>
 
               <Field error={errorOf("legalName")}>
@@ -315,7 +300,7 @@ export function SettingsForm({
 
             <ImageField
               label="Logo"
-              description="Shown in the header, the footer and the sign-in screen. A transparent PNG or SVG-exported PNG works best. It is resized on upload; nothing needs preparing first."
+              description="Shown in the header, footer and sign-in screen. A transparent PNG works best."
               entityType="site"
               entityId={SITE_ENTITY_ID}
               imageKey={logoKey}
@@ -327,7 +312,7 @@ export function SettingsForm({
 
             <ImageField
               label="Logo for dark backgrounds"
-              description="Optional, but worth adding. Your logo is drawn for a white page, so on the dark footer it is shown on a small white card to stay readable. Upload a version with light-coloured text here and the footer will use it directly, with nothing behind it."
+              description="Used on dark backgrounds like the footer. Upload a light-text version."
               entityType="site"
               entityId={SITE_ENTITY_ID}
               imageKey={logoInvertKey}
@@ -391,9 +376,7 @@ export function SettingsForm({
                 onChange={(event) => set("yearsExperience")(event.target.value)}
               />
               <FieldDescription>
-                Used in the about section and in the structured data search
-                engines and AI assistants read. Leave blank to omit it.
-              </FieldDescription>
+                Shown in the about section. Leave blank to omit.</FieldDescription>
             </Field>
 
             <p className="max-w-[70ch] text-sm text-foreground-muted">
@@ -471,13 +454,7 @@ export function SettingsForm({
             <p className="flex max-w-[70ch] items-start gap-2.5 rounded-md border border-warning/30 bg-warning-bg p-4 text-sm text-foreground">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
               <span>
-                These values appear on every page because Florida advertising rules
-                require them, and the brokerage name is rendered at least as
-                prominently as your own name for the same reason. They are editable
-                so a licence renewal or a brokerage change can be handled without a
-                developer — not so they can be shortened. Check with your broker
-                before changing anything here.
-              </span>
+                Florida advertising rules require these on every page. Check with your broker before changing them.</span>
             </p>
 
             <Field error={errorOf("brokerageName")}>
@@ -517,9 +494,7 @@ export function SettingsForm({
                 onChange={(event) => set("disclosureText")(event.target.value)}
               />
               <FieldDescription>
-                Optional extra line in the compliance footer, if your broker asks
-                for specific wording.
-              </FieldDescription>
+                Extra line in the compliance footer, if your broker asks for one.</FieldDescription>
             </Field>
           </div>
         </TabsContent>

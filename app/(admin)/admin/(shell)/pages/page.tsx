@@ -39,7 +39,7 @@ const SECTIONS: {
   {
     key: "hero",
     label: "Hero",
-    description: "The first screen. Headline, supporting line and the two buttons.",
+    description: "Headline, supporting line and the two buttons.",
     defaults: DEFAULT_CONTENT.hero as unknown as Record<string, unknown>,
   },
   {
@@ -52,14 +52,14 @@ const SECTIONS: {
     key: "credentials",
     label: "Licence and trust",
     description:
-      "The credential block. The licence numbers themselves come from the site configuration, not from here.",
+      "The credential block. Licence numbers come from site settings.",
     defaults: DEFAULT_CONTENT.credentials as unknown as Record<string, unknown>,
   },
   {
     key: "services",
     label: "Services",
     description:
-      "What you offer. This list is also what the SEO engine builds its search phrases from, so only put real services here.",
+      "What you offer. Also used to build the page's search phrases.",
     defaults: DEFAULT_CONTENT.services as unknown as Record<string, unknown>,
   },
   {
@@ -84,7 +84,7 @@ const SECTIONS: {
     key: "local",
     label: "Central Florida",
     description:
-      "The service area. Only list places you genuinely work in — this feeds both the page and the structured data search engines read.",
+      "Only list places you genuinely work in.",
     defaults: DEFAULT_CONTENT.local as unknown as Record<string, unknown>,
   },
   {
@@ -97,7 +97,7 @@ const SECTIONS: {
     key: "faq",
     label: "Questions",
     description:
-      "Shown on the page and published as structured data. Only include a question the page genuinely answers.",
+      "Only include questions the page genuinely answers.",
     defaults: DEFAULT_CONTENT.faq as unknown as Record<string, unknown>,
   },
   {
@@ -150,15 +150,11 @@ export default async function AdminPagesPage() {
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         title="Hire Contractor page"
-        description="Every section of the contractor landing page, editable on its own. Anything you have not changed shows the wording the site ships with."
+        description="Every section of the Hire Contractor page. Unchanged sections show the default wording."
       />
 
       <p className="max-w-[70ch] rounded-lg border border-info/30 bg-info-bg p-4 text-sm text-foreground">
-        Each section saves separately, so an edit here cannot overwrite one you
-        made somewhere else on the page. Changing the services or the service
-        areas also tells the SEO engine to work out the page&rsquo;s search
-        phrases again.
-      </p>
+        Each section saves on its own. Changing services or areas re-runs the SEO for this page.</p>
 
       <div className="flex flex-col gap-5">
         {SECTIONS.map((section) => {

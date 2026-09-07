@@ -134,9 +134,7 @@ export function HealthPanel({
           <div className="flex flex-col gap-1">
             <h2 className="text-h4 font-semibold">Site health</h2>
             <p className="max-w-[70ch] text-sm text-foreground-muted">
-              Checks every published page for the things that stop it being
-              found. Nothing is estimated — each number below is counted.
-            </p>
+              Checks every published page for what stops it being found.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button type="button" loading={busy === "audit"} onClick={audit}>
@@ -226,9 +224,7 @@ export function HealthPanel({
             </span>
 
             <p className="w-full text-xs text-foreground-subtle">
-              Anything waiting is picked up automatically every 15 minutes. You
-              do not need to stay on this page.
-            </p>
+              Waiting work is picked up automatically. You can leave this page.</p>
           </div>
         ) : null}
 
@@ -325,7 +321,6 @@ export function HealthPanel({
         ) : (
           <p className="rounded-lg border border-border bg-surface-sunken p-5 text-sm text-foreground-muted">
             Press <strong>Run the check</strong> to look at every published page.
-            It takes a moment and changes nothing.
           </p>
         )}
       </section>
@@ -336,11 +331,7 @@ export function HealthPanel({
           <div className="flex flex-col gap-1">
             <h2 className="text-h4 font-semibold">Suggested links</h2>
             <p className="max-w-[70ch] text-sm text-foreground-muted">
-              Connections between your own pages, worked out from what each one
-              is about. Every target was checked to exist. Nothing appears on the
-              site until you accept it — including when the engine is set to
-              automatic.
-            </p>
+              Links between your pages. Nothing appears until you accept it.</p>
           </div>
 
           {/*
@@ -442,15 +433,13 @@ export function HealthPanel({
         <div className="flex flex-col gap-1">
           <h2 className="text-h4 font-semibold">How the engine behaves</h2>
           <p className="max-w-[70ch] text-sm text-foreground-muted">
-            The safety rules are on, and they are what stop anything being
-            claimed about a property that the property does not record.
-          </p>
+            The safety rules stop anything being claimed that a listing does not record.</p>
         </div>
 
         <div className="flex flex-col gap-3">
           <SwitchField
             label="Apply new phrases automatically"
-            description="Off means nothing changes until you look at it. Suggested links always wait for you either way."
+            description="Off means nothing changes until you approve it."
             checked={settings.mode === "auto"}
             onCheckedChange={(v) =>
               setSettings({ ...settings, mode: v ? "auto" : "review" })
@@ -459,28 +448,28 @@ export function HealthPanel({
 
           <SwitchField
             label="Work out nearby places"
-            description="Uses the map of which areas genuinely border each other, so a listing is never described as near somewhere it is not."
+            description="Only describes a listing as near places that genuinely border it."
             checked={settings.enableGeographic}
             onCheckedChange={(v) => setSettings({ ...settings, enableGeographic: v })}
           />
 
           <SwitchField
             label="Work out search phrases"
-            description="Builds the phrases each page should be found for, from what that page actually records."
+            description="Builds the phrases each page should be found for."
             checked={settings.enableKeywords}
             onCheckedChange={(v) => setSettings({ ...settings, enableKeywords: v })}
           />
 
           <SwitchField
             label="Suggest links between your pages"
-            description="Proposes connections for you to accept. Never adds one on its own."
+            description="Proposes links for you to accept."
             checked={settings.enableInternalLinks}
             onCheckedChange={(v) => setSettings({ ...settings, enableInternalLinks: v })}
           />
 
           <SwitchField
             label="Redo the work when a page changes"
-            description="Keeps phrases in step with a price change, a new photo or a move to a different community."
+            description="Updates phrases when a listing changes."
             checked={settings.enableContinuous}
             onCheckedChange={(v) => setSettings({ ...settings, enableContinuous: v })}
           />
@@ -499,7 +488,7 @@ export function HealthPanel({
         <div className="flex flex-col gap-3">
           <SwitchField
             label="Only mention features the listing records"
-            description="Off would allow a phrase about a pool on a property with no pool recorded. Leave this on."
+            description="Off would allow claiming features a listing does not have."
             checked={settings.requireVerifiedFeatures}
             onCheckedChange={(v) =>
               setSettings({ ...settings, requireVerifiedFeatures: v })
@@ -507,13 +496,13 @@ export function HealthPanel({
           />
           <SwitchField
             label="Only mention places genuinely connected"
-            description="Off would allow any city name in any phrase, whether or not the property is near it."
+            description="Off would allow any city name, near or not."
             checked={settings.requireGeoRelevance}
             onCheckedChange={(v) => setSettings({ ...settings, requireGeoRelevance: v })}
           />
           <SwitchField
             label="Refuse stuffed or padded phrases"
-            description="Blocks repeated place names and words like “luxury” that describe nothing."
+            description="Blocks repeated place names and empty words."
             checked={settings.blockKeywordStuffing}
             onCheckedChange={(v) =>
               setSettings({ ...settings, blockKeywordStuffing: v })
