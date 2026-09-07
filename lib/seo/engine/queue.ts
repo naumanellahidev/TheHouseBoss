@@ -7,11 +7,37 @@ import { createServiceClient } from "@/lib/supabase/service";
  *
  * ── Enqueue here, drain in the cron ───────────────────────────────────────
  *
- * A server action enqueues and returns immediately; `app/api/cron/seo/route.ts`
+ * A server action enqueues and returns immediately; `app/api/cron/seo-queue`
  * drains a batch on each run. §36 is explicit that a background worker must not
  * be pretended into existence, so the worker is the scheduled route that this
  * deployment already has, and the admin shows the real counts rather than a
  * progress bar animating on a timer.
+ *
+ * ── The schedule depends on the Vercel plan ───────────────────────────────
+ *
+ * `vercel.json` runs this every OTHER day, because a Hobby account rejects any
+ * cron that fires more than once a day — the first production deploy failed on
+ * exactly that, with a fifteen-minute expression.
+ *
+ * The expression is `15 8` on day-of-month `every 2`, and it is worth being
+ * precise about what that means: cron cannot express "every 48 hours". It fires
+ * on the odd days of the month — 1st, 3rd, 5th and so on — so a 31-day month is
+ * followed by the 1st, and those two runs are 24 hours apart rather than 48.
+ * That is the standard approximation and it is fine here; it is recorded so
+ * nobody later reads "48 hours" and trusts it as a guarantee.
+ *
+ * This is a real degradation and worth stating plainly: a bulk enqueue of four
+ * hundred records would take a very long time to drain on the schedule alone.
+ * What makes it workable is that draining does not depend on the cron —
+ * `bulkAnalyseListings` drains one batch as it enqueues, and "Process a batch
+ * now" in Admin → SEO drains on demand. The cron is the catch-up, not the
+ * engine.
+ *
+ * On Pro, put it back to a fifteen-minute schedule in `vercel.json`. Note that
+ * the expression cannot be written in a block comment: it contains the two
+ * characters that close one. The project is meant to be on Pro
+ * anyway: CLAUDE.md records that Hobby forbids commercial use, and this is a
+ * commercial site.
  *
  * ── Why the batch is small ────────────────────────────────────────────────
  *

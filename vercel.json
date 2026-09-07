@@ -19,7 +19,7 @@
     },
     {
       "path": "/api/cron/seo-queue",
-      "schedule": "*/15 * * * *"
+      "schedule": "15 8 */2 * *"
     }
   ]
 }
