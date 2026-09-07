@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ShieldAlert } from "lucide-react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
+import { getSiteSettings } from "@/lib/queries/settings";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { StorageMeter } from "@/components/admin/storage-meter";
 import { getAdminIdentity } from "@/lib/auth/permissions";
@@ -44,10 +45,12 @@ export default async function AdminShellLayout({
 
   // Both are admin-only reads and both are cheap; running them in parallel
   // keeps the shell off the critical path of the page inside it.
-  const [newLeads, usage, identity] = await Promise.all([
+  const [newLeads, usage, identity, settings] = await Promise.all([
     countNewLeads(),
     getStorageUsage(),
     getAdminIdentity(),
+    // The uploaded logo, so the dashboard shows the same brand as the site.
+    getSiteSettings().catch(() => null),
   ]);
 
   const percent = Math.min(
@@ -57,6 +60,7 @@ export default async function AdminShellLayout({
 
   return (
     <AdminShell
+      settings={settings}
       newLeads={newLeads}
       userEmail={admin.user.email ?? ""}
       userName={(admin.profile as { full_name?: string | null }).full_name ?? null}

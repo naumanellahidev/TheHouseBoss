@@ -9,7 +9,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { adminNav, isActiveAdminRoute, visibleAdminNav } from "@/lib/admin-nav";
 import type { Permission } from "@/lib/auth/permissions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { Logo } from "@/components/site/logo";
 import { cn } from "@/lib/utils";
+import type { SiteSettings } from "@/types/domain";
 
 /**
  * Admin chrome — docs/06 § 2.
@@ -24,6 +26,12 @@ import { cn } from "@/lib/utils";
  */
 
 export type AdminShellProps = {
+  /**
+   * Live branding, so the sidebar shows the logo the client uploaded.
+   * Null only if the settings read failed — `Logo` then renders the type-set
+   * lockup rather than nothing.
+   */
+  settings: SiteSettings | null;
   children: React.ReactNode;
   newLeads: number;
   userEmail: string;
@@ -43,6 +51,7 @@ export type AdminShellProps = {
 
 export function AdminShell({
   children,
+  settings,
   newLeads,
   userEmail,
   userName,
@@ -75,16 +84,33 @@ export function AdminShell({
       {/* ── Sidebar / icon rail: 768px and up ─────────────────────────── */}
       <aside className="sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-border-invert bg-surface-invert md:flex md:w-16 lg:w-60">
         <div className="flex h-16 items-center justify-center border-b border-border-invert lg:justify-start lg:px-5">
-          <Link
+          {/*
+            The uploaded logo, not a hardcoded wordmark.
+
+            This used to render the literal string "The House Boss" (and "THB"
+            on the icon rail), which meant the dashboard kept showing a name the
+            client could no longer change — they upload artwork in Settings and
+            it appeared everywhere on the public site EXCEPT here, which is the
+            screen they look at most.
+
+            `invert` because the sidebar is navy: `Logo` prefers
+            `settings.logoInvertKey` when one has been uploaded and falls back
+            to the main artwork otherwise.
+          */}
+          <Logo
             href="/admin"
-            className={cn(
-              "inline-flex min-h-11 items-center rounded-md px-2 font-display text-base font-semibold tracking-[0.06em] text-foreground-invert uppercase",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
-            )}
-          >
-            <span className="lg:hidden">THB</span>
-            <span className="hidden lg:inline">The House Boss</span>
-          </Link>
+            variant="compact"
+            invert
+            settings={settings}
+            className="lg:hidden"
+          />
+          <Logo
+            href="/admin"
+            variant="full"
+            invert
+            settings={settings}
+            className="hidden lg:inline-flex"
+          />
         </div>
 
         <nav aria-label="Dashboard" className="flex-1 overflow-y-auto p-2 lg:p-3">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LoginForm } from "@/components/admin/login-form";
 import { UsernameLoginForm } from "@/components/admin/username-login-form";
 import { Logo } from "@/components/site/logo";
+import { getSiteSettings } from "@/lib/queries/settings";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -37,6 +38,10 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
 
+  // Cookie-free read, so this page stays static. A failure renders the type-set
+  // lockup rather than blocking sign-in.
+  const settings = await getSiteSettings().catch(() => null);
+
   // Only same-site paths survive: a `next` of https://evil.example would
   // otherwise be handed straight to the auth callback.
   const next =
@@ -50,7 +55,14 @@ export default async function LoginPage({
         <div className="flex flex-col items-center gap-4 text-center">
           {/* The stacked lockup already carries "Powered by {brokerage}", so
               the heading below does not repeat it. */}
-          <Logo variant="stacked" href={null} />
+          {/*
+            `settings` passed, which it was not before.
+
+            Without it `Logo` falls back to the type-set lockup, so the sign-in
+            screen was the one page on the whole site still showing a wordmark
+            instead of the client's uploaded artwork.
+          */}
+          <Logo variant="stacked" href={null} settings={settings} />
           <h1 className="text-h3">Dashboard sign-in</h1>
 
           {/*

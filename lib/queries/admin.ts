@@ -690,3 +690,173 @@ export async function getKnownAmenities(): Promise<string[]> {
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([amenity]) => amenity);
 }
+
+/* ── Dashboard: the wider picture ─────────────────────────────────────────── */
+
+export type DashboardPulse = {
+  /** Leads this week and last, so the tile can show a real direction. */
+  leadsThisWeek: number;
+  leadsLastWeek: number;
+  /** Lead pipeline, counted by status. */
+  leadsByStatus: { status: string; count: number }[];
+  /** Inventory by status, for the same reason. */
+  listingsByStatus: { status: string; count: number }[];
+  /** Content totals, so the empty column has something true to say. */
+  communities: number;
+  reviews: number;
+  draftArticles: number;
+  /** Total value of everything currently for sale. */
+  activeInventoryValue: number;
+};
+
+/**
+ * The numbers the dashboard needs beyond the six headline tiles.
+ *
+ * ── Why a delta and not just a total ──────────────────────────────────────
+ *
+ * "New leads (7d): 4" is a fact with no meaning attached. Four is good if last
+ * week was one and bad if last week was twelve, and the operator cannot tell
+ * which from the tile. The previous period costs one more count query and turns
+ * a number into information.
+ *
+ * ── Why nothing here is estimated ─────────────────────────────────────────
+ *
+ * Every field is a count or a sum over real rows. The dashboard is the screen
+ * the client trusts most, and a plausible-looking figure that turns out to be
+ * invented poisons everything else on it.
+ */
+export async function getDashboardPulse(): Promise<DashboardPulse> {
+  const service = createServiceClient();
+  const db = await createSupabaseServerClient();
+
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const twoWeeksAgo = new Date(Date.now() - 14 * 86_400_000).toISOString();
+
+  const [lastWeek, leadRows, listingRows, communities, reviews, draftArticles, activeValue] =
+    await Promise.all([
+      service
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", twoWeeksAgo)
+        .lt("created_at", weekAgo),
+      /*
+        Statuses are grouped in JS rather than with a Postgres GROUP BY.
+        PostgREST cannot express one without a view or an RPC, and adding either
+        for a handful of rows on one screen is more machinery than the question
+        deserves.
+      */
+      service.from("leads").select("status"),
+      db.from("listings").select("status").eq("published", true),
+      db.from("communities").select("id", { count: "exact", head: true }).eq("published", true),
+      db.from("reviews").select("id", { count: "exact", head: true }).eq("published", true),
+      db.from("articles").select("id", { count: "exact", head: true }).eq("status", "draft"),
+      db.from("listings").select("price").eq("published", true).in("status", ["active", "coming_soon", "pending"]),
+    ]);
+
+  const tally = (rows: { status: string | null }[] | null) => {
+    const counts = new Map<string, number>();
+    for (const row of rows ?? []) {
+      const key = row.status ?? "unknown";
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([status, count]) => ({ status, count }))
+      .sort((a, b) => b.count - a.count);
+  };
+
+  const leadsThisWeek = (
+    await service
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", weekAgo)
+  ).count ?? 0;
+
+  return {
+    leadsThisWeek,
+    leadsLastWeek: lastWeek.count ?? 0,
+    leadsByStatus: tally(leadRows.data as { status: string | null }[] | null),
+    listingsByStatus: tally(listingRows.data as { status: string | null }[] | null),
+    communities: communities.count ?? 0,
+    reviews: reviews.count ?? 0,
+    draftArticles: draftArticles.count ?? 0,
+    activeInventoryValue: (activeValue.data ?? []).reduce(
+      (sum, row) => sum + Number(row.price ?? 0),
+      0,
+    ),
+  };
+}
+
+export type ActivityEntry = {
+  id: string;
+  action: string;
+  entityType: string | null;
+  createdAt: string;
+  actor: string | null;
+};
+
+/**
+ * What has happened lately, from `audit_logs` (brief §78).
+ *
+ * ── Why this belongs on the dashboard ─────────────────────────────────────
+ *
+ * The screen showed six totals and a list of leads, which says what EXISTS but
+ * nothing about what is happening. An activity feed is the difference between a
+ * dashboard that looks like a report and one that looks like a system somebody
+ * is running — and unlike most "activity" widgets this one is not invented, it
+ * is the audit trail that already records every publish, every settings change
+ * and every sign-in.
+ */
+export async function getRecentActivity(limit = 8): Promise<ActivityEntry[]> {
+  const service = createServiceClient();
+
+  /*
+    Two queries, not one embedded join.
+
+    `audit_logs.user_id` references `auth.users`, NOT `profiles`, so PostgREST
+    cannot resolve `profiles(...)` from here — it answers PGRST200, "no
+    relationship found". The first version did exactly that: the request 400'd,
+    this function returned an empty array, and the dashboard displayed "Nothing
+    recorded yet" over 151 real rows. A silent failure that reads as an honest
+    empty state is the worst kind, so the fallback below is deliberately NOT
+    silent about a broken read.
+
+    `profiles.id` is the same uuid as the auth user, so one extra `in` query
+    resolves every name at once rather than per row.
+  */
+  const { data, error } = await service
+    .from("audit_logs")
+    .select("id, action, entity_type, created_at, user_id")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error(`[getRecentActivity] ${error.message}`);
+    return [];
+  }
+  if (!data || data.length === 0) return [];
+
+  const userIds = [...new Set(data.map((r) => r.user_id).filter(Boolean))] as string[];
+
+  const names = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: profiles } = await service
+      .from("profiles")
+      .select("id, full_name, username")
+      .in("id", userIds);
+
+    for (const profile of profiles ?? []) {
+      const name = profile.full_name ?? profile.username;
+      if (name) names.set(profile.id, name);
+    }
+  }
+
+  return data.map((row) => ({
+    id: row.id,
+    action: String(row.action),
+    entityType: row.entity_type,
+    createdAt: row.created_at,
+    // Null for an action taken by a cron or a deleted account. The component
+    // renders "The system" rather than a blank.
+    actor: row.user_id ? (names.get(row.user_id) ?? null) : null,
+  }));
+}

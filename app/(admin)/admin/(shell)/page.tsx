@@ -21,6 +21,10 @@ import { getLeads } from "@/lib/queries/leads";
 import { formatDateTime, relativeTime } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";
 import { getSeoSnapshot } from "@/lib/queries/platform";
+import { getDashboardPulse, getRecentActivity } from "@/lib/queries/admin";
+import { ActivityFeed } from "@/components/admin/dashboard/activity";
+import { BreakdownBar, PulseTile } from "@/components/admin/dashboard/pulse";
+import { formatPrice } from "@/lib/utils";
 import type { AttentionItem } from "@/types/domain";
 
 /**
@@ -30,27 +34,55 @@ import type { AttentionItem } from "@/types/domain";
  * site healthy without the client needing to understand SEO, so it is computed
  * from real rows and it is given the most space.
  */
+/*
+  Status labels and colours, in the operator's words rather than the database's.
+
+  `new`, `contacted`, `qualified` are column values; "Waiting on you" is what
+  the person reading the bar needs to know. The tones come from the theme so the
+  bar cannot drift away from the rest of the palette (HR23).
+*/
+const LEAD_STATUS_LABEL: Record<string, string> = {
+  new: "Waiting on you",
+  contacted: "Contacted",
+  qualified: "Qualified",
+  closed: "Closed",
+  spam: "Spam",
+};
+
+const LEAD_STATUS_TONE: Record<string, string> = {
+  new: "bg-accent",
+  contacted: "bg-azure-400",
+  qualified: "bg-success",
+  closed: "bg-slate-500",
+  spam: "bg-slate-300",
+};
+
+const LISTING_STATUS_LABEL: Record<string, string> = {
+  active: "Active",
+  coming_soon: "Coming soon",
+  pending: "Under contract",
+  sold: "Sold",
+  off_market: "Off market",
+};
+
+const LISTING_STATUS_TONE: Record<string, string> = {
+  active: "bg-success",
+  coming_soon: "bg-azure-400",
+  pending: "bg-warning",
+  sold: "bg-slate-500",
+  off_market: "bg-slate-300",
+};
+
 export default async function AdminDashboardPage() {
-  const [stats, attention, recentLeads, seo] = await Promise.all([
+  const [stats, attention, recentLeads, seo, pulse, activity] = await Promise.all([
     getDashboardStats(),
     getNeedsAttention(),
     getLeads({ limit: 5 }),
     // §105. Four counts, no audit — this page is opened many times a day.
     getSeoSnapshot().catch(() => null),
+    getDashboardPulse().catch(() => null),
+    getRecentActivity(8).catch(() => []),
   ]);
-
-  const tiles = [
-    { label: "New leads (7d)", value: stats.newLeads7d, href: "/admin/leads" },
-    { label: "Published", value: stats.publishedListings, href: "/admin/listings?published=true" },
-    { label: "Active", value: stats.activeListings, href: "/admin/listings?status=active" },
-    { label: "Drafts", value: stats.draftListings, href: "/admin/listings?published=false" },
-    { label: "Articles", value: stats.publishedArticles, href: "/admin/listings" },
-    {
-      label: "Storage used",
-      value: formatBytes(stats.storage.totalBytes),
-      href: "/admin/media",
-    },
-  ];
 
   return (
     <div className="flex flex-col gap-8">
@@ -72,28 +104,60 @@ export default async function AdminDashboardPage() {
         }
       />
 
-      {/* ── Stat tiles ─────────────────────────────────────────────────── */}
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        {tiles.map((tile) => (
-          <li key={tile.label}>
-            <Link
-              href={tile.href}
-              className={cn(
-                "flex h-full flex-col gap-1 rounded-lg border border-border bg-surface p-4 shadow-xs",
-                "transition-shadow duration-(--dur-fast) hover:shadow-md",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-              )}
-            >
-              <span className="text-overline font-semibold tracking-[0.12em] text-accent-quiet uppercase">
-                {tile.label}
-              </span>
-              <span className="text-h3 font-semibold text-foreground tabular">
-                {tile.value}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {/* ── Headline tiles ─────────────────────────────────────────────── */}
+      {/*
+        Six flat totals became four tiles that mean something. The leads tile
+        carries a week-on-week direction because that is the only one where the
+        comparison is informative; the rest state a total and what it is for.
+        See the note in `PulseTile` on why a delta is not put on every tile.
+      */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <PulseTile
+          label="New enquiries"
+          value={stats.newLeads7d}
+          href="/admin/leads"
+          emphasis
+          delta={
+            pulse
+              ? { current: pulse.leadsThisWeek, previous: pulse.leadsLastWeek }
+              : undefined
+          }
+          hint="Last seven days"
+        />
+
+        <PulseTile
+          label="Live listings"
+          value={stats.publishedListings}
+          href="/admin/listings?published=true"
+          hint={
+            stats.draftListings > 0
+              ? `${stats.draftListings} still in draft`
+              : "Nothing waiting in draft"
+          }
+        />
+
+        <PulseTile
+          label="For sale"
+          value={
+            pulse && pulse.activeInventoryValue > 0
+              ? formatPrice(pulse.activeInventoryValue, { compact: true })
+              : "—"
+          }
+          href="/admin/listings?status=active"
+          hint="Total asking price, live listings"
+        />
+
+        <PulseTile
+          label="Published writing"
+          value={stats.publishedArticles}
+          href="/admin/articles"
+          hint={
+            pulse && pulse.draftArticles > 0
+              ? `${pulse.draftArticles} in draft`
+              : "Articles and market updates"
+          }
+        />
+      </div>
 
       {/*
         §105. The SEO snapshot.
@@ -165,6 +229,42 @@ export default async function AdminDashboardPage() {
               ))}
             </ul>
           )}
+
+          {/*
+            The column under "Needs attention" was empty whenever there was
+            little to attend to — which is most days, and is exactly when the
+            dashboard looked least like a system being run. These two bars are
+            counted from real rows and answer the questions the totals above
+            cannot: where the enquiries are stuck, and what the inventory is
+            actually made of.
+          */}
+          {pulse ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <BreakdownBar
+                title="Enquiry pipeline"
+                href="/admin/leads"
+                emptyLabel="No enquiries yet. They appear here the moment one arrives."
+                segments={pulse.leadsByStatus.map((row) => ({
+                  label: LEAD_STATUS_LABEL[row.status] ?? row.status,
+                  count: row.count,
+                  tone: LEAD_STATUS_TONE[row.status] ?? "bg-slate-400",
+                }))}
+              />
+
+              <BreakdownBar
+                title="Live inventory"
+                href="/admin/listings"
+                emptyLabel="Nothing published yet."
+                segments={pulse.listingsByStatus.map((row) => ({
+                  label: LISTING_STATUS_LABEL[row.status] ?? row.status,
+                  count: row.count,
+                  tone: LISTING_STATUS_TONE[row.status] ?? "bg-slate-400",
+                }))}
+              />
+            </div>
+          ) : null}
+
+          <ActivityFeed entries={activity} />
         </section>
 
         {/* ── Storage detail ───────────────────────────────────────────── */}

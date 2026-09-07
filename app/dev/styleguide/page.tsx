@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/site/empty-state";
 import { FaqAccordion } from "@/components/site/faq-accordion";
 import { LeadForm } from "@/components/site/lead-form";
 import { Logo } from "@/components/site/logo";
+import { getSiteSettings } from "@/lib/queries/settings";
 import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
 import {
@@ -124,7 +125,16 @@ const demoColumns: Column[] = [
   { key: "status", header: "Status" },
 ];
 
-export default function StyleguidePage() {
+export default async function StyleguidePage() {
+  /*
+    The specimen shows the REAL logo, not the fallback.
+
+    A styleguide that renders the type-set lockup while every real page renders
+    uploaded artwork is a styleguide describing a site that does not exist —
+    which is the one thing a specimen page must never do.
+  */
+  const settings = await getSiteSettings().catch(() => null);
+
   return (
     <>
       <Section tone="invert" className="py-12 md:py-16">
@@ -141,9 +151,9 @@ export default function StyleguidePage() {
             lead="Luxury Authority: deep navy ground, warm gold accent, Fraunces over Inter. Every token, component and state on one page. This is the artifact the client approves before Phase 1."
           />
           <div className="flex flex-wrap items-end gap-10 pt-2">
-            <Logo variant="full" invert href={null} />
-            <Logo variant="compact" invert href={null} />
-            <Logo variant="stacked" invert href={null} />
+            <Logo variant="full" invert href={null} settings={settings} />
+            <Logo variant="compact" invert href={null} settings={settings} />
+            <Logo variant="stacked" invert href={null} settings={settings} />
           </div>
         </Container>
       </Section>

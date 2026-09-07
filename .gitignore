@@ -57,3 +57,6 @@ tests/.auth/
 .claude/settings.local.json
 backups/
 lighthouse-results.json
+
+.vercel
+.env*
