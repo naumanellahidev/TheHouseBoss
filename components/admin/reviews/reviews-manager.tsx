@@ -2,7 +2,16 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ExternalLink, Plus, Save, Star, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ExternalLink,
+  Mail,
+  Pencil,
+  Plus,
+  Save,
+  Star,
+  Trash2,
+} from "lucide-react";
 
 import {
   createReview,
@@ -11,20 +20,31 @@ import {
   setReviewPublished,
 } from "@/app/(admin)/admin/(shell)/content-actions";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { REVIEW_SOURCES, type ReviewInput } from "@/lib/validation/place";
 import { cn } from "@/lib/utils";
-import { formatDateTime } from "@/lib/utils/date";
+import { formatDate, formatDateTime } from "@/lib/utils/date";
 import type { AdminReview } from "@/types/domain";
 
 /**
  * Reviews — docs/06 § 7.
  *
- * Deliberately one screen rather than a list plus an editor: a review is a
- * name, a source, a date and a paragraph. Sending someone to a separate page to
- * edit four fields is friction with nothing bought by it.
+ * ── Cards to read, a dialog to edit ───────────────────────────────────────
+ *
+ * This screen used to be a stack of open forms — every review, every field,
+ * always editable. That is the right shape for a screen you arrive at to
+ * change something and the wrong one for this screen, which is mostly opened to
+ * READ: what came in, what is live, and does this one belong on the site. Ten
+ * reviews meant ten forms and roughly two thousand pixels of scrolling before
+ * you had seen five of them.
+ *
+ * So the list is cards that show the review the way a visitor sees it, and the
+ * pencil opens the one you actually mean to change. Editing is a deliberate
+ * act; reading should not require one.
  *
  * The warning at the top is not decoration. docs/09 § 7: publish only reviews
  * actually received, attribute the source, and do not edit their substance. The
@@ -34,11 +54,14 @@ import type { AdminReview } from "@/types/domain";
 
 type EditableReview = AdminReview;
 
+/** What the editor dialog is open on: an existing review, a new one, or nothing. */
+type Editing = EditableReview | "new" | null;
+
 export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
   const router = useRouter();
   const toast = useToast();
 
-  const [creating, setCreating] = React.useState(false);
+  const [editing, setEditing] = React.useState<Editing>(null);
   const [deleting, setDeleting] = React.useState<EditableReview | null>(null);
   const [published, setPublishedState] = React.useState<Record<string, boolean>>({});
 
@@ -70,6 +93,20 @@ export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
     router.refresh();
   }
 
+  const grid = (items: EditableReview[]) => (
+    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {items.map((review) => (
+        <li key={review.id}>
+          <ReviewSummary
+            review={review}
+            published={isPublished(review)}
+            onEdit={() => setEditing(review)}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <p className="flex max-w-[75ch] items-start gap-2.5 rounded-lg border border-warning/30 bg-warning-bg p-4 text-sm text-foreground">
@@ -83,28 +120,12 @@ export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
         </span>
       </p>
 
-      {creating ? (
-        <ReviewCard
-          key="new"
-          initial={null}
-          onCancel={() => setCreating(false)}
-          onSaved={() => {
-            setCreating(false);
-            router.refresh();
-          }}
-        />
-      ) : (
-        <Button
-          variant="accent"
-          className="self-start"
-          onClick={() => setCreating(true)}
-        >
-          <Plus aria-hidden="true" />
-          Add a review
-        </Button>
-      )}
+      <Button variant="accent" className="self-start" onClick={() => setEditing("new")}>
+        <Plus aria-hidden="true" />
+        Add a review
+      </Button>
 
-      {reviews.length === 0 && !creating ? (
+      {reviews.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border bg-surface-sunken p-6 text-sm text-foreground-muted">
           No reviews yet. The public reviews page hides itself until there are
           at least three published, so it never shows a thin list.
@@ -134,20 +155,7 @@ export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
               {pending.length === 1 ? "review" : "reviews"} sent from the site
             </span>
           </div>
-
-          <ul className="flex flex-col gap-4">
-            {pending.map((review) => (
-              <li key={review.id}>
-                <ReviewCard
-                  initial={review}
-                  published={isPublished(review)}
-                  onTogglePublished={(value) => void togglePublished(review, value)}
-                  onDelete={() => setDeleting(review)}
-                  onSaved={() => router.refresh()}
-                />
-              </li>
-            ))}
-          </ul>
+          {grid(pending)}
         </section>
       ) : null}
 
@@ -158,22 +166,65 @@ export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
               On file
             </h2>
           ) : null}
-
-          <ul className="flex flex-col gap-4">
-            {rest.map((review) => (
-              <li key={review.id}>
-                <ReviewCard
-                  initial={review}
-                  published={isPublished(review)}
-                  onTogglePublished={(value) => void togglePublished(review, value)}
-                  onDelete={() => setDeleting(review)}
-                  onSaved={() => router.refresh()}
-                />
-              </li>
-            ))}
-          </ul>
+          {grid(rest)}
         </section>
       ) : null}
+
+      {/*
+        One dialog, keyed on what it is editing.
+
+        The key matters: without it React keeps the form's state between two
+        different reviews, so opening a second one shows the first one's text
+        until every field happens to be overwritten. Remounting is the whole fix.
+      */}
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+      >
+        {editing !== null ? (
+          <DialogContent
+            title={editing === "new" ? "Add a review" : "Edit this review"}
+            description={
+              editing === "new"
+                ? "Only what you actually received."
+                : "Changes go live as soon as you save, if it is published."
+            }
+            className="max-w-3xl"
+          >
+            <div className="overflow-y-auto px-5 py-5">
+              <ReviewEditor
+                key={editing === "new" ? "new" : editing.id}
+                initial={editing === "new" ? null : editing}
+                published={editing === "new" ? undefined : isPublished(editing)}
+                onTogglePublished={
+                  editing === "new"
+                    ? undefined
+                    : (value) => void togglePublished(editing, value)
+                }
+                onDelete={
+                  editing === "new"
+                    ? undefined
+                    : () => {
+                        /*
+                          Close the editor before opening the confirmation.
+                          Two stacked modals trap focus in the wrong one and
+                          leave the reader unable to tell which Escape closes.
+                        */
+                        const target = editing;
+                        setEditing(null);
+                        setDeleting(target);
+                      }
+                }
+                onCancel={() => setEditing(null)}
+                onSaved={() => {
+                  setEditing(null);
+                  router.refresh();
+                }}
+              />
+            </div>
+          </DialogContent>
+        ) : null}
+      </Dialog>
 
       <ConfirmDialog
         open={deleting !== null}
@@ -204,7 +255,118 @@ export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
   );
 }
 
-function ReviewCard({
+/**
+ * One review, as a card.
+ *
+ * Shows what a visitor would see — the stars, the words, who wrote them — plus
+ * the two things only the client needs: whether it is live, and whether it came
+ * in through the site rather than being typed in here.
+ *
+ * The body is clamped rather than truncated with a character count. A review is
+ * read in lines, and cutting at a line boundary keeps the cards the same height
+ * whatever the sentence lengths happen to be; the full text is one click away.
+ */
+function ReviewSummary({
+  review,
+  published,
+  onEdit,
+}: {
+  review: EditableReview;
+  published: boolean;
+  onEdit: () => void;
+}) {
+  return (
+    <article className="flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-xs">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {review.rating ? (
+            <span className="flex items-center gap-0.5">
+              {Array.from({ length: review.rating }).map((_, index) => (
+                <Star
+                  key={index}
+                  className="size-4 fill-current text-accent"
+                  aria-hidden="true"
+                />
+              ))}
+              <span className="sr-only">{review.rating} out of 5</span>
+            </span>
+          ) : (
+            <span className="text-xs text-foreground-subtle">No rating</span>
+          )}
+
+          <Badge tone={published ? "active" : "neutral"}>
+            {published ? "Live" : "Hidden"}
+          </Badge>
+
+          {review.submittedAt ? (
+            <Badge tone="accent">From the site</Badge>
+          ) : null}
+        </div>
+
+        {/*
+          The pencil is an icon button with a real accessible name that includes
+          the reviewer, because a screen reader hears this list as a run of
+          identical "Edit" buttons otherwise.
+        */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onEdit}
+          aria-label={`Edit the review by ${review.authorName}`}
+          title="Edit"
+        >
+          <Pencil aria-hidden="true" />
+        </Button>
+      </div>
+
+      <blockquote className="line-clamp-5 text-sm leading-relaxed text-foreground-muted">
+        {review.body}
+      </blockquote>
+
+      <div className="mt-auto flex flex-col gap-1 border-t border-border pt-3">
+        <span className="text-sm font-semibold text-foreground">
+          {review.authorName}
+        </span>
+        {review.authorRole ? (
+          <span className="text-xs text-foreground-subtle">{review.authorRole}</span>
+        ) : null}
+
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-foreground-subtle">
+          {review.source ? <span>via {review.source}</span> : null}
+          {review.reviewedAt ? <span>{formatDate(review.reviewedAt)}</span> : null}
+          {review.sourceUrl ? (
+            <a
+              href={review.sourceUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1 font-medium text-accent-quiet underline underline-offset-4 hover:text-foreground"
+            >
+              Original
+              <ExternalLink className="size-3" aria-hidden="true" />
+            </a>
+          ) : null}
+        </span>
+
+        {/*
+          The submitter's address, on the card rather than only inside the
+          editor. Checking that a review is genuine is what the warning at the
+          top of this screen asks for, and it should not need a click.
+        */}
+        {review.submittedAt && review.authorEmail ? (
+          <a
+            href={`mailto:${review.authorEmail}`}
+            className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-accent-quiet underline underline-offset-4 hover:text-foreground"
+          >
+            <Mail className="size-3" aria-hidden="true" />
+            {review.authorEmail}
+          </a>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function ReviewEditor({
   initial,
   published,
   onTogglePublished,
@@ -269,7 +431,7 @@ function ReviewCard({
   );
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 shadow-xs">
+    <div className="flex flex-col gap-4">
       {/*
         Where this one came from, on the reviews that came from somewhere.
 

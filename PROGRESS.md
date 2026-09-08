@@ -2663,9 +2663,28 @@ to 16px. Nav padding is `px-2` until 1280 with `whitespace-nowrap`; the height
 is untouched so the 44px target holds. Every item is 44px tall at 1024, 1100,
 1280 and 1440, with no horizontal overflow at any of them.
 
+**Admin → Reviews is cards, not a stack of open forms.** It was every review,
+every field, always editable — the right shape for a screen you arrive at to
+change something, and the wrong one for this screen, which is mostly opened to
+read: what came in, what is live, does this belong on the site. Ten reviews
+meant ten forms and about two thousand pixels of scrolling.
+
+Now a card grid showing each review roughly as a visitor sees it, plus the two
+things only the client needs — Live/Hidden, and whether it arrived through the
+site — with the submitter's address on the card so verifying one costs no
+clicks. The pencil opens the existing editor in a dialog: edit, publish, save,
+close.
+
+The dialog is keyed on what it is editing. Without the key React keeps form
+state between two different reviews, so opening a second shows the first one's
+text until every field happens to be overwritten. Delete closes the editor
+before opening the confirmation — two stacked modals trap focus in the wrong
+one.
+
 **Verified**: typecheck, lint, build, all guards, `check:seo`, axe clean on
-`/`, a listing, `/` at 390 and `/reviews` at 1024. The full Playwright suite
-was NOT run for this change, at the client's request.
+`/`, a listing, `/` at 390 and `/reviews` at 1024, and on `/admin/reviews`
+with its editor dialog open. The full Playwright suite was NOT run for these
+changes, at the client's request.
 
 ---
 <!-- Append new session entries above this line, newest last. -->
