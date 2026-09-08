@@ -2550,6 +2550,26 @@ follow would pull the hero's own copy up under the reader mid-scroll, which is
 worse to watch than the space the logo leaves — and that space is scrolling out
 of view by the time it exists.
 
+**The hero's top spacing, tightened.** Measured at 1440 before: the section's
+padding was `logo + 2rem`, the home hero's grid was `items-center`, and the
+media column is ~130px taller than the copy beside it — so the badge sat at
+y=327, the photograph at y=264 and the two CTAs at y=739, below the fold on a
+laptop. Three changes: the section pads by `logo + 1rem`, the grid is
+`items-start`, and the media column is pulled up by the logo's height minus the
+bar's (`lg:-mt-10 xl:-mt-24`) because nothing sits above it. After: badge 224,
+photograph 128, buttons 636, and the hero is 1236px tall rather than 1100.
+
+`PageHero` and `CityHub` lost their own top padding for the same reason — the
+section already provides it, and counting it twice is what read as an empty
+band. Bottom padding is untouched.
+
+That moved the city hero's copy into a part of the picture `photo-scrim` does
+not cover: it runs bottom-up, for a caption at the foot of a photograph, and a
+city hero puts its breadcrumb and headline in the top half. Added
+`photo-scrim-hero`, top-weighted, with a deliberately light first stop because
+`[data-hero-bleed]::before` is already laying 0.72 over the top 210px and two
+strong gradients in one band composite to solid navy.
+
 **Open, and needs the client**: the portrait itself, and a light-text logo for
 the dark footer. Both are uploads, not code. The light-text version now matters
 more than it did: at 192px the mark's black lettering sits over the brightest

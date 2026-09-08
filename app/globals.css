@@ -415,6 +415,32 @@
   );
 }
 
+/*
+  A scrim for a hero whose copy sits at the TOP of the photograph.
+
+  `photo-scrim` runs bottom-up, which is right for a caption over the foot of a
+  picture and wrong for a city hero — that puts its breadcrumb, overline,
+  headline and lead in the upper half, exactly where the bottom-up gradient is
+  transparent. Over a bright sky the breadcrumb was unreadable, and tightening
+  the hero's top padding moved that copy further up still.
+
+  The first stop is deliberately light. `[data-hero-bleed]::before` is already
+  laying 0.72 over the top ~210px for the nav's sake, and two strong gradients
+  in the same band composite to nearly solid navy and take the photograph with
+  them. Below that band this one carries the copy on its own: 0.68 over a pure
+  white sky measures 5.7:1 for white text, and the weakest point, 0.55 at the
+  very foot, is 4.4:1 — under text that is only ever a button with its own fill.
+*/
+@utility photo-scrim-hero {
+  background: linear-gradient(
+    to bottom,
+    rgb(7 16 35 / 0.35),
+    rgb(7 16 35 / 0.68) 30%,
+    rgb(7 16 35 / 0.7) 70%,
+    rgb(7 16 35 / 0.55)
+  );
+}
+
 /* horizontal scroll row (filter chips, mobile carousels) with edge fade */
 @utility scroll-row {
   display: flex;
@@ -632,7 +658,12 @@
 }
 
 /*
-  The hero clears the hero-sized logo, not the bar.
+  The hero clears the hero-sized logo, and nothing more.
+
+  `+ 1rem` is the whole gap between the bottom of the mark and the first line of
+  the hero's own copy. It is deliberately tight: this padding exists to stop the
+  logo landing on the headline, not to give the hero a top margin, and every
+  pixel added here is a pixel of empty navy on the first screen.
 
   Static, deliberately: it does NOT shrink when the logo does. Making it follow
   the logo would move the hero's own copy up under the reader mid-scroll, which
@@ -640,7 +671,7 @@
   space is scrolling out of view by the time it exists.
 */
 [data-hero-bleed] {
-  padding-top: calc(var(--logo-h-hero) + 2rem);
+  padding-top: calc(var(--logo-h-hero) + 1rem);
 }
 
 /*

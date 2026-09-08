@@ -291,12 +291,21 @@ export default async function HomePage() {
           </div>
         ) : null}
 
-        <Container className="pt-6 pb-14 md:pt-8 md:pb-20 xl:pt-10 xl:pb-24">
+        <Container className="pt-3 pb-14 md:pt-4 md:pb-20 xl:pb-24">
           {/*
             Asymmetric: copy at 7/12, media at 5/12. The old layout was a
             centred band, which is what made the page read as a template.
           */}
-          <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
+          {/*
+            `items-start`, not `items-center`.
+
+            The media column is a 4:5 frame and is ~130px taller than the copy
+            beside it, so centring pushed the copy that far down — which put the
+            "Lake Mary" badge a long way below the logo and the two CTAs below
+            the fold on a laptop. Top-aligned, both columns begin at the same
+            line and the buttons are on the first screen.
+          */}
+          <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-12">
             <div className="flex flex-col items-start gap-6 lg:col-span-7">
               <Badge tone="accent" className="bg-royal-800 text-azure-400">
                 Lake Mary · Seminole &amp; Orange County
@@ -353,7 +362,17 @@ export default async function HomePage() {
               phone it would push the search card off the first screen, and
               search is what the client asked to lead with.
             */}
-            <div className="relative hidden lg:col-span-5 lg:block">
+            {/*
+              Pulled up so the photograph starts just under the bar.
+
+              Only the LEFT column has to clear the hero-sized logo; nothing
+              sits above this one, and leaving it on the same line was the other
+              half of the empty band across the top of the hero. The two offsets
+              are the logo's own height minus the bar's at each width — 40px at
+              1024 where the logo is 136, 96px at 1280 where it is 192 — so the
+              frame lands the same distance below the header either way.
+            */}
+            <div className="relative hidden lg:col-span-5 lg:-mt-10 lg:block xl:-mt-24">
               <MediaFrame
                 photo={heroPhoto(lakeMary?.heroKey, lakeMary?.heroAlt, 1200, 1500)}
                 sizes="(max-width: 1023px) 0px, 40vw"

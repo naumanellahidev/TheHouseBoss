@@ -95,8 +95,16 @@ export function CityHub({
                 className="h-full w-full object-cover"
               />
             </div>
-            {/* Never raw text over a photograph (design-system skill). */}
-            <div aria-hidden="true" className="absolute inset-0 -z-10 photo-scrim" />
+            {/*
+              Never raw text over a photograph (design-system skill), and
+              `photo-scrim-hero` rather than `photo-scrim` because this hero's
+              copy is at the TOP. The reasoning and the measured ratios are with
+              the utility in app/globals.css.
+            */}
+            <div
+              aria-hidden="true"
+              className="photo-scrim-hero absolute inset-0 -z-10"
+            />
           </>
         ) : (
           <div
@@ -105,7 +113,8 @@ export function CityHub({
           />
         )}
 
-        <Container className="flex flex-col gap-5 py-16 md:py-24 lg:py-28">
+        {/* Top padding is the section's job here — see PageHero. */}
+        <Container className="flex flex-col gap-5 pt-4 pb-16 md:pt-6 md:pb-24 lg:pt-8 lg:pb-28">
           <Breadcrumbs items={crumbs} invert />
           <p className="text-overline font-semibold tracking-[0.12em] text-azure-400 uppercase">
             {city.county} County, Florida

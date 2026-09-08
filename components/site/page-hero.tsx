@@ -48,9 +48,15 @@ export function PageHero({
       <Container
         className={cn(
           "flex flex-col gap-5",
-          size === "sm" && "py-10 md:py-14",
-          size === "md" && "py-12 md:py-18 lg:py-20",
-          size === "lg" && "py-16 md:py-24 lg:py-28",
+          /*
+            Asymmetric on purpose. The section's own `padding-top` already
+            clears the hero-sized logo, so a matching top padding here is
+            counted twice and reads as an empty band. The bottom is untouched.
+          */
+          "pt-4 md:pt-6 lg:pt-8",
+          size === "sm" && "pb-10 md:pb-14",
+          size === "md" && "pb-12 md:pb-18 lg:pb-20",
+          size === "lg" && "pb-16 md:pb-24 lg:pb-28",
         )}
       >
         {crumbs ? <Breadcrumbs items={crumbs} invert /> : null}
