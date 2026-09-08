@@ -906,6 +906,8 @@ export type Database = {
           published: boolean;
           sort_order: number;
           created_at: string;
+          author_email: string | null;
+          submitted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -919,6 +921,8 @@ export type Database = {
           published?: boolean;
           sort_order?: number;
           created_at?: string;
+          author_email?: string | null;
+          submitted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -932,6 +936,8 @@ export type Database = {
           published?: boolean;
           sort_order?: number;
           created_at?: string;
+          author_email?: string | null;
+          submitted_at?: string | null;
         };
         Relationships: [];
       };

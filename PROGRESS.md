@@ -2577,4 +2577,54 @@ part of a city hero as well as over the navy footer.
 
 ---
 
+### 2026-09-09 — Reviews a visitor can write, and two smaller fixes
+
+**A visitor can submit a review, and it waits for approval.** A button in the
+home hero and on `/reviews` opens a dialog; `/api/reviews` writes an
+unpublished row; it lands in Admin → Reviews under "Waiting for you" with the
+submitter's email beside it, and publishing it puts it on `/reviews` as a card.
+Reviews is now a header nav item as well as a footer one.
+
+The security is in the database, not in the route. Migration 024 grants anon
+INSERT on `reviews` only `with check (published = false)`, so the form could
+not publish itself even if the component were rewritten to try; `test:rls`
+asserts both halves and the run is 36/36.
+
+`author_email` is never public. A column-level REVOKE cannot take away a
+privilege granted at table level, so the table grant is revoked from anon and
+an explicit column list is granted back — which carries the same trap as
+`site_settings_public`: a column added later is invisible to anon until it is
+added to that list, and it fails silently. `authenticated` keeps its table
+grant, which is why `getAdminReviews` can read the email and `getReviews`
+cannot.
+
+**The duplicate-image check is gone**, at the client's request. It was unique on
+`(entity_type, entity_id, content_hash)`, and every site-wide image shares one
+entity id — so uploading a single file as BOTH the logo and the
+dark-background logo was refused with "This photo is already on this listing",
+which is neither true nor actionable. The hash is kept and still indexed,
+non-uniquely. Identical bytes are now stored twice and counted twice against
+the 1 GB budget; `canAcceptUpload()` still holds the ceiling.
+
+**The header shows the mark drawn for the background it is currently over.**
+`tone="auto"` renders both uploaded marks and CSS picks: the dark-background
+one while the bar is transparent over a dark hero, the light-background one
+once it has scrolled onto its own light ground. Measured: `["dark"]` at the top
+of the home page, `["light"]` scrolled, `["light"]` on a light page. The second
+image is only requested when a dark-background logo has actually been uploaded.
+
+`display`, not opacity — an invisible image is still an image to a screen
+reader, and two copies of one wordmark in a link would give it two names.
+
+**`check-migrations.mjs` learned about GRANT and REVOKE.** Its FROM scan read
+`revoke select on reviews from anon` as a dependency on a table called "anon".
+Those statements are stripped before the scan rather than growing the
+keyword skip-list one role at a time.
+
+**Verified**: guards, `check:seo`, `check:compliance`, `test:rls` 36/36, the
+Playwright suite, and the whole review loop driven end to end in a browser —
+submitted from the hero, seen in the dashboard with its email, published, and
+rendered as a card on `/reviews`.
+
+---
 <!-- Append new session entries above this line, newest last. -->

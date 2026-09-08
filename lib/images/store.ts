@@ -73,8 +73,20 @@ export async function storeImage(opts: {
   const budget = await canAcceptUpload(processed.totalBytes);
   if (!budget.ok) throw new ImageProcessingError(budget.reason, 507);
 
-  await assertNotDuplicate(opts.entityType, opts.entityId, processed.contentHash);
+  /*
+    There is no duplicate check.
 
+    There was one, and it refused the same bytes twice against one entity.
+    Migration 024 removed it at the client's request, after it blocked the
+    case it was never meant to touch: every site-wide image shares one
+    entity id, so uploading a single file as BOTH the logo and the
+    dark-background logo failed with "This photo is already on this
+    listing" — which is neither true nor actionable.
+
+    The cost is stated rather than hidden: identical bytes are now stored
+    twice and counted twice against the 1 GB budget. `canAcceptUpload`
+    above is what still holds the ceiling.
+  */
   const key = buildKey(opts.entityType, opts.entityId);
   const written: string[] = [];
 
@@ -117,33 +129,6 @@ export async function storeImage(opts: {
     bytes: processed.totalBytes,
     blur: processed.blur,
   };
-}
-
-/**
- * "This photo is already on this listing" (docs/07 § 8). The unique index
- * `media_entity_hash_idx` is the real guarantee; this check exists to turn a
- * constraint violation into a sentence the client can act on.
- */
-async function assertNotDuplicate(
-  entityType: EntityType,
-  entityId: string,
-  contentHash: string,
-): Promise<void> {
-  const db = createServiceClient();
-  const { data } = await db
-    .from("media")
-    .select("id")
-    .eq("entity_type", entityType)
-    .eq("entity_id", entityId)
-    .eq("content_hash", contentHash)
-    .maybeSingle();
-
-  if (data) {
-    throw new ImageProcessingError(
-      "This photo is already on this listing.",
-      409,
-    );
-  }
 }
 
 /**

@@ -91,6 +91,15 @@ export const primaryNav: NavEntry[] = [
     label: "Hire Contractor",
   },
   { href: "/market-updates", label: "Insights" },
+  /*
+    Reviews is in the header as well as the footer.
+
+    It was footer-only, which is where a page goes when nobody is expected to
+    look for it. Now that a visitor can write one, the page has to be reachable
+    from the same chrome the button lives in — and social proof is a page people
+    do go looking for.
+  */
+  { href: "/reviews", label: "Reviews" },
   { href: "/about", label: "About" },
 ];
 

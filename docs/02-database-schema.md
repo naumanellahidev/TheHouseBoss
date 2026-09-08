@@ -35,6 +35,7 @@ Never edit an applied migration — add a new one.
 | 021 | `021_article_faq.sql` | articles.faq_json |
 | 022 | `022_page_sections.sql` | per-section CMS rows for /hire-contractor |
 | 023 | `023_portrait.sql` | site_settings.portrait_key + view rebuild |
+| 024 | `024_reviews_intake.sql` | media duplicate check dropped; reviews accept a public submission |
 
 **011 was added in Phase 2.** `docs/06-admin-dashboard-spec.md` § 10 required a
 single-row `site_settings` table that this document had never defined. It is
@@ -389,12 +390,26 @@ create table reviews (
   reviewed_at date,
   published   boolean not null default false,
   sort_order  int not null default 0,
-  created_at  timestamptz not null default now()
+  created_at  timestamptz not null default now(),
+  -- Added in 024, for reviews submitted through the public form.
+  author_email text,
+  submitted_at timestamptz
 );
 ```
 
 **Do not** emit `AggregateRating` JSON-LD from this table unless every review is
 genuinely first-party and verifiable. See `09-compliance-legal.md`.
+
+`submitted_at` is NULL for a review an admin typed in and set for one that
+arrived through `/api/reviews`. That is the only thing separating "waiting for
+you" from "on file" on the admin screen.
+
+**`author_email` is not readable by anon.** A column-level REVOKE cannot take
+away a privilege granted at table level, so 024 revokes anon's table grant and
+grants back an explicit column list. Same trap as `site_settings_public`: a
+column added later is invisible to anon until it is added to that list, and it
+fails silently. `authenticated` keeps its table grant, which is why
+`getAdminReviews` can read the email and `getReviews` cannot.
 
 ### leads
 
@@ -753,6 +768,11 @@ create policy "public insert leads"
 create policy "public insert saved searches"
   on saved_searches for insert to anon, authenticated
   with check (true);
+
+-- public may write a review and may never publish one (024)
+create policy "public insert reviews"
+  on reviews for insert to anon, authenticated
+  with check (published = false);
 
 -- admin full control, applied to each table
 create policy "admin all listings" on listings

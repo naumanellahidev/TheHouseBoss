@@ -50,8 +50,15 @@ const ALL_TABLES = [
   "sync_log",
 ] as const;
 
-/** The only two tables anon may INSERT into. */
-const INTAKE = new Set(["leads", "saved_searches"]);
+/**
+ * The tables anon may INSERT into.
+ *
+ * `reviews` joined them in migration 024 and is the only one with a condition
+ * on the insert — `with check (published = false)` — so section 6 below proves
+ * that half separately. The other two accept anything and are read-proof
+ * instead.
+ */
+const INTAKE = new Set(["leads", "saved_searches", "reviews"]);
 
 /** Tables anon may SELECT from at all. */
 const READABLE = new Set([
@@ -229,6 +236,45 @@ async function main() {
     });
   if (uploadError) ok("media bucket: anon upload rejected");
   else fail("media bucket: ANON UPLOADED AN OBJECT");
+
+  // ── 6. review intake ────────────────────────────────────────────────────
+  //
+  // The public form can create a review and cannot publish one, and the
+  // reviewer's email never leaves the dashboard. Both are enforced in the
+  // database — a policy and a column grant — rather than in the route that
+  // happens to write the row, which is what makes them worth asserting here.
+  console.log("\n6. review intake\n");
+
+  {
+    const probe = {
+      author_name: "__RLS_PROBE__",
+      body: "A probe row written by scripts/test-rls.ts. Safe to delete.",
+    };
+
+    const { error: unpublished } = await anon
+      .from("reviews")
+      .insert({ ...probe, published: false } as never);
+
+    if (unpublished) {
+      fail("reviews: an unpublished submission was refused", unpublished.message);
+    } else {
+      ok("reviews: a visitor can submit an unpublished review");
+      notes.push(
+        'reviews: a row named "__RLS_PROBE__" was written — delete it in Admin → Reviews',
+      );
+    }
+
+    const { error: published } = await anon
+      .from("reviews")
+      .insert({ ...probe, published: true } as never);
+
+    if (published) ok("reviews: a PUBLISHED insert is refused");
+    else fail("reviews: ANON PUBLISHED A REVIEW");
+
+    const { error: emailRead } = await anon.from("reviews").select("author_email").limit(1);
+    if (emailRead) ok("reviews: author_email is not readable by anon");
+    else fail("reviews: ANON READ author_email");
+  }
 
   // ── result ──────────────────────────────────────────────────────────────
   console.log(

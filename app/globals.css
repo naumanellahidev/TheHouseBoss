@@ -757,6 +757,34 @@ body:has([data-hero-bleed]) [data-site-header][data-at-top] {
 }
 
 /*
+  Which of the two marks is showing.
+
+  The header renders both when the client has uploaded a dark-background
+  version, and this is the whole of the choice between them: the light-page
+  mark is the default, and the dark-page one takes over exactly while the bar
+  is transparent over a dark hero — which is the only moment the logo is not
+  sitting on the page's own light ground.
+
+  `display` rather than opacity: an invisible image is still an image to a
+  screen reader, and two copies of the same wordmark in one link would give it
+  two accessible names.
+
+  These rules only ever match when there ARE two, because `data-logo-art` is
+  set only in that case. With a single mark there is nothing to hide.
+*/
+[data-logo-art="dark"] {
+  display: none;
+}
+
+body:has([data-hero-bleed]) [data-site-header][data-at-top] [data-logo-art="dark"] {
+  display: block;
+}
+
+body:has([data-hero-bleed]) [data-site-header][data-at-top] [data-logo-art="light"] {
+  display: none;
+}
+
+/*
   The logo's type-set fallback follows the same tone.
 
   It only renders when no artwork has been uploaded, or when uploaded artwork

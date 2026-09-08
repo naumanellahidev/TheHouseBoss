@@ -290,7 +290,7 @@ the last 24 hours — an in-progress upload must not be swept.
 | Upload succeeds, DB write fails | Delete the uploaded objects in the catch block before returning the error |
 | DB write succeeds, upload fails | Not possible — upload happens first, DB row second |
 | Corrupt or non-image file | `sharp` throws on metadata read; return 415 with a readable message |
-| Duplicate upload | Content hash stored on the `media` row; a duplicate within the same entity is rejected with "This photo is already on this listing" |
+| Duplicate upload | **Allowed.** The content hash is still stored on the `media` row and still indexed, but not uniquely — migration 024 dropped the constraint at the client's request. Every site-wide image shares one entity id, so the check refused a single file being used as both the logo and the dark-background logo. Identical bytes are now stored twice and counted twice against the 1 GB budget; `canAcceptUpload()` still holds the ceiling. |
 | Very large source (50 MP) | Client compression caps at 2400px first; server rejects above 10 MB |
 | Slow upload on mobile data | Per-file progress, per-file retry, the form remains saveable |
 | Image 404 in production | `onError` fallback plus a weekly integrity check comparing `media` keys against a bucket listing |

@@ -6,7 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { ExternalLink, LogOut, Menu, User } from "lucide-react";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { adminNav, isActiveAdminRoute, visibleAdminNav } from "@/lib/admin-nav";
+import {
+  adminNav,
+  isActiveAdminRoute,
+  visibleAdminNav,
+  type AdminNavItem,
+} from "@/lib/admin-nav";
 import type { Permission } from "@/lib/auth/permissions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Logo } from "@/components/site/logo";
@@ -34,6 +39,8 @@ export type AdminShellProps = {
   settings: SiteSettings | null;
   children: React.ReactNode;
   newLeads: number;
+  /** Reviews a visitor submitted that nobody has published or discarded. */
+  pendingReviews: number;
   userEmail: string;
   userName: string | null;
   /** Rendered inside the sidebar footer; the server builds it. */
@@ -53,6 +60,7 @@ export function AdminShell({
   children,
   settings,
   newLeads,
+  pendingReviews,
   userEmail,
   userName,
   storage,
@@ -127,7 +135,7 @@ export function AdminShell({
                 <NavLink
                   item={item}
                   active={isActiveAdminRoute(pathname, item.href)}
-                  count={item.badge === "leads" ? newLeads : 0}
+                  count={badgeCount(item.badge, newLeads, pendingReviews)}
                 />
               </li>
             ))}
@@ -189,7 +197,7 @@ export function AdminShell({
                       <NavLink
                         item={item}
                         active={isActiveAdminRoute(pathname, item.href)}
-                        count={item.badge === "leads" ? newLeads : 0}
+                        count={badgeCount(item.badge, newLeads, pendingReviews)}
                         forceLabel
                       />
                     </li>
@@ -228,6 +236,24 @@ export function AdminShell({
       </div>
     </div>
   );
+}
+
+/**
+ * The number on a sidebar item, or none.
+ *
+ * A function rather than a ternary at each of the two call sites: the sidebar
+ * and the mobile sheet render the same list twice, and the first version of the
+ * reviews badge went on only one of them because the ternary was copied and
+ * then edited in one place.
+ */
+function badgeCount(
+  badge: AdminNavItem["badge"],
+  newLeads: number,
+  pendingReviews: number,
+): number {
+  if (badge === "leads") return newLeads;
+  if (badge === "reviews") return pendingReviews;
+  return 0;
 }
 
 function NavLink({

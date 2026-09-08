@@ -72,6 +72,17 @@ export function clientIp(headers: Headers): string {
 export const LEAD_LIMIT = { limit: 5, windowMs: 60 * 60 * 1000 };
 
 /** docs/07 § 2: 30 uploads per minute per user. */
+/*
+ * Reviews. Three per IP per day.
+ *
+ * Lower than leads and over a much longer window, because the shapes differ:
+ * a person may legitimately send several enquiries about several properties in
+ * an afternoon, and nobody writes three genuine reviews of the same agent in
+ * one. Everything that arrives here waits for approval anyway, so the limit is
+ * protecting the client's moderation queue rather than the site.
+ */
+export const REVIEW_LIMIT = { limit: 3, windowMs: 24 * 60 * 60 * 1000 };
+
 export const UPLOAD_LIMIT = { limit: 30, windowMs: 60 * 1000 };
 
 /** docs/06 § 1: 3 magic links per email per 15 minutes. */

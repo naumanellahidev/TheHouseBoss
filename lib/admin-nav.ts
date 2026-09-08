@@ -31,7 +31,7 @@ export type AdminNavItem = {
   label: string;
   icon: LucideIcon;
   /** Which key on the badge counts feeds this item, if any. */
-  badge?: "leads";
+  badge?: "leads" | "reviews";
   /**
    * Hide the item unless the signed-in user holds this permission.
    *
@@ -50,7 +50,7 @@ export const adminNav: AdminNavItem[] = [
   { href: "/admin/articles", label: "Articles", icon: FileText },
   { href: "/admin/cities", label: "Cities", icon: MapPin },
   { href: "/admin/communities", label: "Communities", icon: MapPinned },
-  { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/reviews", label: "Reviews", icon: Star, badge: "reviews" },
   { href: "/admin/leads", label: "Leads", icon: Inbox, badge: "leads" },
   { href: "/admin/media", label: "Media", icon: ImageIcon },
 

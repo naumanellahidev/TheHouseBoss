@@ -16,7 +16,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { REVIEW_SOURCES, type ReviewInput } from "@/lib/validation/place";
 import { cn } from "@/lib/utils";
-import type { Review } from "@/types/domain";
+import { formatDateTime } from "@/lib/utils/date";
+import type { AdminReview } from "@/types/domain";
 
 /**
  * Reviews — docs/06 § 7.
@@ -31,7 +32,7 @@ import type { Review } from "@/types/domain";
  * practice, and `AggregateRating` markup is never emitted from this data.
  */
 
-type EditableReview = Review & { published: boolean; sortOrder: number };
+type EditableReview = AdminReview;
 
 export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
   const router = useRouter();
@@ -43,6 +44,20 @@ export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
 
   const isPublished = (review: EditableReview) =>
     published[review.id] ?? review.published;
+
+  /*
+    Split on the two facts, not on one.
+
+    A review is "waiting" when it arrived through the public form AND has not
+    been published. `isPublished` rather than `review.published`, so approving
+    one moves it out of this section on the optimistic toggle instead of after
+    the router refresh — otherwise it sits in "Waiting for you" with its switch
+    already on, which reads as a failure.
+  */
+  const pending = reviews.filter(
+    (review) => review.submittedAt !== null && !isPublished(review),
+  );
+  const rest = reviews.filter((review) => !pending.includes(review));
 
   async function togglePublished(review: EditableReview, value: boolean) {
     setPublishedState((current) => ({ ...current, [review.id]: value }));
@@ -96,19 +111,69 @@ export function ReviewsManager({ reviews }: { reviews: EditableReview[] }) {
         </p>
       ) : null}
 
-      <ul className="flex flex-col gap-4">
-        {reviews.map((review) => (
-          <li key={review.id}>
-            <ReviewCard
-              initial={review}
-              published={isPublished(review)}
-              onTogglePublished={(value) => void togglePublished(review, value)}
-              onDelete={() => setDeleting(review)}
-              onSaved={() => router.refresh()}
-            />
-          </li>
-        ))}
-      </ul>
+      {/*
+        Submissions first, and in their own section.
+
+        `submittedAt` is set only by the public form, so this is exactly "someone
+        wrote this and it is waiting for you" — as distinct from an unpublished
+        review the admin typed and has not finished, which stays in the list
+        below. Sorting them to the top of one long list would have been less
+        code and would not have answered the question the client will actually
+        open this screen to ask.
+      */}
+      {pending.length > 0 ? (
+        <section aria-labelledby="pending-heading" className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 id="pending-heading" className="text-h4 font-semibold">
+              Waiting for you
+            </h2>
+            <span className="text-sm text-foreground-muted">
+              <span className="tabular font-semibold text-foreground">
+                {pending.length}
+              </span>{" "}
+              {pending.length === 1 ? "review" : "reviews"} sent from the site
+            </span>
+          </div>
+
+          <ul className="flex flex-col gap-4">
+            {pending.map((review) => (
+              <li key={review.id}>
+                <ReviewCard
+                  initial={review}
+                  published={isPublished(review)}
+                  onTogglePublished={(value) => void togglePublished(review, value)}
+                  onDelete={() => setDeleting(review)}
+                  onSaved={() => router.refresh()}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {rest.length > 0 ? (
+        <section aria-labelledby="onfile-heading" className="flex flex-col gap-4">
+          {pending.length > 0 ? (
+            <h2 id="onfile-heading" className="text-h4 font-semibold">
+              On file
+            </h2>
+          ) : null}
+
+          <ul className="flex flex-col gap-4">
+            {rest.map((review) => (
+              <li key={review.id}>
+                <ReviewCard
+                  initial={review}
+                  published={isPublished(review)}
+                  onTogglePublished={(value) => void togglePublished(review, value)}
+                  onDelete={() => setDeleting(review)}
+                  onSaved={() => router.refresh()}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <ConfirmDialog
         open={deleting !== null}
@@ -205,6 +270,34 @@ function ReviewCard({
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 shadow-xs">
+      {/*
+        Where this one came from, on the reviews that came from somewhere.
+
+        The email is the only way to check that a review is genuine, which is
+        what the warning at the top of this screen asks for. It is shown as a
+        mailto so checking is one click rather than a copy and paste, and it is
+        never rendered anywhere public — anon has no privilege to read the
+        column at all (migration 024).
+      */}
+      {initial?.submittedAt ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md bg-accent-wash px-4 py-3 text-sm">
+          <span className="font-semibold text-foreground">Sent from the site</span>
+          <span className="text-foreground-muted">
+            {formatDateTime(initial.submittedAt)}
+          </span>
+          {initial.authorEmail ? (
+            <a
+              href={`mailto:${initial.authorEmail}`}
+              className="font-medium text-accent-quiet underline underline-offset-4 hover:text-foreground"
+            >
+              {initial.authorEmail}
+            </a>
+          ) : (
+            <span className="text-foreground-subtle">No email given</span>
+          )}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold text-foreground">

@@ -235,6 +235,27 @@ export type Review = {
   reviewedAt: string | null;
 };
 
+/**
+ * A review as the dashboard sees it (migration 024).
+ *
+ * Two fields the public shape does not have and must never gain.
+ *
+ * `authorEmail` is how a review gets verified before it is published. The
+ * standing rule is to publish only reviews actually received, and a warning
+ * nobody can act on is decoration. Anon has no SELECT privilege on that column,
+ * so it cannot leak through the public API even if a query asked for it.
+ *
+ * `submittedAt` is NULL for a review the admin typed in and set for one that
+ * arrived through the public form. That is the whole difference between "on
+ * file" and "waiting for you".
+ */
+export type AdminReview = Review & {
+  published: boolean;
+  sortOrder: number;
+  authorEmail: string | null;
+  submittedAt: string | null;
+};
+
 /* ── Search ─────────────────────────────────────────────────────────────── */
 
 /**

@@ -10,6 +10,7 @@ import { getAdminIdentity } from "@/lib/auth/permissions";
 import { storageLevel } from "@/lib/storage/budget";
 import { Button } from "@/components/ui/button";
 import { countNewLeads } from "@/lib/queries/leads";
+import { countPendingReviews } from "@/lib/queries/admin";
 import { getStorageUsage } from "@/lib/queries/media";
 import { getAdminProfile, getCurrentUser } from "@/lib/supabase/server";
 
@@ -45,8 +46,9 @@ export default async function AdminShellLayout({
 
   // Both are admin-only reads and both are cheap; running them in parallel
   // keeps the shell off the critical path of the page inside it.
-  const [newLeads, usage, identity, settings] = await Promise.all([
+  const [newLeads, pendingReviews, usage, identity, settings] = await Promise.all([
     countNewLeads(),
+    countPendingReviews(),
     getStorageUsage(),
     getAdminIdentity(),
     // The uploaded logo, so the dashboard shows the same brand as the site.
@@ -62,6 +64,7 @@ export default async function AdminShellLayout({
     <AdminShell
       settings={settings}
       newLeads={newLeads}
+      pendingReviews={pendingReviews}
       userEmail={admin.user.email ?? ""}
       userName={(admin.profile as { full_name?: string | null }).full_name ?? null}
       storage={<StorageMeter usage={usage} variant="sidebar" />}

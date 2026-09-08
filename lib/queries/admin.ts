@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { toCity, toCommunity, toListing, toPhotos, toReview } from "@/lib/queries/mappers";
 import { getStorageUsage, getUpcomingPurge } from "@/lib/queries/media";
 import type {
+  AdminReview,
   ArticleKind,
   AttentionItem,
   City,
@@ -12,7 +13,6 @@ import type {
   ListingType,
   MediaItem,
   Photo,
-  Review,
   StorageUsage,
 } from "@/types/domain";
 
@@ -649,15 +649,12 @@ export async function getAdminCommunityById(
 }
 
 /** Reviews INCLUDING unpublished ones, in display order. */
-export async function getAdminReviews(): Promise<(Review & {
-  published: boolean;
-  sortOrder: number;
-})[]> {
+export async function getAdminReviews(): Promise<AdminReview[]> {
   const db = await createSupabaseServerClient();
   const { data, error } = await db
     .from("reviews")
     .select(
-      "id, author_name, author_role, rating, body, source, source_url, reviewed_at, published, sort_order",
+      "id, author_name, author_email, author_role, rating, body, source, source_url, reviewed_at, published, sort_order, submitted_at",
     )
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
@@ -669,7 +666,35 @@ export async function getAdminReviews(): Promise<(Review & {
     ...toReview(row),
     published: Boolean(row.published),
     sortOrder: Number(row.sort_order ?? 0),
+    /*
+      This read goes through the RLS client rather than the service role, so it
+      is the signed-in admin's own privileges that make the email visible.
+      Migration 024 revoked anon's SELECT on that column; `authenticated` kept
+      it, which is the whole reason this query can ask for it and the public
+      one cannot.
+    */
+    authorEmail: typeof row.author_email === "string" ? row.author_email : null,
+    submittedAt: typeof row.submitted_at === "string" ? row.submitted_at : null,
   }));
+}
+
+/**
+ * Reviews a visitor sent that nobody has published or thrown away yet.
+ *
+ * `submitted_at is not null` is what separates these from an unpublished review
+ * the admin typed and has not finished — a draft of their own is not something
+ * to badge them about.
+ */
+export async function countPendingReviews(): Promise<number> {
+  const db = createServiceClient();
+  const { count, error } = await db
+    .from("reviews")
+    .select("id", { count: "exact", head: true })
+    .eq("published", false)
+    .not("submitted_at", "is", null);
+
+  if (error) throw new Error(`countPendingReviews: ${error.message}`);
+  return count ?? 0;
 }
 
 /** Autocomplete source for the community amenities tag input. */

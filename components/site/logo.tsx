@@ -97,12 +97,22 @@ export function LogoMark({
 export function Logo({
   variant = "full",
   invert = false,
+  tone = "fixed",
   href = "/",
   className,
   settings,
 }: {
   variant?: "full" | "compact" | "stacked";
   invert?: boolean;
+  /**
+   * `"auto"` renders BOTH uploaded marks and lets CSS choose between them by
+   * the background the bar is currently over. For the site header, which starts
+   * transparent on a dark hero and acquires a light background on scroll.
+   *
+   * Everywhere else is `"fixed"`: the footer is always navy and the admin
+   * sidebar is always navy, so they say so with `invert` and render one image.
+   */
+  tone?: "fixed" | "auto";
   href?: string | null;
   className?: string;
   /** Live branding. Absent → the type-set lockup from site-config. */
@@ -220,13 +230,15 @@ export function Logo({
     </>
   );
 
-  const inner = artworkKey ? (
+  /** One piece of artwork. */
+  const artwork = (key: string, w: number, h: number) => (
     <PropertyImage
+      key={key}
       photo={{
         kind: "stored",
-        key: artworkKey,
-        w: artworkW,
-        h: artworkH,
+        key,
+        w,
+        h,
         // The artwork is a wordmark, so its alt IS the brand name and it is
         // what names the link. `fallback` covers it never arriving.
         alt: brandName,
@@ -254,9 +266,65 @@ export function Logo({
       wrapperClassName={cn("w-fit self-start", artworkMaxWidth)}
       className={cn(artworkHeight, "w-auto object-contain")}
     />
-  ) : (
-    typeSet
   );
+
+  /**
+   * The same artwork, labelled with the background it was drawn for.
+   *
+   * A wrapping span rather than a prop on `PropertyImage`: that component has a
+   * closed prop list on purpose, and widening a shared image component so one
+   * caller can hang a CSS hook on it would be the wrong trade. The span keeps
+   * `w-fit self-start` because a flex child stretches by default, and a
+   * stretched wrapper is what once left the footer mark adrift at the left edge
+   * of a full-width card.
+   */
+  const labelled = (
+    forGround: "light" | "dark",
+    key: string,
+    w: number,
+    h: number,
+  ) => (
+    <span data-logo-art={forGround} className="w-fit self-start">
+      {artwork(key, w, h)}
+    </span>
+  );
+
+  /*
+    ── Two marks, when there are two ─────────────────────────────────────────
+
+    `tone="auto"` is the header's case and only the header's. The bar is
+    transparent over a dark hero and light once it has scrolled, so the artwork
+    under it changes background halfway down the page — and the mark drawn for a
+    white page has black lettering that disappears on navy.
+
+    Both are rendered and CSS chooses, because the swap happens on scroll and a
+    server component cannot know where the reader is. The second image costs a
+    request ONLY when a dark-background logo has actually been uploaded; with
+    just the one key this renders exactly what it rendered before.
+  */
+  const hasBoth = Boolean(settings?.logoKey && settings?.logoInvertKey);
+
+  const inner =
+    tone === "auto" && hasBoth ? (
+      <>
+        {labelled(
+          "light",
+          settings!.logoKey!,
+          settings?.logoW ?? 900,
+          settings?.logoH ?? 600,
+        )}
+        {labelled(
+          "dark",
+          settings!.logoInvertKey!,
+          settings?.logoInvertW ?? 900,
+          settings?.logoInvertH ?? 600,
+        )}
+      </>
+    ) : artworkKey ? (
+      artwork(artworkKey, artworkW, artworkH)
+    ) : (
+      typeSet
+    );
 
   const layout = cn(
     "flex min-w-0",

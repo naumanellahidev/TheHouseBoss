@@ -79,12 +79,24 @@ for (const file of files) {
   )) {
     deps.add(m[1].replace(/"/g, "").toLowerCase());
   }
-  for (const m of sql.matchAll(/\bfrom\s+([a-z][a-z0-9_.]*)/gi)) {
+  /*
+    GRANT and REVOKE statements are removed before the FROM/JOIN scan.
+
+    `revoke select on reviews from anon` reads as a dependency on a table
+    called "anon" to a regex that only knows the word FROM. Neither statement
+    can name a relation this scan needs to see — the relation is after ON,
+    which the index/policy/alter pattern above already covers — so dropping
+    them whole is simpler and safer than growing the keyword skip-list one
+    role at a time.
+  */
+  const relational = sql.replace(/\b(?:grant|revoke)\b[\s\S]*?;/gi, " ");
+
+  for (const m of relational.matchAll(/\bfrom\s+([a-z][a-z0-9_.]*)/gi)) {
     const t = m[1].toLowerCase();
     // skip SQL keywords that can follow FROM in an expression
     if (!["extract", "timestamp", "interval", "public"].includes(t)) deps.add(t);
   }
-  for (const m of sql.matchAll(/\bjoin\s+([a-z][a-z0-9_.]*)/gi)) {
+  for (const m of relational.matchAll(/\bjoin\s+([a-z][a-z0-9_.]*)/gi)) {
     deps.add(m[1].toLowerCase());
   }
   // function calls we define ourselves

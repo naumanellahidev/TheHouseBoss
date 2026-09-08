@@ -22,6 +22,7 @@ import { Container, Section, SectionHeader } from "@/components/site/container";
 import { FloatCard } from "@/components/site/float-card";
 import { LeadForm } from "@/components/site/lead-form";
 import { MediaFrame, heroPhoto, portraitPhoto } from "@/components/site/media-frame";
+import { ReviewForm } from "@/components/site/review-form";
 import { Reveal } from "@/components/site/reveal";
 import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
@@ -335,7 +336,7 @@ export default async function HomePage() {
               </p>
 
               {inventoryIsThin ? (
-                <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row">
+                <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   <Button variant="accent" size="lg" asChild>
                     <Link href="/contact">
                       Get new listing alerts
@@ -344,15 +345,41 @@ export default async function HomePage() {
                   <Button variant="invert" size="lg" asChild>
                     <Link href="/search">Browse what is available</Link>
                   </Button>
+                  {/*
+                    Third, and deliberately the quietest of the three.
+
+                    It is not what most visitors came for, and a hero with
+                    three equally weighted CTAs has none. Ghost on the navy,
+                    which needs the inverted ink named explicitly — the
+                    variant is drawn for a light ground.
+                  */}
+                  <ReviewForm
+                    variant="ghost"
+                    size="lg"
+                    className="text-foreground-invert hover:bg-royal-800 hover:text-foreground-invert"
+                  />
                 </div>
               ) : (
-                <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row">
+                <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   <Button variant="accent" size="lg" asChild>
                     <Link href="/search">Search homes</Link>
                   </Button>
                   <Button variant="invert" size="lg" asChild>
                     <Link href="/contact">Talk to Krisi</Link>
                   </Button>
+                  {/*
+                    Third, and deliberately the quietest of the three.
+
+                    It is not what most visitors came for, and a hero with
+                    three equally weighted CTAs has none. Ghost on the navy,
+                    which needs the inverted ink named explicitly — the
+                    variant is drawn for a light ground.
+                  */}
+                  <ReviewForm
+                    variant="ghost"
+                    size="lg"
+                    className="text-foreground-invert hover:bg-royal-800 hover:text-foreground-invert"
+                  />
                 </div>
               )}
             </div>

@@ -65,8 +65,25 @@ export function Header({ settings }: { settings?: SiteSettings | null }) {
       )}
     >
       <div className="container-page flex h-(--header-h) items-center justify-between gap-4 lg:h-(--header-h-lg)">
-        <Logo variant="compact" className="lg:hidden" settings={settings} />
-        <Logo variant="full" className="hidden lg:inline-flex" settings={settings} />
+        {/*
+          `tone="auto"` renders both uploaded marks and lets CSS pick.
+
+          The bar is transparent over a dark hero and light once it has
+          scrolled, so the artwork under it changes background halfway down
+          the page — and a mark drawn for a white page has black lettering
+          that disappears on navy. Nothing here can know where the reader
+          is; the rule that chooses is in app/globals.css.
+
+          Costs a second request only when a dark-background logo has
+          actually been uploaded. With one key this is what it always was.
+        */}
+        <Logo variant="compact" tone="auto" className="lg:hidden" settings={settings} />
+        <Logo
+          variant="full"
+          tone="auto"
+          className="hidden lg:inline-flex"
+          settings={settings}
+        />
 
         <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-1">

@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { Container, Section } from "@/components/site/container";
 import { EmptyState } from "@/components/site/empty-state";
 import { JsonLd } from "@/components/site/json-ld";
+import { ReviewForm } from "@/components/site/review-form";
 import { Button } from "@/components/ui/button";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -61,6 +62,15 @@ export default async function ReviewsPage({
             average is easy to inflate and tells you less than reading three of
             these does.
           </p>
+
+          {/*
+            The same control as the home hero, on the page it fills.
+
+            Somebody who has just read three reviews is the likeliest person
+            on the site to write a fourth, and sending them back to the home
+            page to find the button would be the wrong place to put it.
+          */}
+          <ReviewForm variant="accent" size="lg" className="self-start" />
         </Container>
       </Section>
 
