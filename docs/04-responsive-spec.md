@@ -102,6 +102,16 @@ in `app/globals.css` under HEADER OVERLAY AND TONE.
 The heights are set by the logo, not by the chrome: the artwork is a square
 lockup and `--logo-h-lg` is 80px, so the bar has to be 96.
 
+**The hero lockup.** On a `data-hero-bleed` page the logo opens at
+`--logo-h-hero` — 120px phone, 136px at 1024, 192px at 1280+ — and returns to
+bar size on the first scroll, with a `--dur-slow` transition. 136 rather than
+192 at 1024 because the desktop nav starts ~180px from the left edge there.
+
+The mark grows **downward only** (`align-self: flex-start` plus the offset
+centring would have given it) and the bar's own height never changes, so the
+background that appears on scroll is always one bar tall. The hero's top
+padding clears the hero-sized logo and is static — it does not shrink with it.
+
 Mobile sheet requirements:
 
 - Covers the viewport, background `--color-ink-900`

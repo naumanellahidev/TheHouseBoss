@@ -2526,8 +2526,34 @@ silently falls back to the launch values without one, which is what made it look
 like a failure) · Playwright suite green · screenshots at 1440 and 390 for the
 transparent, scrolled and light-page states.
 
+**The hero lockup.** On a page whose first section is dark the logo opens at
+`--logo-h-hero` — 120 on a phone, 136 at 1024, 192 at 1280 and up — reaching
+down to where the hero's own first line begins, and returns to bar size on the
+first scroll. 136 rather than 192 at 1024 because the desktop nav starts about
+180px from the left edge there and a full-size mark runs into "Homes".
+
+Two rules make it safe. The anchor is `align-self: flex-start` with exactly the
+offset centring would have given it, so the mark grows downward only and lands
+in the same place once it is small — a taller child under `items-center` would
+overflow above the top of the window. And the bar's own height never changes:
+the row is a fixed height and the mark overflows it, so the background that
+appears on scroll is always one bar tall.
+
+Two states with a CSS transition, not a scroll-linked size. Tying the height to
+scroll position reads slightly better for the first 200px and costs a
+rAF-throttled write per frame, a second source of truth for "how far down are
+we", and a reduced-motion branch of its own; the global reduced-motion block
+already turns a transition off with nothing further written.
+
+The hero's top padding is static and does NOT follow the logo down. Making it
+follow would pull the hero's own copy up under the reader mid-scroll, which is
+worse to watch than the space the logo leaves — and that space is scrolling out
+of view by the time it exists.
+
 **Open, and needs the client**: the portrait itself, and a light-text logo for
-the dark footer. Both are uploads, not code.
+the dark footer. Both are uploads, not code. The light-text version now matters
+more than it did: at 192px the mark's black lettering sits over the brightest
+part of a city hero as well as over the navy footer.
 
 ---
 

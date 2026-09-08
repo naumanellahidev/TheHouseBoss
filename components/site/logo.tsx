@@ -275,12 +275,26 @@ export function Logo({
     "Links must have discernible text" on every page. A link whose label is
     hidden is a link a screen reader announces as nothing.
   */
+  /*
+    `data-logo` marks the outermost element of the lockup, whichever it is.
+
+    It is what `app/globals.css` reaches for to grow the mark to hero size on a
+    page with a dark hero and shrink it back on scroll. An attribute rather than
+    a class because the class list here is composed from three conditionals and
+    a caller-supplied `className`, any of which could stop carrying a marker
+    class without anything failing loudly.
+  */
   if (!href) {
-    return <span className={cn(layout, className)}>{inner}</span>;
+    return (
+      <span data-logo="" className={cn(layout, className)}>
+        {inner}
+      </span>
+    );
   }
 
   return (
     <Link
+      data-logo=""
       href={href}
       // No aria-label: the visible text (or the image's alt) already names the
       // link, and an aria-label that differs from visible text fails WCAG 2.5.3.

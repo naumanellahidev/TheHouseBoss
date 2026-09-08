@@ -256,6 +256,18 @@
   --logo-h-footer: 6rem; /* 96 — the footer has the most room of anywhere */
   --logo-h-stacked: 6rem; /* 96 — sign-in, where it is the only thing there */
 
+  /*
+    The hero lockup.
+
+    On a page whose first section is dark the logo is not a bar element at all
+    until you scroll: it opens at this height, reaching down to roughly where
+    the hero's own first line of type begins, and returns to `--logo-h-bar` on
+    the first scroll. The value is overridden per breakpoint further down,
+    because at 1024px the desktop nav is only ~180px from the left edge and a
+    hero-sized mark would run into it.
+  */
+  --logo-h-hero: 7.5rem; /* 120 — phone */
+
   /* A wide logo must never push the primary nav off the bar. */
   --logo-max-w: 15rem;
   --logo-max-w-compact: 11rem;
@@ -600,12 +612,35 @@
   conditional class lists, so one rule changes every control in the bar at once.
 */
 
+/*
+  `--logo-h-bar` is the height the logo returns to, and `--bar-h` the height of
+  the bar it returns into. Both exist because the morph and the hero's padding
+  have to agree on those two numbers at every width, and a media query is the
+  only place that agreement can be written once.
+
+  The header renders `compact` below 1024 and `full` at and above it, so the
+  bar height is `--logo-h` then `--logo-h-lg` — `--logo-h-md` never applies
+  there.
+*/
+:root {
+  --logo-h-bar: var(--logo-h);
+  --bar-h: var(--header-h);
+}
+
 [data-site-header] ~ main {
   padding-top: var(--header-h);
 }
 
+/*
+  The hero clears the hero-sized logo, not the bar.
+
+  Static, deliberately: it does NOT shrink when the logo does. Making it follow
+  the logo would move the hero's own copy up under the reader mid-scroll, which
+  is a worse thing to watch than the space the logo leaves behind — and that
+  space is scrolling out of view by the time it exists.
+*/
 [data-hero-bleed] {
-  padding-top: var(--header-h);
+  padding-top: calc(var(--logo-h-hero) + 2rem);
 }
 
 /*
@@ -647,16 +682,29 @@ body:has([data-hero-bleed]) [data-site-header] ~ main {
 }
 
 @media (width >= 64rem) {
-  [data-site-header] ~ main {
-    padding-top: var(--header-h-lg);
+  :root {
+    --logo-h-bar: var(--logo-h-lg);
+    --bar-h: var(--header-h-lg);
+    /*
+      8.5rem and not the full hero size. At 1024 the desktop nav starts about
+      180px from the left edge, and this artwork is very nearly square, so
+      anything taller than ~150px collides with "Homes".
+    */
+    --logo-h-hero: 8.5rem; /* 136 */
   }
 
-  [data-hero-bleed] {
+  [data-site-header] ~ main {
     padding-top: var(--header-h-lg);
   }
 
   [data-hero-bleed]::before {
     height: calc(var(--header-h-lg) * 2.2);
+  }
+}
+
+@media (width >= 80rem) {
+  :root {
+    --logo-h-hero: 12rem; /* 192 — full size, and the nav has cleared it */
   }
 }
 
@@ -685,6 +733,45 @@ body:has([data-hero-bleed]) [data-site-header][data-at-top] {
   logo, and dark text on a dark hero would leave the link with no visible label
   at all.
 */
+/*
+  The hero lockup, and the shrink back into the bar.
+
+  ── Why the anchor is pinned rather than centred ──────────────────────────
+
+  The bar is a fixed-height flex row with `items-center`. A child taller than
+  the row would centre in it and overflow BOTH ways, which puts the top of a
+  hero-sized mark above the top of the window. `align-self: flex-start` plus
+  exactly the offset centring would have given it means the mark grows
+  downward only, and lands in precisely the same place once it is back at bar
+  size — so nothing moves at the end of the transition.
+
+  The bar's own height never changes. The row is a fixed height and the mark
+  simply overflows it, so the translucent background that appears on scroll is
+  always one bar tall and never a tall pane with a logo hanging out of it.
+
+  ── Why two states and not a scroll-linked size ───────────────────────────
+
+  Tying the height to scroll position reads better for the first 200px and
+  costs a rAF-throttled write on every scroll frame, a second source of truth
+  for "how far down are we", and a `prefers-reduced-motion` branch of its own.
+  Two states and one transition give the same reading — the mark shrinks up
+  into the bar as you leave the hero — and the global reduced-motion block
+  already turns the transition off without anything further being written.
+*/
+body:has([data-hero-bleed]) [data-site-header] [data-logo] {
+  align-self: flex-start;
+  margin-top: calc((var(--bar-h) - var(--logo-h-bar)) / 2);
+}
+
+body:has([data-hero-bleed]) [data-site-header] [data-logo] img {
+  transition: height var(--dur-slow) var(--ease-out);
+}
+
+body:has([data-hero-bleed]) [data-site-header][data-at-top] [data-logo] img {
+  height: var(--logo-h-hero);
+  max-height: none;
+}
+
 [data-site-header] [data-logo-type] {
   color: var(--nav-fg);
 }
