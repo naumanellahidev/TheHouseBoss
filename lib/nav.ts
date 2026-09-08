@@ -21,6 +21,16 @@ export function isGroup(entry: NavEntry): entry is NavGroup {
  * throwing away the indexation, which deleting the route would.
  */
 export const primaryNav: NavEntry[] = [
+  /*
+    Home, and it is not the same thing as "Homes".
+
+    "Homes" is a dropdown about property search, and its label is a trigger
+    rather than a link — clicking it opens the menu. There was no way to get
+    back to the landing page from the navigation at all except by clicking
+    the logo, which is a convention rather than an affordance and is not one
+    every visitor knows.
+  */
+  { href: "/", label: "Home" },
   {
     label: "Homes",
     href: "/search",

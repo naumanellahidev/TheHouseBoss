@@ -5,6 +5,7 @@ import { CustomCursor } from "@/components/site/custom-cursor";
 import { Footer } from "@/components/site/footer";
 import { Header } from "@/components/site/header";
 import { PageTransition } from "@/components/site/page-transition";
+import { ScrollToTopOnNavigate } from "@/components/site/scroll-to-top";
 import { JsonLd } from "@/components/site/json-ld";
 import { agentJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
@@ -46,6 +47,14 @@ export default async function MarketingLayout({
       >
         Skip to content
       </a>
+
+      {/*
+        Every page starts at the top of that page.
+
+        Renders nothing. The reasoning, and the two navigations it
+        deliberately leaves alone, are in the component.
+      */}
+      <ScrollToTopOnNavigate />
 
       <Header settings={settings} />
 

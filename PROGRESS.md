@@ -2627,4 +2627,45 @@ submitted from the hero, seen in the dashboard with its email, published, and
 rendered as a card on `/reviews`.
 
 ---
+### 2026-09-09 — A new page starts at the top of it, and Home is in the nav
+
+**Navigating no longer lands you below the hero.** Measured before:
+/search → a listing landed at scrollY 716. The App Router does scroll on
+navigation, but it decides where by asking whether the top of the new
+segment's first element is in the viewport — and a listing page's segment
+contains a `position: fixed` action bar pinned to the bottom of the window.
+Its rect is nowhere near the top, the check fails, and the router scrolls to
+the next thing it finds.
+
+`ScrollToTopOnNavigate` in the marketing layout makes the guarantee explicit
+rather than reordering the one page that trips it — any page can grow a fixed
+element, and a rule that holds only while nobody adds one is not a rule.
+
+It leaves two navigations alone. Back and forward restore where the reader
+was, and clobbering that is the most irritating thing a scroll handler can do;
+`popstate` fires before the route commits, so the flag is still set when the
+effect runs. A URL with a hash is asking for an element, not the top.
+
+`scroll-behavior` is forced to `auto` around the scroll and restored after —
+the smooth default is wanted for in-page anchors and would make arrival
+animate, which reads as a bug and can also be overtaken by the router's own
+scroll. Verified: 0 from a search card, a footer link and a header link; back
+still restores 700; an anchor click still lands at 1595 and a direct `#faq`
+load at 8372.
+
+**Home is a nav item.** "Homes" is a dropdown about property search and its
+label is a trigger, not a link, so the only route back to the landing page was
+the logo — a convention rather than an affordance.
+
+Eight items and a hero-sized logo do not both fit at 1024 with the old
+padding: "Hire Contractor" wrapped onto two lines and the gap to the mark fell
+to 16px. Nav padding is `px-2` until 1280 with `whitespace-nowrap`; the height
+is untouched so the 44px target holds. Every item is 44px tall at 1024, 1100,
+1280 and 1440, with no horizontal overflow at any of them.
+
+**Verified**: typecheck, lint, build, all guards, `check:seo`, axe clean on
+`/`, a listing, `/` at 390 and `/reviews` at 1024. The full Playwright suite
+was NOT run for this change, at the client's request.
+
+---
 <!-- Append new session entries above this line, newest last. -->

@@ -138,7 +138,16 @@ function TopLink({
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative inline-flex h-11 items-center rounded-md px-3 text-sm font-semibold",
+        /*
+          `px-2` until 1280.
+
+          Eight items and a hero-sized logo do not both fit at 1024 with the
+          roomier padding — measured: "Hire Contractor" wrapped onto two
+          lines and the gap between the mark and the first item fell to
+          16px. The height is untouched, so the 44px target still holds
+          (docs/03 § 9); only the space either side of the label gives.
+        */
+        "relative inline-flex h-11 items-center rounded-md px-2 text-sm font-semibold whitespace-nowrap xl:px-3",
         "transition-colors duration-(--dur-fast) ease-(--ease-out)",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--nav-ring)",
         /*
@@ -148,7 +157,7 @@ function TopLink({
           what keeps the label legible once the backdrop is not a flat colour.
         */
         active ? "text-(--nav-fg)" : "text-(--nav-fg-muted) hover:text-(--nav-fg)",
-        "after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:origin-left after:bg-accent",
+        "after:absolute after:inset-x-2 after:bottom-1.5 after:h-0.5 after:origin-left after:bg-accent xl:after:inset-x-3",
         "after:transition-transform after:duration-(--dur-base) after:ease-(--ease-out)",
         active
           ? "after:scale-x-100"
@@ -222,7 +231,7 @@ function DesktopDropdown({
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "relative inline-flex h-11 items-center gap-1 rounded-md px-3 text-sm font-semibold",
+          "relative inline-flex h-11 items-center gap-1 rounded-md px-2 text-sm font-semibold whitespace-nowrap xl:px-3",
           "transition-colors duration-(--dur-fast) ease-(--ease-out)",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--nav-ring)",
           active ? "text-(--nav-fg)" : "text-(--nav-fg-muted) hover:text-(--nav-fg)",
