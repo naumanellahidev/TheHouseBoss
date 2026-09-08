@@ -1413,6 +1413,7 @@ export type Database = {
           license_contractor_authority: string | null;
           years_experience: number | null;
           whatsapp: string | null;
+          portrait_key: string | null;
         };
         Insert: {
           id?: number;
@@ -1450,6 +1451,7 @@ export type Database = {
           license_contractor_authority?: string | null;
           years_experience?: number | null;
           whatsapp?: string | null;
+          portrait_key?: string | null;
         };
         Update: {
           id?: number;
@@ -1487,6 +1489,7 @@ export type Database = {
           license_contractor_authority?: string | null;
           years_experience?: number | null;
           whatsapp?: string | null;
+          portrait_key?: string | null;
         };
         Relationships: [];
       };
@@ -1609,6 +1612,9 @@ export type Database = {
           logo_invert_w: number | null;
           logo_invert_h: number | null;
           whatsapp: string | null;
+          portrait_key: string | null;
+          portrait_w: number | null;
+          portrait_h: number | null;
         };
         Relationships: [];
       };

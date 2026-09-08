@@ -72,7 +72,10 @@ export function CityHub({
       />
 
       {/* 1. Hero */}
-      <section className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert">
+      <section
+        data-hero-bleed=""
+        className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert"
+      >
         {city.heroKey ? (
           <>
             <div className="absolute inset-0 -z-10">

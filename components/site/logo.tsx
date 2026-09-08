@@ -186,9 +186,16 @@ export function Logo({
     nothing is right for a decorative photograph and wrong for a link's only
     label.
   */
+  /*
+    The two data attributes are the header's hook for re-colouring the type-set
+    fallback while it is transparent over a dark hero (app/globals.css). They
+    do nothing anywhere else, and they are attributes rather than classes so
+    the rule survives any change to the class list.
+  */
   const typeSet = (
     <>
       <span
+        data-logo-type=""
         className={cn(
           "font-display leading-none font-semibold tracking-[0.06em] uppercase",
           variant === "compact" ? "text-base" : "text-lg md:text-xl",
@@ -200,6 +207,7 @@ export function Logo({
 
       {variant !== "compact" ? (
         <span
+          data-logo-sub=""
           className={cn(
             "flex items-center gap-2 text-xs leading-none font-medium",
             invert ? "text-foreground-invert-muted" : "text-foreground-subtle",
@@ -224,13 +232,21 @@ export function Logo({
         alt: brandName,
       }}
       /*
-        800, not 400. The logo now renders up to 80px tall and, at a 3:2 ratio
-        on a 2x screen, wants ~240px across — the 400 was chosen when the box
-        was 44px tall. `sizes` lets the loader drop back to the 400 on a phone,
-        so this costs nothing where it is not needed.
+        800, not 400. The logo now renders up to 96px tall in the footer and
+        80px in the header, and the `sizes` below are the WIDTH CAPS from
+        `--logo-max-w-compact` / `--logo-max-w` rather than a guess at the
+        rendered width — because the width depends on the uploaded artwork's
+        ratio, which is not known here. Declaring the cap is the only figure
+        that cannot under-request, and `sizes` still lets the loader drop back
+        to the 400 wherever the box is genuinely small.
+
+        A SQUARE upload therefore renders as a full square at the header's
+        height, which is what fills the bar; a wide lockup renders wide and is
+        held to the cap so it cannot push the nav off the bar. Neither is ever
+        stretched — `object-contain` and `w-auto` keep the file's own ratio.
       */
       size={800}
-      sizes="(max-width: 767px) 180px, 300px"
+      sizes="(max-width: 1023px) 176px, 240px"
       priority
       aspect="none"
       bare

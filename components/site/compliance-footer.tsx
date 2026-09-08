@@ -134,8 +134,30 @@ export function ComplianceFooter({
           {/* Additional disclosure, typed by the admin. Editable since Phase 2
               and until now rendered nowhere. */}
           {settings?.disclosureText ? <p>{settings.disclosureText}</p> : null}
-          <p>
-            &copy; {new Date().getFullYear()} {brandName}. All rights reserved.
+          {/*
+            The copyright and the build credit share one line, separated by a
+            middot, and wrap onto two only when the width forces it. They are
+            the same kind of statement — who owns this and who made it — and
+            splitting them into two paragraphs gives the credit a prominence in
+            the legal block that it should not have.
+          */}
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>
+              &copy; {new Date().getFullYear()} {brandName}. All rights
+              reserved.
+            </span>
+            <span aria-hidden="true">&middot;</span>
+            <span>
+              Designed &amp; Developed by:{" "}
+              <a
+                href="https://naumanellahi.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground-invert underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert"
+              >
+                NAUMAN ELLAHI
+              </a>
+            </span>
           </p>
         </div>
       </div>

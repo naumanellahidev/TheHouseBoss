@@ -75,6 +75,11 @@ function toSiteSettings(row: Row | null): SiteSettings {
     logoH: num(row?.logo_h),
     logoInvertW: num(row?.logo_invert_w),
     logoInvertH: num(row?.logo_invert_h),
+
+    // The agent portrait, migration 023. Same shape as the logo.
+    portraitKey: str(row?.portrait_key),
+    portraitW: num(row?.portrait_w),
+    portraitH: num(row?.portrait_h),
     licenseReLabel: str(row?.license_re_label),
     licenseReAuthority: str(row?.license_re_authority),
     licenseContractorLabel: str(row?.license_contractor_label),

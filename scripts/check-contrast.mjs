@@ -74,6 +74,14 @@ const PAIRS = [
   ["warning", "warning-bg", "text", "warning message"],
   ["danger", "danger-bg", "text", "error message"],
   ["info", "info-bg", "text", "info message"],
+
+  // The floating WhatsApp button. It carries a text label, so the ink is held
+  // to 4.5:1 rather than the 3:1 a bare icon would need, and the edge is what
+  // gives the control a boundary against the page it floats over.
+  ["whatsapp-ink", "whatsapp", "text", "the WhatsApp button's label and mark"],
+  ["whatsapp-ink", "whatsapp-hover", "text", "the same label while hovered"],
+  ["whatsapp-edge", "porcelain-50", "nontext", "the button's edge on the page"],
+  ["whatsapp", "royal-950", "nontext", "the button's fill over the footer"],
 ];
 
 const THRESHOLD = { text: 4.5, large: 3, nontext: 3 };

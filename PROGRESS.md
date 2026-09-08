@@ -2471,4 +2471,64 @@ clean · all 8 admin routes 200 with real data and no page errors · a11y suite
 
 ---
 
+### 2026-09-08 — Floating header, WhatsApp pill, build credit, uploaded portrait
+
+**The header stopped being a white bar.** It is `fixed` and paints nothing until
+8px of scroll, so a dark hero runs to the top of the viewport and the logo sits
+on the photograph. Pages whose first section is dark mark it `data-hero-bleed`
+(the home hero, `PageHero`, `CityHub`, `/hire-contractor`); everything else is
+treated as light and keeps a header's worth of padding on `<main>`.
+
+`fixed` plus padding, NOT `sticky` plus a negative margin: the negative margin
+collapses through `<main>`, which has no padding or border to stop it, and takes
+the whole page up with it — leaving a 96px gap above the footer.
+
+The nav takes its colour from `--nav-fg` / `--nav-fg-muted` / `--nav-ring`, set
+on the header and flipped by `body:has([data-hero-bleed]) [data-at-top]`. The
+header renders above the page and cannot be told by it what colour the top of
+the page is; a route→tone lookup would answer that but would be a second list to
+keep in step. The marker travels with the component that IS dark.
+
+**Logo and header tokens grew.** `--header-h` 64→72, `--header-h-lg` 80→96,
+`--logo-h-lg` 64→80, `--logo-h-footer` 72→96. The uploaded artwork is 522×478 —
+a 1.09:1 square with transparent corners and 65% transparent pixels — so at 80px
+it renders as a full square filling the bar. `sizes` now declares the width CAPS
+(`--logo-max-w-compact` / `--logo-max-w`) rather than a guess at the rendered
+width, because the width depends on an uploaded file's ratio.
+
+The admin sidebar's brand row went to `lg:h-24`. It was `h-16`, which was exactly
+the old `--logo-h-lg`; the mark would have overflowed its own row on the screen
+the client uses most.
+
+**The WhatsApp button is a pill** with the mark and the word from 480px up, and
+the mark alone below it. The fill is WhatsApp's brand green `#25d366` and the ink
+is dark: a label is text, so it needs 4.5:1, and white on that green is 1.97:1 —
+which is why the earlier icon-only button used the darker brand teal and only
+had to clear 3:1. `--color-whatsapp-ink` on the green is 9.38:1. The green is
+1.97:1 against the page, so `--color-whatsapp-edge` supplies the 1.4.11 boundary
+at 7.60:1. All four pairings are asserted by `check:contrast`, not by comment.
+
+**Build credit** on the same line as the copyright in `ComplianceFooter`.
+
+**Migration 023 — `site_settings.portrait_key`.** `/about` carried
+`const hasPortrait = false` with a hardcoded `site/krisi-portrait` key behind it,
+and the home page's "Meet The House Boss" section passed `photo={null}`. Both
+were waiting on a file somebody had to place in the repo — the arrangement 015
+already removed for the logo. The portrait now uploads through the branding tab
+like every other image, and `portraitPhoto()` composes its alt text from the
+licensed name and job title so there is no alt column to drift from the name
+field. Null hides the block on both pages rather than showing an empty frame,
+and `personJsonLd` gains `image` only when one exists.
+
+**Verified**: typecheck, lint, build clean · all guards green · `check:seo` 23
+indexable / 5 noindex · `check:compliance` 21 pages (with the service key — it
+silently falls back to the launch values without one, which is what made it look
+like a failure) · Playwright suite green · screenshots at 1440 and 390 for the
+transparent, scrolled and light-page states.
+
+**Open, and needs the client**: the portrait itself, and a light-text logo for
+the dark footer. Both are uploads, not code.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

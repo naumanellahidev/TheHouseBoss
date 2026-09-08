@@ -21,7 +21,7 @@ import { CityTiles } from "@/components/site/city-tiles";
 import { Container, Section, SectionHeader } from "@/components/site/container";
 import { FloatCard } from "@/components/site/float-card";
 import { LeadForm } from "@/components/site/lead-form";
-import { MediaFrame, heroPhoto } from "@/components/site/media-frame";
+import { MediaFrame, heroPhoto, portraitPhoto } from "@/components/site/media-frame";
 import { Reveal } from "@/components/site/reveal";
 import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
@@ -41,7 +41,7 @@ import { EMPTY_SETTINGS, safeQuery } from "@/lib/queries/safe";
 import { getSiteSettings } from "@/lib/queries/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/site-config";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 
 /**
  * The home page — all eleven sections of docs/05-page-specs.md § Home.
@@ -202,6 +202,9 @@ export default async function HomePage() {
   /** Spec: swap the primary CTA rather than advertise an empty search. */
   const inventoryIsThin = published < 5;
 
+  /** Admin → Settings → Branding, migration 023. Null hides section 6's media. */
+  const portrait = portraitPhoto(settings);
+
   /*
     The photograph beside the lead form.
 
@@ -244,7 +247,10 @@ export default async function HomePage() {
   return (
     <>
       {/* ── 1. Hero + search ─────────────────────────────────────────── */}
-      <section className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert">
+      <section
+        data-hero-bleed=""
+        className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert"
+      >
         {/*
           The navy gradient and gold grid stay as the base layer. They are not
           dead weight: if the hero photograph is ever missing the section still
@@ -486,24 +492,38 @@ export default async function HomePage() {
       <Section tone="sunken">
         <Container>
           <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
-            <div className="relative lg:col-span-5">
-              <MediaFrame
-                photo={null}
-                size={800}
-                sizes={IMAGE_SIZES.portrait}
-                aspect="4/5"
-                className="mx-auto max-w-sm lg:mx-0 lg:max-w-none"
-              />
-              <FloatCard
-                className="mx-auto mt-[-2rem] max-w-[17rem] lg:absolute lg:-right-6 lg:bottom-6 lg:mt-0"
-                icon={HardHat}
-                label="Dual licensed"
-                value="Realtor + Contractor"
-                caption={`${siteConfig.licenses.realEstate.number} · ${siteConfig.licenses.contractor.number}`}
-              />
-            </div>
+            {/*
+              The portrait is uploaded in Admin → Settings → Branding
+              (migration 023). With none uploaded the media column is dropped
+              entirely and the copy runs full width, rather than leaving a grey
+              4:5 rectangle where a person should be — which is what
+              `photo={null}` produced here for the whole of Phase 5.
+            */}
+            {portrait ? (
+              <div className="relative lg:col-span-5">
+                <MediaFrame
+                  photo={portrait}
+                  size={1600}
+                  sizes={IMAGE_SIZES.portrait}
+                  aspect="4/5"
+                  className="mx-auto max-w-sm lg:mx-0 lg:max-w-none"
+                />
+                <FloatCard
+                  className="mx-auto mt-[-2rem] max-w-[17rem] lg:absolute lg:-right-6 lg:bottom-6 lg:mt-0"
+                  icon={HardHat}
+                  label="Dual licensed"
+                  value="Realtor + Contractor"
+                  caption={`${siteConfig.licenses.realEstate.number} · ${siteConfig.licenses.contractor.number}`}
+                />
+              </div>
+            ) : null}
 
-            <div className="flex flex-col items-start gap-5 lg:col-span-7">
+            <div
+              className={cn(
+                "flex flex-col items-start gap-5",
+                portrait ? "lg:col-span-7" : "lg:col-span-12",
+              )}
+            >
               <SectionHeader
                 overline="Meet The House Boss"
                 title="You gain more than a Realtor"

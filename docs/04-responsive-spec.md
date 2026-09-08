@@ -88,8 +88,19 @@ padding-bottom: max(16px, env(safe-area-inset-bottom));
 | < 1024px | Logo left, hamburger right. Tap opens a full-screen sheet sliding from the right. |
 | ≥ 1024px | Horizontal nav bar with dropdowns for Cities and Guides. |
 
-Header height: 64px mobile, 80px desktop. Sticky, with a `backdrop-blur` and a
-1px bottom border that appears only after 8px of scroll.
+Header height: **72px mobile, 96px desktop** (`--header-h` / `--header-h-lg`).
+It is `position: fixed` and paints **nothing at all** until 8px of scroll, at
+which point it gains a translucent background, a `backdrop-blur` and a 1px
+bottom border.
+
+It floats rather than sitting on a bar, so a dark hero runs to the top of the
+viewport and the logo sits on the photograph. A section that should run up
+behind it carries `data-hero-bleed`; everything else keeps a header's worth of
+padding on `<main>`. Both rules, and the nav's light/dark tone variables, live
+in `app/globals.css` under HEADER OVERLAY AND TONE.
+
+The heights are set by the logo, not by the chrome: the artwork is a square
+lockup and `--logo-h-lg` is 80px, so the bar has to be 96.
 
 Mobile sheet requirements:
 

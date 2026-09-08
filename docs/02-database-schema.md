@@ -24,6 +24,17 @@ Never edit an applied migration — add a new one.
 | 010 | `010_rls.sql` | every policy, in one place |
 | 011 | `011_settings.sql` | site_settings (single row) + site_settings_public |
 | 012 | `012_redirect_status.sql` | redirects.status_code default 308, honoured by the app |
+| 013 | `013_hero_alt.sql` | alt text for city and community heroes |
+| 014 | `014_admin_platform.sql` | audit_logs, seo_pages and the admin platform tables |
+| 015 | `015_branding.sql` | runtime branding on site_settings + view rebuild |
+| 016 | `016_logo_dimensions.sql` | logo_w/h read from `media` in the view |
+| 017 | `017_whatsapp.sql` | site_settings.whatsapp + view rebuild |
+| 018 | `018_geo_entities.sql` | geo_entities, geo_entity_links, listing_geo_relevance |
+| 019 | `019_seo_engine.sql` | generated keywords, runs and internal links |
+| 020 | `020_seo_jobs.sql` | the SEO job queue the cron worker drains |
+| 021 | `021_article_faq.sql` | articles.faq_json |
+| 022 | `022_page_sections.sql` | per-section CMS rows for /hire-contractor |
+| 023 | `023_portrait.sql` | site_settings.portrait_key + view rebuild |
 
 **011 was added in Phase 2.** `docs/06-admin-dashboard-spec.md` § 10 required a
 single-row `site_settings` table that this document had never defined. It is
@@ -508,6 +519,10 @@ create table site_settings (
   announcement_href  text,
   og_key             text,
   hero_key           text,
+  -- Branding, uploaded through the admin rather than committed (015/016/023).
+  logo_key           text,
+  logo_invert_key    text,
+  portrait_key       text,
   brokerage_name     text,
   license_re         text,
   license_contractor text,
@@ -536,6 +551,11 @@ Decisions recorded here so they are not relitigated:
   than rendering a placeholder phone number.
 - **A CHECK pins the singleton.** A settings table that can grow a second row
   is a settings table that will eventually serve the wrong one.
+- **Image columns hold a `key`, never a URL** (HR1), and never a dimension. The
+  logo and the portrait are ordinary uploads with `media` rows, so their real
+  pixel size is already recorded once; `site_settings_public` reads it back
+  from `media` rather than duplicating it here, which is why 016 and 023 add a
+  subselect to the view instead of a `_w` / `_h` pair to the table.
 
 RLS: the table is **admin-only**. Public pages read `site_settings_public`
 instead — see below.
@@ -590,6 +610,15 @@ where published = true;
 The publishable subset of `site_settings`. **Not** `security_invoker` — that is
 the point: it exposes a narrow, reviewed column list past the admin-only policy
 on the table.
+
+It also carries four derived columns that are not on the table: `logo_w`,
+`logo_h`, `logo_invert_w`, `logo_invert_h` (016) and `portrait_w`, `portrait_h`
+(023), each a `limit 1` subselect against `media` on the matching key.
+
+**A new column must be added to the view or it stays admin-only** — the view has
+an explicit column list and `create or replace view` cannot insert into the
+middle of it, so every addition since 015 is appended at the end. Forgetting
+this is silent: the setting saves, and the public site never sees it.
 
 Excluded on purpose: `lead_notify_email`, `autoresponder_subject`,
 `autoresponder_body`, and the three `last_*` maintenance timestamps. None is

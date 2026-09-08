@@ -40,7 +40,13 @@ export function MobileNav() {
           variant="ghost"
           size="icon"
           aria-label="Open menu"
-          className="lg:hidden"
+          /*
+            The trigger takes the header's tone with the rest of the nav, so a
+            dark icon is never left on a dark hero. `--nav-fg` is set on the
+            header element and flips while the bar is transparent over one; see
+            app/globals.css.
+          */
+          className="text-(--nav-fg) hover:text-(--nav-fg) lg:hidden"
         >
           <Menu className="size-6" aria-hidden="true" />
         </Button>

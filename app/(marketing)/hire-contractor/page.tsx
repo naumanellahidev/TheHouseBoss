@@ -155,7 +155,10 @@ export default async function HireContractorPage() {
       />
 
       {/* ═══ HERO (§6, §7) ══════════════════════════════════════════════ */}
-      <section className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert">
+      <section
+        data-hero-bleed=""
+        className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert"
+      >
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-20 bg-[radial-gradient(130%_100%_at_20%_0%,var(--color-royal-800),var(--color-royal-950))]"

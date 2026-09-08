@@ -106,6 +106,7 @@ export function SettingsForm({
   */
   const [logoKey, setLogoKey] = React.useState(settings.logoKey);
   const [logoInvertKey, setLogoInvertKey] = React.useState(settings.logoInvertKey);
+  const [portraitKey, setPortraitKey] = React.useState(settings.portraitKey);
 
   const [errors, setErrors] = React.useState<Record<string, string[]>>({});
 
@@ -117,7 +118,13 @@ export function SettingsForm({
     setSaving(true);
     setErrors({});
 
-    const result = await saveSettings({ ...form, profiles, logoKey, logoInvertKey });
+    const result = await saveSettings({
+      ...form,
+      profiles,
+      logoKey,
+      logoInvertKey,
+      portraitKey,
+    });
     setSaving(false);
 
     if (!result.ok) {
@@ -320,6 +327,28 @@ export function SettingsForm({
               hideAlt
               contain
               onChange={(next) => setLogoInvertKey(next.key)}
+            />
+
+            {/*
+              `hideAlt`, and no alt column to go with it.
+
+              The alt text is written in code from the licensed name and job
+              title — "Krisi Kakarova, Realtor and Certified Residential
+              Building Contractor" — because that is what the picture is on
+              both pages that show it, and it stays correct when the name is
+              edited in the field above. A free-text alt box here would let a
+              caption or a filename end up as the description of the one image
+              on the site that identifies the licensee.
+            */}
+            <ImageField
+              label="Your photo"
+              description="Shown on the home page and the about page. Portrait orientation works best."
+              entityType="site"
+              entityId={SITE_ENTITY_ID}
+              imageKey={portraitKey}
+              alt={null}
+              hideAlt
+              onChange={(next) => setPortraitKey(next.key)}
             />
 
             <div className="grid gap-5 md:grid-cols-2">

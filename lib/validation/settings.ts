@@ -95,6 +95,8 @@ export const settingsSchema = z.object({
   legalName: optionalText(120),
   logoKey: optionalText(300),
   logoInvertKey: optionalText(300),
+  /** The agent portrait, migration 023. */
+  portraitKey: optionalText(300),
   licenseReLabel: optionalText(120),
   licenseReAuthority: optionalText(200),
   licenseContractorLabel: optionalText(120),

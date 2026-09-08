@@ -201,25 +201,41 @@
   --container-page: 80rem; /* 1280 */
   --container-prose: 45rem; /* 720 */
   --container-wide: 90rem; /* 1440 */
-  --header-h: 4rem; /* 64 mobile */
-  --header-h-lg: 5rem; /* 80 desktop */
+  /*
+    The header floats over the page rather than sitting on a bar, so its height
+    is the size of the logo it has to hold rather than a band of chrome the
+    page has to pay for. A square lockup at 80px needs 96 around it.
+  */
+  --header-h: 4.5rem; /* 72 mobile */
+  --header-h-lg: 6rem; /* 96 desktop */
 
   /*
     WhatsApp.
 
-    `#128c7e`, WhatsApp's dark brand teal — NOT the familiar `#25d366`.
-    Measured against this palette, that lighter green is 1.96:1 against the page
-    and gives a white glyph 1.98:1, both well under the 3:1 that WCAG 1.4.11
-    requires of a control's boundary and its non-text content. The teal is
-    4.10:1 against the page, 4.14:1 for the white glyph and 4.12:1 against the
-    navy footer, so it passes wherever the button lands.
+    `#25d366` is WhatsApp's brand green, and the button now carries the word
+    "WhatsApp" beside the mark rather than the mark alone — which changes what
+    the contrast rules ask of it. A label is text, so it needs 4.5:1 rather than
+    the 3:1 a graphic needs, and white on this green measures 1.97:1. That is
+    the reason an earlier version of this button used the darker brand teal:
+    with no text on it, 3:1 was the whole requirement.
 
-    Brand recognition survives: the teal is one of WhatsApp's own colours and
-    the glyph is the real mark. A recognisable button nobody with low vision can
-    see is not a better trade.
+    So the ink is dark rather than white. `--color-whatsapp-ink` on the green
+    measures 9.38:1, which clears AA with room to spare, and the button keeps
+    the green everyone recognises instead of trading it for a teal nobody reads
+    as WhatsApp.
+
+    `--color-whatsapp-edge` is the boundary. The green is only 1.97:1 against
+    this page, so the fill alone cannot satisfy 1.4.11 on a light ground; the
+    edge is 7.60:1 there and is what makes the control's shape identifiable.
+    Over the navy footer the fill itself is 9.56:1 and the edge is decorative.
+
+    All four figures are computed by `npm run check:contrast`, which asserts the
+    pairings rather than trusting this comment.
   */
-  --color-whatsapp: #128c7e;
-  --color-whatsapp-hover: #0f7a6c;
+  --color-whatsapp: #25d366;
+  --color-whatsapp-hover: #1da851;
+  --color-whatsapp-ink: #0b141a;
+  --color-whatsapp-edge: #075e54;
 
   /*
     Logo heights.
@@ -234,11 +250,11 @@
     correct relative to each other.
   */
   --logo-h-compact: 2.5rem; /* 40 — dense spaces */
-  --logo-h: 3rem; /* 48 — mobile header, inside 64 */
-  --logo-h-md: 3.5rem; /* 56 — tablet */
-  --logo-h-lg: 4rem; /* 64 — desktop header, inside 80 */
-  --logo-h-footer: 4.5rem; /* 72 — the footer has room */
-  --logo-h-stacked: 5rem; /* 80 — sign-in, where it is the only thing there */
+  --logo-h: 3.5rem; /* 56 — mobile header, inside 72 */
+  --logo-h-md: 4rem; /* 64 — tablet */
+  --logo-h-lg: 5rem; /* 80 — desktop header, inside 96 */
+  --logo-h-footer: 6rem; /* 96 — the footer has the most room of anywhere */
+  --logo-h-stacked: 6rem; /* 96 — sign-in, where it is the only thing there */
 
   /* A wide logo must never push the primary nav off the bar. */
   --logo-max-w: 15rem;
@@ -525,10 +541,156 @@
   own `safe-bottom` grows it on a device with a home indicator and a fixed
   offset would under-shoot there.
 */
+/*
+  The floating button's own offset.
+
+  `env(safe-area-inset-bottom)` goes in the OFFSET, not in padding. It was
+  `bottom-4` plus the `safe-bottom` utility, and `safe-bottom` is
+  `padding-bottom` — which on a fixed-height button shrinks the content box
+  instead of moving the button, leaving the mark sitting above centre. The
+  inset has to move the element, so it is added to `bottom`.
+*/
+[data-floating-cta] {
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (width >= 48rem) {
+  [data-floating-cta] {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (width < 64rem) {
   body:has([data-sticky-action-bar]) [data-floating-cta] {
     bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
+}
+
+/* ============================================================================
+   HEADER OVERLAY AND TONE
+   ========================================================================= */
+
+/*
+  The header is transparent and floats over the page rather than sitting on a
+  white bar of its own.
+
+  ── Why `fixed` and a padded `main`, not `sticky` and a negative margin ────
+
+  Pulling the hero up under a sticky header with `margin-top: -4.5rem` looks
+  right until the margin collapses through `<main>` — which has no padding or
+  border to stop it — and takes the entire page up with it, leaving a gap the
+  height of the header above the footer. Taking the header out of flow and
+  paying for it with padding on `main` has no collapsing to reason about, and
+  the two cases (a hero that bleeds, and a page that starts with a light
+  section) differ by exactly which element carries that padding.
+
+  `[data-site-header] ~ main` and not a bare `main`: the admin shell has its own
+  `<main>` and no site header, and must not gain a header's worth of padding.
+
+  ── Why the tone is CSS and not a prop ────────────────────────────────────
+
+  The header renders above the page in the layout and cannot be told by it what
+  colour the top of the page is. A route→tone lookup in the header would answer
+  the question but would be a second list to keep in step with the pages. The
+  marker instead travels with the component that IS dark, so a page is light
+  until something dark says otherwise, and `:has()` reads it — the same
+  technique the floating button already uses to clear the listing action bar.
+
+  The nav then reads its colours from these three variables rather than from
+  conditional class lists, so one rule changes every control in the bar at once.
+*/
+
+[data-site-header] ~ main {
+  padding-top: var(--header-h);
+}
+
+[data-hero-bleed] {
+  padding-top: var(--header-h);
+}
+
+/*
+  The top scrim, and it is not decoration.
+
+  `photo-scrim` runs bottom-up: it is transparent exactly where the header now
+  sits. Before the header floated, that did not matter — the nav was on a white
+  bar. Now it is over the brightest part of a photograph, and on a city hero
+  with a white sky the nav was unreadable.
+
+  Sized against the worst case rather than a typical one. A pure-white sky under
+  0.665 alpha at the nav's centre line composites to #5a606d, which gives white
+  text 6.31:1 — comfortably past AA for 14px. That figure is a hand computation
+  and NOT one `check:contrast` can assert, because the other colour is a
+  photograph rather than a token; what the script can and does check is every
+  pairing where both sides are known.
+
+  `z-index: -1` puts it above the photo layers (`-z-10`, `-z-20`) and below the
+  content, inside the stacking context the section's `isolate` already creates.
+*/
+[data-hero-bleed]::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: -1;
+  height: calc(var(--header-h) * 2.2);
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgb(7 16 35 / 0.72),
+    rgb(7 16 35 / 0.6) 50%,
+    transparent
+  );
+}
+
+body:has([data-hero-bleed]) [data-site-header] ~ main {
+  padding-top: 0;
+}
+
+@media (width >= 64rem) {
+  [data-site-header] ~ main {
+    padding-top: var(--header-h-lg);
+  }
+
+  [data-hero-bleed] {
+    padding-top: var(--header-h-lg);
+  }
+
+  [data-hero-bleed]::before {
+    height: calc(var(--header-h-lg) * 2.2);
+  }
+}
+
+[data-site-header] {
+  --nav-fg: var(--color-foreground);
+  --nav-fg-muted: var(--color-foreground-muted);
+  --nav-ring: var(--color-ring);
+}
+
+/*
+  Light controls, but only while the bar is genuinely over the dark hero. Once
+  the page has scrolled the header paints its own light background, and the
+  nav goes back to dark ink on it.
+*/
+body:has([data-hero-bleed]) [data-site-header][data-at-top] {
+  --nav-fg: var(--color-foreground-invert);
+  --nav-fg-muted: var(--color-foreground-invert-muted);
+  --nav-ring: var(--color-ring-invert);
+}
+
+/*
+  The logo's type-set fallback follows the same tone.
+
+  It only renders when no artwork has been uploaded, or when uploaded artwork
+  fails to load — but that is exactly the state in which the brand name IS the
+  logo, and dark text on a dark hero would leave the link with no visible label
+  at all.
+*/
+[data-site-header] [data-logo-type] {
+  color: var(--nav-fg);
+}
+
+[data-site-header] [data-logo-sub] {
+  color: var(--nav-fg-muted);
 }
 
 @utility safe-bottom {

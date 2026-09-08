@@ -5,9 +5,9 @@ import { Award, HardHat, MapPin, ShieldCheck } from "lucide-react";
 import { Container, Section, SectionHeader } from "@/components/site/container";
 import { JsonLd } from "@/components/site/json-ld";
 import { LeadForm } from "@/components/site/lead-form";
+import { MediaFrame, portraitPhoto } from "@/components/site/media-frame";
 import { PageHero } from "@/components/site/page-hero";
 import { Prose } from "@/components/site/prose";
-import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { Button } from "@/components/ui/button";
 import { breadcrumbJsonLd, personJsonLd } from "@/lib/seo/jsonld";
@@ -91,7 +91,16 @@ export default async function AboutPage() {
     "getSiteSettings(about)",
   );
 
-  const hasPortrait = false; // Phase 5 content: client headshot still outstanding
+  /*
+    Uploaded in Admin → Settings → Branding (migration 023), not committed to
+    the repository. This was `const hasPortrait = false` with a hardcoded key
+    behind it, waiting on a file somebody had to place in `public/` — which is
+    the arrangement migration 015 already removed for the logo.
+
+    Null is a real state: the whole block below is dropped rather than showing
+    an empty frame, and the credentials card moves up to take its place.
+  */
+  const portrait = portraitPhoto(settings);
 
   return (
     <>
@@ -110,22 +119,14 @@ export default async function AboutPage() {
           {/* ── Portrait + credentials ─────────────────────────────────── */}
           <div className="lg:col-span-5">
             <div className="flex flex-col gap-6 lg:sticky lg:top-[calc(var(--header-h-lg)+1.5rem)]">
-              <PropertyImage
-                photo={
-                  hasPortrait
-                    ? {
-                        kind: "stored",
-                        key: "site/krisi-portrait",
-                        w: 800,
-                        h: 1000,
-                        alt: `${siteConfig.legalName}, Realtor and Certified Residential Building Contractor`,
-                      }
-                    : null
-                }
-                sizes={IMAGE_SIZES.portrait}
-                aspect="4/5"
-                wrapperClassName="rounded-lg border border-border"
-              />
+              {portrait ? (
+                <MediaFrame
+                  photo={portrait}
+                  size={1600}
+                  sizes={IMAGE_SIZES.portrait}
+                  aspect="4/5"
+                />
+              ) : null}
 
               <dl className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 shadow-sm">
                 {/* A <div> inside a <dl> may contain ONLY a dt/dd group —

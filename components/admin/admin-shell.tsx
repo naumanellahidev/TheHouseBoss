@@ -83,7 +83,14 @@ export function AdminShell({
     <div className="flex min-h-dvh bg-surface-sunken">
       {/* ── Sidebar / icon rail: 768px and up ─────────────────────────── */}
       <aside className="sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-border-invert bg-surface-invert md:flex md:w-16 lg:w-60">
-        <div className="flex h-16 items-center justify-center border-b border-border-invert lg:justify-start lg:px-5">
+        {/*
+          `lg:h-24` because the brand row has to hold the logo, and the logo's
+          height is a token that grew when the public header stopped being a
+          white bar. 64px was exactly the old `--logo-h-lg`; leaving it there
+          would have the mark overflow its own row on the one screen the client
+          spends all day in.
+        */}
+        <div className="flex h-16 items-center justify-center border-b border-border-invert lg:h-24 lg:justify-start lg:px-5">
           {/*
             The uploaded logo, not a hardcoded wordmark.
 

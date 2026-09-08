@@ -338,6 +338,17 @@ export type SiteSettings = {
   logoH: number | null;
   logoInvertW: number | null;
   logoInvertH: number | null;
+  /**
+   * The agent's own photograph (migration 023), uploaded in Admin → Settings →
+   * Branding exactly like the logo.
+   *
+   * NULL is a real state, not an oversight: `/` and `/about` hide the portrait
+   * rather than render a grey box, and the Person graph omits `image` rather
+   * than pointing at a placeholder.
+   */
+  portraitKey: string | null;
+  portraitW: number | null;
+  portraitH: number | null;
   licenseReLabel: string | null;
   licenseReAuthority: string | null;
   licenseContractorLabel: string | null;

@@ -1,8 +1,9 @@
 import * as React from "react";
 
 import { PropertyImage } from "@/components/site/property-image";
+import { siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
-import type { Photo, PhotoSize } from "@/types/domain";
+import type { Photo, PhotoSize, SiteSettings } from "@/types/domain";
 
 /**
  * Editorial media frame — the single place non-listing imagery is shaped.
@@ -37,6 +38,36 @@ export function heroPhoto(
   h = 1200,
 ): Photo | null {
   return key ? { kind: "stored", key, w, h, alt: alt ?? "" } : null;
+}
+
+/**
+ * The agent portrait, uploaded in Admin → Settings → Branding (migration 023).
+ *
+ * The home page and the about page both show the same photograph, so they both
+ * build it here rather than each writing the object literal — and, more to the
+ * point, so they describe it the same way. The alt text is composed from the
+ * licensed name and the job title because that is what the picture IS on both
+ * pages; there is no alt column to get out of step with the name field.
+ *
+ * The dimensions come from `media` through the public view, so the frame is
+ * reserved at the photograph's real ratio and CLS stays 0 (HR7). The 4:5
+ * fallback covers the window between an upload and the view catching up.
+ *
+ * Returns null when nothing has been uploaded, and every caller hides its
+ * frame rather than rendering an empty box.
+ */
+export function portraitPhoto(settings?: SiteSettings | null): Photo | null {
+  if (!settings?.portraitKey) return null;
+
+  const name = settings.legalName ?? siteConfig.legalName;
+
+  return {
+    kind: "stored",
+    key: settings.portraitKey,
+    w: settings.portraitW ?? 800,
+    h: settings.portraitH ?? 1000,
+    alt: `${name}, Realtor and Certified Residential Building Contractor`,
+  };
 }
 
 export function MediaFrame({

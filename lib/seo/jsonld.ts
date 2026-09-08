@@ -1,3 +1,4 @@
+import { keyUrl } from "@/lib/storage/url";
 import { absolute } from "@/lib/seo/metadata";
 import { allCities, isPending, siteConfig } from "@/lib/site-config";
 import type { Crumb } from "@/components/site/breadcrumbs";
@@ -123,6 +124,18 @@ export function personJsonLd(settings?: SiteSettings): JsonLdObject {
     jobTitle: "Realtor and Certified Residential Building Contractor",
     description: siteConfig.positioning,
     url: absolute("/about"),
+    /*
+      Her own photograph, when one has been uploaded (migration 023).
+
+      `image` on a Person is what lets a knowledge panel or an AI assistant show
+      a face against the name, and it is the one image on this site that is
+      genuinely about the entity rather than about a property. Omitted entirely
+      when nothing is uploaded — a Person pointing at the site's OG card would
+      be a picture of a house presented as a picture of a person.
+    */
+    ...(settings?.portraitKey
+      ? { image: keyUrl(settings.portraitKey, 1600) }
+      : {}),
     worksFor: { "@type": "Organization", name: siteConfig.brokerage },
     // The highest-value markup on the site. Do not remove.
     hasCredential: [

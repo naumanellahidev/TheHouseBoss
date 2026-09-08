@@ -27,7 +27,15 @@ export function PageHero({
   size?: "sm" | "md" | "lg";
 }) {
   return (
-    <section className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert">
+    <section
+      /*
+        Runs up behind the transparent header. The rule and the reasoning are
+        in app/globals.css under HEADER OVERLAY AND TONE; without this marker
+        the page is treated as light and the header keeps its own space.
+      */
+      data-hero-bleed=""
+      className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert"
+    >
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"

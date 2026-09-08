@@ -14,8 +14,21 @@ import { cn } from "@/lib/utils";
 
 
 /**
- * Sticky header. 64px mobile / 80px desktop. The bottom border and backdrop
- * blur appear only after 8px of scroll so the hero reads as full-bleed.
+ * The site header. 72px mobile / 96px desktop.
+ *
+ * ── It floats; it does not sit on a bar ───────────────────────────────────
+ *
+ * At the top of the page it paints nothing at all, so a dark hero runs the full
+ * height of the viewport and the logo sits on the photograph rather than on a
+ * white strip above it. After 8px of scroll it acquires a translucent
+ * background, a blur and a bottom border, because from that point it is over
+ * content rather than over a hero and needs to be separable from it.
+ *
+ * `data-at-top` is the whole state, and everything that depends on it —
+ * whether the hero bleeds up behind the bar, and whether the nav is light ink
+ * or dark — is decided in `app/globals.css`. The reasoning is there, next to
+ * the rules.
+ *
  * docs/04-responsive-spec.md § 3.
  */
 export function Header({ settings }: { settings?: SiteSettings | null }) {
@@ -36,12 +49,19 @@ export function Header({ settings }: { settings?: SiteSettings | null }) {
 
   return (
     <header
+      data-site-header
+      /*
+        Present while the bar is at the top of the page and absent once it is
+        not — an attribute rather than a value, so the CSS reads
+        `[data-at-top]` and cannot be defeated by a stale "false" string.
+      */
+      data-at-top={scrolled ? undefined : ""}
       className={cn(
-        "sticky top-0 z-40 w-full",
+        "fixed top-0 z-40 w-full",
         "transition-[background-color,box-shadow,border-color] duration-(--dur-base) ease-(--ease-out)",
         scrolled
           ? "border-b border-border bg-background/90 backdrop-blur-md"
-          : "border-b border-transparent bg-background",
+          : "border-b border-transparent bg-transparent",
       )}
     >
       <div className="container-page flex h-(--header-h) items-center justify-between gap-4 lg:h-(--header-h-lg)">
@@ -101,11 +121,16 @@ function TopLink({
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative inline-flex h-11 items-center rounded-md px-3 text-sm font-medium",
+        "relative inline-flex h-11 items-center rounded-md px-3 text-sm font-semibold",
         "transition-colors duration-(--dur-fast) ease-(--ease-out)",
-        active
-          ? "text-foreground"
-          : "text-foreground-muted hover:text-foreground",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--nav-ring)",
+        /*
+          `--nav-fg` / `--nav-fg-muted` are set on the header and flip to the
+          inverted pair while it is transparent over a dark hero. Semibold
+          rather than medium: at 14px over a photograph the extra weight is
+          what keeps the label legible once the backdrop is not a flat colour.
+        */
+        active ? "text-(--nav-fg)" : "text-(--nav-fg-muted) hover:text-(--nav-fg)",
         "after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:origin-left after:bg-accent",
         "after:transition-transform after:duration-(--dur-base) after:ease-(--ease-out)",
         active
@@ -180,11 +205,10 @@ function DesktopDropdown({
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "relative inline-flex h-11 items-center gap-1 rounded-md px-3 text-sm font-medium",
+          "relative inline-flex h-11 items-center gap-1 rounded-md px-3 text-sm font-semibold",
           "transition-colors duration-(--dur-fast) ease-(--ease-out)",
-          active
-            ? "text-foreground"
-            : "text-foreground-muted hover:text-foreground",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--nav-ring)",
+          active ? "text-(--nav-fg)" : "text-(--nav-fg-muted) hover:text-(--nav-fg)",
         )}
       >
         {group.label}
