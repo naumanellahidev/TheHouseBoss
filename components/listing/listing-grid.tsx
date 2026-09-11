@@ -15,8 +15,14 @@ import type { ListingCard } from "@/types/domain";
  * to 4: a four-across grid makes the photos too small to sell a house
  * (docs/04 § 4).
  *
- * The first three cards get `priority`, so the LCP image on a search page is
- * not lazy-loaded.
+ * Only the FIRST card gets `priority` (preloaded, fetchpriority=high).
+ *
+ * It used to be the first three. On a phone the grid is one column, so cards
+ * two and three are below the fold — and three high-priority preloads split the
+ * bandwidth three ways on exactly the throttled connection where the first
+ * photo is the LCP. On desktop cards two and three are in the viewport and load
+ * as soon as layout places them; they are the same size as the first, so the
+ * first still decides the LCP.
  */
 export function ListingGrid({
   listings,
@@ -34,7 +40,7 @@ export function ListingGrid({
     >
       {listings.map((listing, index) => (
         <li key={listing.id}>
-          <PropertyCard listing={listing} priority={index < 3} />
+          <PropertyCard listing={listing} priority={index === 0} />
         </li>
       ))}
     </ul>

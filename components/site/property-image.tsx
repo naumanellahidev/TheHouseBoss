@@ -37,6 +37,7 @@ export function PropertyImage({
   size = 800,
   sizes,
   priority = false,
+  eager = false,
   className,
   wrapperClassName,
   aspect = "4/3",
@@ -46,7 +47,29 @@ export function PropertyImage({
   photo: Photo | null | undefined;
   size?: PhotoSize;
   sizes: string;
+  /**
+   * The page's LCP image: preloaded in <head> AND fetched at high priority.
+   *
+   * Next 16 changed what `priority` means — it now only preloads, and no
+   * longer sets `fetchpriority="high"`. An image preload without it is LOW
+   * priority in Chrome, so every "priority" image on this site was being
+   * preloaded and then queued behind the fonts and scripts: Lighthouse showed
+   * the listing hero requested at Low with ~1.9 s of load delay. Both are now
+   * set explicitly. Use on at most one image per viewport.
+   */
   priority?: boolean;
+  /**
+   * Above the fold but NOT the LCP — the header logo. Requested straight away
+   * (never lazily), at LOW priority, and never preloaded.
+   *
+   * The low priority is load-bearing. React 19 inserts a `<link rel=preload>`
+   * for every server-rendered <img> that is not lazy — so an "eager" logo was
+   * still preloaded, twice (the light and dark marks), ahead of the LCP image.
+   * `fetchPriority="low"` is what tells React not to, and it keeps the logo's
+   * request behind the hero's without delaying it: the preload scanner still
+   * finds it in the HTML immediately.
+   */
+  eager?: boolean;
   className?: string;
   wrapperClassName?: string;
   /** Tailwind aspect utility suffix, e.g. "4/3" | "16/9" | "4/5". */
@@ -105,8 +128,9 @@ export function PropertyImage({
         width={aspect === "none" && photo ? photo.w : undefined}
         height={aspect === "none" && photo ? photo.h : undefined}
         sizes={sizes}
-        priority={priority}
-        loading={priority ? undefined : "lazy"}
+        preload={priority}
+        fetchPriority={priority ? "high" : eager ? "low" : undefined}
+        loading={priority ? undefined : eager ? "eager" : "lazy"}
         placeholder={
           photo && photo.kind === "stored" && photo.blur ? "blur" : "empty"
         }

@@ -103,9 +103,20 @@ export function ArticleCard({
 export function ArticleGrid({
   articles,
   className,
+  leadsPage = false,
 }: {
   articles: ArticleCardType[];
   className?: string;
+  /**
+   * True only where this grid is the first thing on the page (the blog and
+   * market-update indexes). Then its first cover is the LCP and is preloaded.
+   *
+   * It used to preload the first THREE covers everywhere — including the city
+   * hubs, where the grid sits near the bottom of a long page. Those three
+   * high-priority requests were competing with the hero photo that actually
+   * decides the score.
+   */
+  leadsPage?: boolean;
 }) {
   if (articles.length === 0) return null;
 
@@ -118,7 +129,7 @@ export function ArticleGrid({
     >
       {articles.map((article, index) => (
         <li key={article.id}>
-          <ArticleCard article={article} priority={index < 3} />
+          <ArticleCard article={article} priority={leadsPage && index === 0} />
         </li>
       ))}
     </ul>

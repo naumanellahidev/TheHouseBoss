@@ -697,6 +697,46 @@ export function listingItemListJsonLd(
  * claim the site is an authority on the city rather than on its property market.
  * The `areaServed` link back to the agent is what carries that relationship.
  */
+/**
+ * The local-SEO half of a city or community page.
+ *
+ * `placeJsonLd` describes the place; on its own it says nothing about who
+ * serves it. This ties the page to the business: a Service, provided by the
+ * agent entity (by @id, not restated), with `areaServed` set to exactly this
+ * place. It is what lets "real estate agent in Sanford" resolve to a page that
+ * is explicitly about Sanford rather than only to the site-wide entity, whose
+ * `areaServed` lists all eight cities at once.
+ */
+export function placeServiceJsonLd(place: {
+  name: string;
+  path: string;
+  /** Present for a community: the city it sits in. */
+  city?: string | null;
+  county?: string | null;
+}): JsonLdObject {
+  const where = place.city ? `${place.name}, ${place.city}` : place.name;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: `Real estate services in ${where}, Florida`,
+    serviceType: "Real estate agent",
+    url: absolute(place.path),
+    provider: { "@id": AGENT_ID },
+    areaServed: {
+      "@type": place.city ? "Place" : "City",
+      name: place.name,
+      ...(place.city || place.county
+        ? {
+            containedInPlace: {
+              "@type": place.city ? "City" : "AdministrativeArea",
+              name: place.city ?? `${place.county} County, Florida`,
+            },
+          }
+        : {}),
+    },
+  };
+}
+
 export function placeJsonLd(place: {
   name: string;
   slug: string;

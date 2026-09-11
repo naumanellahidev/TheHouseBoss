@@ -61,7 +61,7 @@ export function Footer({ settings }: { settings?: SiteSettings | null }) {
       <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 lg:py-16">
         {/* ── Brand ──────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
-          <Logo variant="full" settings={settings} invert />
+          <Logo variant="full" settings={settings} invert eager={false} />
 
           <p className="max-w-[36ch] text-sm leading-relaxed">
             {siteConfig.positioning}

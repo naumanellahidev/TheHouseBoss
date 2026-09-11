@@ -403,7 +403,14 @@ export default async function HomePage() {
               <MediaFrame
                 photo={heroPhoto(lakeMary?.heroKey, lakeMary?.heroAlt, 1200, 1500)}
                 sizes="(max-width: 1023px) 0px, 40vw"
-                priority
+                /*
+                  NOT priority. This frame is `hidden` below 1024px, but a
+                  preload ignores CSS: with `priority` every phone downloaded
+                  it at high priority — `sizes` of 0px still fetches the
+                  smallest candidate — alongside the hero it cannot even see.
+                  On desktop the full-bleed hero behind it is the larger paint
+                  and so the LCP; this loads lazily as layout places it.
+                */
                 aspect="4/5"
               />
               {lakeMary?.stats.medianPrice != null ? (

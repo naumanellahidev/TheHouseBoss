@@ -93,7 +93,7 @@ export async function proxy(request: NextRequest) {
     return toLogin();
   }
 
-  let user = null;
+  let user: { id: string } | null = null;
 
   try {
     const supabase = createServerClient(config.url, config.key, {
@@ -114,9 +114,15 @@ export async function proxy(request: NextRequest) {
     });
 
     // Refreshes the token if it has expired. Must run before any auth check.
-    ({
-      data: { user },
-    } = await supabase.auth.getUser());
+    /*
+      getClaims(), not getUser(): the session JWT is ES256-signed, so this
+      verifies it locally against the cached public key instead of calling
+      Supabase Auth on every admin request. It still refreshes an expired
+      access token (writing the new cookies through setAll above), and a
+      tampered token still fails. See getVerifiedUser in lib/supabase/server.ts.
+    */
+    const { data } = await supabase.auth.getClaims();
+    user = data?.claims?.sub ? { id: data.claims.sub } : null;
   } catch (error) {
     // Reaching Supabase is a network call and network calls fail. Log it and
     // fall through: `user` stays null, so the guard below sends an unverified

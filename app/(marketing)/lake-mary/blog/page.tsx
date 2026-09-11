@@ -63,7 +63,7 @@ export default async function LakeMaryBlogPage() {
               }
             />
           ) : (
-            <ArticleGrid articles={articles} />
+            <ArticleGrid articles={articles} leadsPage />
           )}
         </Container>
       </Section>

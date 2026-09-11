@@ -10,10 +10,12 @@ import type { ListingCard } from "@/types/domain";
  * set and the section does not push the rest of the page a screen and a half
  * down. From 768px it becomes the ordinary grid.
  *
- * `priority` goes to the first card only. On the home page the hero image is
- * the LCP element, so eagerly loading three more large photos below the fold
- * competes with it for bandwidth — the opposite of what a search page wants,
- * where the grid IS the content.
+ * No card gets `priority`. This section only renders on the home page, below
+ * the hero, and the hero image is the LCP element — so a preloaded card photo
+ * here competes with it for bandwidth on exactly the throttled connection
+ * where that matters. (It used to preload the first card, which the note above
+ * already argued against.) Contrast the search grid, where the first card IS
+ * the LCP and is preloaded.
  *
  * The caller decides whether to render this at all: docs/05 § Home hides the
  * whole section below three featured listings, because two cards in a row meant
@@ -33,14 +35,14 @@ export function FeaturedListings({
         className,
       )}
     >
-      {listings.map((listing, index) => (
+      {listings.map((listing) => (
         <li
           key={listing.id}
           // Below 768px each card is a snap point at ~82% of the viewport, so
           // the next one peeks in and the row is visibly scrollable.
           className="w-[82vw] max-w-sm shrink-0 snap-start md:w-auto md:max-w-none"
         >
-          <PropertyCard listing={listing} priority={index === 0} />
+          <PropertyCard listing={listing} />
         </li>
       ))}
     </ul>

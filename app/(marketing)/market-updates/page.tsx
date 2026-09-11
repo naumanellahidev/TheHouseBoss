@@ -102,7 +102,7 @@ export default async function MarketUpdatesPage({
               }
             />
           ) : (
-            <ArticleGrid articles={articles} />
+            <ArticleGrid articles={articles} leadsPage />
           )}
 
           {/* docs/09 § 6: market pages carry the estimate disclaimer. */}

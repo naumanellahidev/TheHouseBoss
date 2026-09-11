@@ -1,6 +1,8 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { cache } from "react";
+
+import { createSupabaseServerClient, getVerifiedUser } from "@/lib/supabase/server";
 
 /**
  * Permission checks for the admin platform.
@@ -92,14 +94,12 @@ export type AdminIdentity = {
  * suspended admin is treated as no admin at all, which is why `status` is
  * checked here as well as inside `has_permission()`.
  */
-export async function getAdminIdentity(): Promise<AdminIdentity | null> {
-  const db = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-  } = await db.auth.getUser();
+export const getAdminIdentity = cache(async (): Promise<AdminIdentity | null> => {
+  // Shared, locally verified identity — no Auth round trip (lib/supabase/server.ts).
+  const user = await getVerifiedUser();
   if (!user) return null;
 
+  const db = await createSupabaseServerClient();
   const { data: profile } = await db
     .from("profiles")
     .select("id, username, display_name, role, status")
@@ -124,7 +124,7 @@ export async function getAdminIdentity(): Promise<AdminIdentity | null> {
     status: profile.status as "active" | "suspended",
     permissions: (grants ?? []).map((g) => g.permission as Permission),
   };
-}
+});
 
 /** Non-throwing check, for deciding whether to render a control. */
 export async function can(permission: Permission): Promise<boolean> {

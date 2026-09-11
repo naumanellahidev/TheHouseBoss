@@ -13,7 +13,12 @@ import { Markdown } from "@/components/site/markdown";
 import { StatTiles } from "@/components/site/stat-tiles";
 import { ListingGrid } from "@/components/listing/listing-grid";
 import { Button } from "@/components/ui/button";
-import { breadcrumbJsonLd, faqJsonLd, placeJsonLd } from "@/lib/seo/jsonld";
+import {
+  breadcrumbJsonLd,
+  faqJsonLd,
+  placeJsonLd,
+  placeServiceJsonLd,
+} from "@/lib/seo/jsonld";
 import { formatDate } from "@/lib/utils/date";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -66,6 +71,11 @@ export function CityHub({
       <JsonLd
         data={[
           placeJsonLd(city),
+          placeServiceJsonLd({
+            name: city.name,
+            path: `/${city.slug}`,
+            county: city.county,
+          }),
           faqJsonLd(city.faq),
           breadcrumbJsonLd(crumbs),
         ]}

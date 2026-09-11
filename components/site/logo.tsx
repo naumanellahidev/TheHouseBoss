@@ -101,6 +101,7 @@ export function Logo({
   href = "/",
   className,
   settings,
+  eager = true,
 }: {
   variant?: "full" | "compact" | "stacked";
   invert?: boolean;
@@ -117,6 +118,17 @@ export function Logo({
   className?: string;
   /** Live branding. Absent → the type-set lockup from site-config. */
   settings?: SiteSettings | null;
+  /**
+   * Load the artwork straight away. True for the header and the admin
+   * sidebar; the footer passes false so its copy loads lazily as it nears the
+   * viewport.
+   *
+   * The logo is never `priority`. It used to be — every instance, header and
+   * footer — which put two logo preloads in <head> on every page, both ahead of
+   * the image that actually decides the LCP score. It is small, it is never
+   * the largest paint, and it only needs to not be lazy.
+   */
+  eager?: boolean;
 }) {
   const brandName = settings?.brandName ?? siteConfig.name;
 
@@ -259,7 +271,7 @@ export function Logo({
       */
       size={800}
       sizes="(max-width: 1023px) 176px, 240px"
-      priority
+      eager={eager}
       aspect="none"
       bare
       fallback={typeSet}

@@ -11,7 +11,12 @@ import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { ListingGrid } from "@/components/listing/listing-grid";
 import { Button } from "@/components/ui/button";
-import { breadcrumbJsonLd, faqJsonLd, placeJsonLd } from "@/lib/seo/jsonld";
+import {
+  breadcrumbJsonLd,
+  faqJsonLd,
+  placeJsonLd,
+  placeServiceJsonLd,
+} from "@/lib/seo/jsonld";
 import { getSeoOverride } from "@/lib/queries/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
 import {
@@ -114,6 +119,11 @@ export default async function CommunityPage({
             slug: `communities/${community.slug}`,
             metaDesc: community.metaDesc,
             introMd: community.introMd,
+          }),
+          placeServiceJsonLd({
+            name: community.name,
+            path: `/communities/${community.slug}`,
+            city: community.city.name || null,
           }),
           faqJsonLd(community.faq),
           breadcrumbJsonLd(crumbs),

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import type { Database } from "@/types/database";
 
@@ -54,32 +55,59 @@ export async function createSupabaseServerClient() {
 }
 
 /**
- * The signed-in user, or null. Uses getUser() rather than getSession() —
- * getSession() returns whatever is in the cookie without verifying it, which is
- * not safe to make an authorisation decision on.
+ * The verified identity of the caller, or null. ONE verification per request.
+ *
+ * ── Why getClaims() and not getUser() ────────────────────────────────────
+ * `getUser()` is a network round trip to Supabase Auth on every call. The
+ * admin was making three of them per click — the proxy, the shell layout, and
+ * `getAdminIdentity()` — which is most of why switching tabs felt slow.
+ *
+ * This project signs its JWTs with an asymmetric ES256 key (the JWKS endpoint
+ * publishes it). `getClaims()` verifies the token's signature locally against
+ * that public key, which auth-js caches module-wide for ten minutes, so on a
+ * warm function it costs no network at all. It is still a real verification —
+ * unlike `getSession()`, a forged or tampered cookie fails here.
+ *
+ * The trade-off, stated plainly: a revoked session is honoured until its access
+ * token expires (at most an hour, `jwt_expiry`), because nothing asks the Auth
+ * server. That is Supabase's recommended pattern for server-side checks, and it
+ * is bounded twice over: every query still runs under RLS with this same token,
+ * and the profile lookup below refuses a deleted or suspended account at once.
+ *
+ * ── Why cache() ──────────────────────────────────────────────────────────
+ * React's `cache` memoises per request. The layout, the page and every helper
+ * that asks "who is this?" during one render now share a single answer instead
+ * of each verifying and querying separately.
  */
+export const getVerifiedUser = cache(
+  async (): Promise<{ id: string; email: string | null } | null> => {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.getClaims();
+    if (error || !data?.claims?.sub) return null;
+    return {
+      id: data.claims.sub,
+      email: typeof data.claims.email === "string" ? data.claims.email : null,
+    };
+  },
+);
+
+/** The signed-in user, or null. Verified — see `getVerifiedUser`. */
 export async function getCurrentUser() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  return getVerifiedUser();
 }
 
 /**
  * Authorisation gate for every admin server action and admin page.
  *
- * Layer 2 of 3 (middleware → this → RLS). Throws rather than returning a
- * boolean so a forgotten `if` cannot silently grant access.
+ * Layer 2 of 3 (proxy → this → RLS). Throws rather than returning a boolean so
+ * a forgotten `if` cannot silently grant access. Memoised per request: a page
+ * and its layout both calling this cost one profile query, not two.
  */
-export async function requireAdmin() {
+const loadAdmin = cache(async () => {
+  const user = await getVerifiedUser();
+  if (!user) return { error: "UNAUTHENTICATED" as const };
+
   const supabase = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("UNAUTHENTICATED");
-
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, role, full_name, status")
@@ -103,10 +131,16 @@ export async function requireAdmin() {
     !(ADMIN_ROLES as readonly string[]).includes(profile.role) ||
     (profile.status ?? "active") !== "active"
   ) {
-    throw new Error("FORBIDDEN");
+    return { error: "FORBIDDEN" as const };
   }
 
   return { user, profile };
+});
+
+export async function requireAdmin() {
+  const result = await loadAdmin();
+  if ("error" in result) throw new Error(result.error);
+  return result;
 }
 
 /** Non-throwing variant, for rendering a 403 page instead of an error boundary. */
