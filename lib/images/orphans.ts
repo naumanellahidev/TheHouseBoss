@@ -41,20 +41,71 @@ export type OrphanReport = {
  * deleted by the nightly cron once it is 24 hours old, so a column omitted here
  * is not a missed optimisation — it is data loss on a timer.
  *
- * `site_settings` and `profiles.avatar_key` were both missing, which meant the
- * site-wide hero, the OG image and the admin's avatar were all scheduled for
- * deletion the day after they were set. Found while planning the image seeding;
- * nothing had been uploaded to those columns yet, so nothing was actually lost.
+ * It has happened twice:
+ *
+ *   - `site_settings.hero_key`/`og_key` and `profiles.avatar_key` were missing.
+ *     Caught before anything was uploaded to them.
+ *   - `site_settings.logo_key`, `logo_invert_key` (migration 015) and
+ *     `portrait_key` (migration 023) were added without being added here. The
+ *     sweep deleted the uploaded logo, inverted logo and portrait; found
+ *     2026-09-11 when the LocalBusiness JSON-LD pointed at them and every
+ *     variant returned 404. Those files are gone and had to be re-uploaded.
+ *
+ * `npm run check:orphan-keys` now fails the build when a `*_key` column exists
+ * in the migrations but not in this function, so the next one is caught in CI
+ * rather than by a missing logo.
+ *
+ * Two further sources hold keys inside JSON rather than in a column, and both
+ * were unprotected:
+ *   - article bodies: the Tiptap editor inserts an inline image as a media URL
+ *     in `body_json`, so an image in the middle of an article lived only there
+ *   - `page_sections.content`, which may carry image references
+ * Both are scanned for anything that looks like one of our object paths.
+ *
+ * Every read FAILS CLOSED. A query that errors must abort the sweep: an empty
+ * result from a failed read would mark everything that table references as
+ * unreferenced, and the sweep would delete it all. Only the listings read
+ * threw before; the rest silently treated an error as "no rows".
  *
  * The full list of key-bearing columns, verified against the migrations:
  *   listings.photos[].key, listings.floorplan_key
- *   articles.cover_key, articles.og_key
+ *   articles.cover_key, articles.og_key, articles.body_json (inline images)
  *   cities.hero_key, communities.hero_key
- *   site_settings.hero_key, site_settings.og_key
+ *   site_settings.hero_key, og_key, logo_key, logo_invert_key, portrait_key
  *   profiles.avatar_key
+ *   page_sections.content (scanned)
  *
  * If a migration adds another, add it here in the same commit.
  */
+
+/**
+ * The prefixes `buildKey` can produce (lib/images/store.ts), preceded by any
+ * boundary a key can sit after in JSON or HTML.
+ *
+ * Deliberately generous: a false match only keeps a file the sweep would have
+ * deleted, while a miss deletes a file something still shows.
+ */
+const KEY_PATTERN =
+  /(?:^|[\/\s"'(=])((?:listings|articles|cities|communities|profile|site)\/[A-Za-z0-9_\-/]+?)(?:-(?:1600|800|400)\.webp)?(?=$|[?#"'\s)])/g;
+
+/**
+ * Pulls every object key out of an arbitrary JSON value — a bare key, a full
+ * media URL, or an object path with a size suffix all reduce to the base key.
+ */
+function keysInJson(value: unknown, add: (key: string) => void): void {
+  if (typeof value === "string") {
+    for (const match of value.matchAll(KEY_PATTERN)) add(match[1]);
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) keysInJson(item, add);
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const item of Object.values(value)) keysInJson(item, add);
+  }
+}
+
 async function referencedKeys(): Promise<Set<string>> {
   const db = createServiceClient();
   const keys = new Set<string>();
@@ -62,36 +113,71 @@ async function referencedKeys(): Promise<Set<string>> {
     if (typeof value === "string" && value.length > 0) keys.add(value);
   };
 
-  const { data, error } = await db.from("listings").select("photos, floorplan_key");
-  if (error) throw new Error(`referencedKeys(listings): ${error.message}`);
+  /** Throws on error — see "FAILS CLOSED" above. */
+  const read = async <T>(
+    label: string,
+    query: PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  ): Promise<T[]> => {
+    const { data, error } = await query;
+    if (error) throw new Error(`referencedKeys(${label}): ${error.message}`);
+    return data ?? [];
+  };
 
-  for (const row of data ?? []) {
+  type Row = Record<string, unknown>;
+
+  for (const row of await read<Row>(
+    "listings",
+    db.from("listings").select("photos, floorplan_key"),
+  )) {
     for (const photo of (row.photos ?? []) as { kind?: string; key?: string }[]) {
       add(photo?.key);
     }
     add(row.floorplan_key);
   }
 
-  const { data: articles } = await db.from("articles").select("cover_key, og_key");
-  for (const row of articles ?? []) {
+  for (const row of await read<Row>(
+    "articles",
+    db.from("articles").select("cover_key, og_key, body_json"),
+  )) {
     add(row.cover_key);
     add(row.og_key);
+    keysInJson(row.body_json, add);
   }
 
-  const { data: cities } = await db.from("cities").select("hero_key");
-  for (const row of cities ?? []) add(row.hero_key);
+  for (const row of await read<Row>("cities", db.from("cities").select("hero_key"))) {
+    add(row.hero_key);
+  }
 
-  const { data: communities } = await db.from("communities").select("hero_key");
-  for (const row of communities ?? []) add(row.hero_key);
+  for (const row of await read<Row>(
+    "communities",
+    db.from("communities").select("hero_key"),
+  )) {
+    add(row.hero_key);
+  }
 
-  const { data: settings } = await db.from("site_settings").select("hero_key, og_key");
-  for (const row of settings ?? []) {
+  for (const row of await read<Row>(
+    "site_settings",
+    db
+      .from("site_settings")
+      .select("hero_key, og_key, logo_key, logo_invert_key, portrait_key"),
+  )) {
     add(row.hero_key);
     add(row.og_key);
+    add(row.logo_key);
+    add(row.logo_invert_key);
+    add(row.portrait_key);
   }
 
-  const { data: profiles } = await db.from("profiles").select("avatar_key");
-  for (const row of profiles ?? []) add(row.avatar_key);
+  for (const row of await read<Row>("profiles", db.from("profiles").select("avatar_key"))) {
+    add(row.avatar_key);
+  }
+
+  for (const row of await read<Row>(
+    "page_sections",
+    db.from("page_sections").select("content"),
+  )) {
+    keysInJson(row.content, add);
+  }
 
   return keys;
 }
