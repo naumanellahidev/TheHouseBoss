@@ -72,7 +72,7 @@ export default function NotFound() {
                   href: "/assumable-mortgage-homes",
                   label: "Assumable Mortgages",
                 },
-                { href: "/about", label: `About ${siteConfig.legalName}` },
+                { href: "/about", label: `About ${siteConfig.knownAs}` },
                 { href: "/contact", label: "Contact" },
               ].map((l) => (
                 <li key={l.href}>

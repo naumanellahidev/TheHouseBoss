@@ -67,10 +67,11 @@ several block phases.
 | 9 | ~~Create the Supabase project~~ | — | ✅ Done — us-east-1, PostgreSQL 17.6 |
 | 11 | **Rotate the service-role key** before launch — it was shared over chat, so treat it as exposed | Launch | ⬜ Open |
 | 10 | Create the Vercel account/project (Pro) so previews can be deployed for client review | P0 sign-off, P7 | ⬜ Open |
+| 16 | **Connect thehousebossfl.com to Vercel.** It currently 302s to a Porkbun `l.ink` page; the site serves from `the-house-boss.vercel.app`. Add the domain in Vercel, point Porkbun DNS, set `NEXT_PUBLIC_SITE_URL`, redeploy — then put `https://thehousebossfl.com` in the Google profile's Website field | Canonicals, sitemap, @ids, the profile's website link | 🟡 Client action (2026-09-11) |
 | 12 | **Re-upload the logo, inverted logo and portrait** in Admin → Settings. The nightly orphan sweep deleted all three (fixed 2026-09-11 — see session log). Upload only AFTER the fix is live in production, or the next 07:45 UTC sweep deletes them again | Live site header/footer, About portrait, LocalBusiness `logo`/`image` | ⬜ Open — urgent |
-| 13 | **Business name mismatch.** Google profile: "The House Boss Florida". Website: "The House Boss". NAP consistency wants one name everywhere, and Google's naming rules disallow appending a location that is not part of the real business name — recommend renaming the profile to "The House Boss" | Local ranking; profile suspension risk | ⬜ Open |
+| 13 | ~~Business name mismatch~~ — the client is renaming the Google profile from "The House Boss Florida" to "The House Boss" (2026-09-11). `siteConfig.google.businessName` already says "The House Boss"; if Google rejects the rename, put the profile's real name back there | — | 🟡 Client action — renaming on Google |
 | 14 | **Confirm the profile's phone and hours match the site exactly:** +1 240 506 5959 (a Maryland area code on a Florida business — check it is the number on the profile) and Mon–Sat 9am–7pm ET | NAP consistency | ⬜ Open |
-| 15 | **Licensed name spelling.** `site_settings.legal_name` is "Krasimira Kakrova"; the brief and the JSON-LD say "Krisi Kakarova". FREC requires the name exactly as licensed with DBPR — confirm the spelling against licence SL3327932 | Compliance footer, Person JSON-LD | ⬜ Open |
+| 15 | ~~Licensed name spelling~~ — **Krasimira Kakarova**, confirmed 2026-09-11. Set in `siteConfig.legalName` and the live `site_settings.legal_name` (was "Krasimira Kakrova"). She goes by Krisi (`siteConfig.knownAs`) | — | ✅ Done |
 
 ---
 
@@ -2764,6 +2765,34 @@ Dry run of the fixed sweep: 0 stray objects, 0 stray rows.
 **Verified:** guards clean; build clean; rendered JSON-LD parsed on 5 pages, all
 LocalBusiness fields present, every @id reference resolves; a11y + 9-width
 responsive on /contact and /reviews 24/24.
+
+---
+
+### 2026-09-11 — Licensed name corrected; Google profile name aligned
+
+The client confirmed the name as licensed: **Krasimira Kakarova**. She goes by
+Krisi.
+
+- `siteConfig.legalName` → "Krasimira Kakarova"; new `siteConfig.knownAs` →
+  "Krisi Kakarova"
+- Live `site_settings.legal_name` corrected from "Krasimira Kakrova" (a letter
+  missing) — this is what the compliance footer renders, so the FREC disclosure
+  on every page was misspelled until now
+- Licensed name now appears in: the compliance footer, legal pages,
+  disclaimers, email sign-offs, the listing agent card, and Person JSON-LD
+  `name` (with `givenName`/`familyName`). "Krisi Kakarova" stays in her
+  first-person bio, page titles and bylines, and is the Person `alternateName`
+  and part of the agent's — so a search for either name reaches the same entity
+- /about credentials card: "Licensed as Krasimira Kakarova" under the licence
+  number, so someone checking SL3327932 against the DBPR register can see it is
+  the same person
+- 404 page nav and llms.txt use the known-as name where it is a label, and
+  llms.txt states both ("Krasimira Kakarova (known as Krisi Kakarova)")
+- CLAUDE.md HR15, docs/08 and docs/09 updated
+
+**Google profile name.** The client is renaming it to "The House Boss";
+`siteConfig.google.businessName` already reflects that, so the old name drops out
+of `alternateName`. **Domain**: the client is connecting it (open decision 16).
 
 ---
 

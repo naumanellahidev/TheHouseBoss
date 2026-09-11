@@ -173,6 +173,7 @@ export function agentJsonLd(settings?: SiteSettings): JsonLdObject {
 
   const names = [
     google.businessName,
+    `${siteConfig.knownAs} - ${siteConfig.name}`,
     `${siteConfig.legalName} - ${siteConfig.name}`,
     siteConfig.lockup,
   ].filter((n) => n !== siteConfig.name);
@@ -305,7 +306,12 @@ export function personJsonLd(settings?: SiteSettings): JsonLdObject {
     "@context": "https://schema.org",
     "@type": "Person",
     "@id": PERSON_ID,
+    // The licensed name, so the entity matches the DBPR register; the name she
+    // goes by rides along so a search for "Krisi Kakarova" resolves here too.
     name: siteConfig.legalName,
+    alternateName: siteConfig.knownAs,
+    givenName: siteConfig.legalName.split(" ")[0],
+    familyName: siteConfig.legalName.split(" ").slice(1).join(" "),
     jobTitle: "Realtor and Certified Residential Building Contractor",
     description: siteConfig.positioning,
     url: absolute("/about"),

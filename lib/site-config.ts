@@ -15,7 +15,19 @@ export const PENDING = "PENDING" as const;
 
 export const siteConfig = {
   name: "The House Boss",
-  legalName: "Krisi Kakarova",
+  /**
+   * The name exactly as licensed with the Florida DBPR (SL3327932), confirmed
+   * by the client 2026-09-11. FREC advertising rules require this form in the
+   * compliance footer, the legal pages and the disclaimers, and it is the
+   * `name` on the Person JSON-LD so it matches the public licence register.
+   */
+  legalName: "Krasimira Kakarova",
+  /**
+   * The name she goes by and writes under — "I'm Krisi Kakarova" is her own
+   * bio. Used for page titles, bylines and first-person copy, and published as
+   * the Person `alternateName` so a search for either name reaches her.
+   */
+  knownAs: "Krisi Kakarova",
   brokerage: "World Properties Group",
   lockup: "The House Boss — Powered by World Properties Group",
 
@@ -92,14 +104,16 @@ export const siteConfig = {
     agent JSON-LD publishes locality + region + `areaServed` and no street, and
     why there is no map embed or "get directions" link anywhere on the site.
 
-    `businessName` is the name exactly as it appears on the profile. It differs
-    from `name` above ("The House Boss") — see PROGRESS.md, Open client
-    decisions: NAP consistency wants these to match, and Google's own naming
-    guidelines disallow a location appended to a business name that is not
-    part of the real name.
+    `businessName` is the name exactly as it appears on the profile. The profile
+    was listed as "The House Boss Florida"; on 2026-09-11 the client agreed to
+    rename it to "The House Boss" so it matches the site (NAP consistency), and
+    because Google's naming guidelines disallow a location appended to a name
+    that is not part of the real business name. If the rename is ever reverted
+    or rejected, put the profile's name back here — it then reappears in the
+    agent's `alternateName` automatically.
   */
   google: {
-    businessName: "The House Boss Florida",
+    businessName: "The House Boss",
     placeId: "ChIJizFziLVk1WERLvMZJqLPqqE",
     cid: "11649351681478095662",
     featureId: "0x61d564b58873318b:0xa1aacfa22619f32e",

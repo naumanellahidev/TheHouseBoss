@@ -107,7 +107,8 @@ storage, or real search visibility. Never "improve" past them.
 
 ### Legal and compliance (Florida)
 
-15. The compliance footer renders on **every** public page: Krisi Kakarova ·
+15. The compliance footer renders on **every** public page: **Krasimira
+    Kakarova** (the name as licensed; she goes by Krisi — `siteConfig.knownAs`) ·
     Licensed Real Estate Agent **SL3327932** · Certified Residential Contractor
     **CRC1335654** · **World Properties Group**.
 16. Per FREC advertising rules the **brokerage name must render at a font size

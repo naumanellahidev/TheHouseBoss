@@ -267,7 +267,8 @@ in a component.
   "@context": "https://schema.org",
   "@type": "Person",
   "@id": "https://thehousebossfl.com/#krisi",
-  "name": "Krisi Kakarova",
+  "name": "Krasimira Kakarova",        // as licensed with DBPR
+  "alternateName": "Krisi Kakarova",   // the name she goes by
   "jobTitle": "Realtor and Certified Residential Building Contractor",
   "description": "...",
   "image": "https://thehousebossfl.com/krisi-kakarova.jpg",

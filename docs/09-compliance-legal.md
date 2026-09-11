@@ -18,7 +18,7 @@ Every public page, in the footer:
 
 | Element | Value |
 |---|---|
-| Licensee's full name as licensed | Krisi Kakarova |
+| Licensee's full name as licensed | **Krasimira Kakarova** (confirmed by the client 2026-09-11; she goes by "Krisi", which is fine in marketing copy but never in the disclosure) |
 | Real-estate licence number | SL3327932 |
 | Brokerage / registered trade name | World Properties Group |
 | Contractor licence number | CRC1335654 |
@@ -35,7 +35,7 @@ advertising. The operative constraint:
 Practically, in `<ComplianceFooter />`:
 
 - "World Properties Group" renders at a font size **equal to or larger than**
-  "Krisi Kakarova" and "The House Boss"
+  "Krasimira Kakarova" and "The House Boss"
 - Same or greater font weight
 - Same or greater contrast
 - Adjacent, not buried in a separate collapsed region

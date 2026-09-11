@@ -41,7 +41,12 @@ const credentials = [
     icon: ShieldCheck,
     label: siteConfig.licenses.realEstate.label,
     value: siteConfig.licenses.realEstate.number,
-    detail: siteConfig.licenses.realEstate.authority,
+    /*
+      The licensed name, visibly. She goes by Krisi everywhere else on this
+      page, and someone checking the number against the DBPR register will find
+      "Krasimira" there — this line is what tells them it is the same person.
+    */
+    detail: `Licensed as ${siteConfig.legalName} · ${siteConfig.licenses.realEstate.authority}`,
   },
   {
     icon: HardHat,
