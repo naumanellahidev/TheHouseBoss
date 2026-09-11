@@ -3,9 +3,10 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { Container, Section } from "@/components/site/container";
+import { GoogleProfileCard } from "@/components/site/google-profile-card";
 import { JsonLd } from "@/components/site/json-ld";
 import { LeadForm } from "@/components/site/lead-form";
-import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { breadcrumbJsonLd, contactPageJsonLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { getSiteSettings } from "@/lib/queries/settings";
 import { EMPTY_SETTINGS, safeQuery } from "@/lib/queries/safe";
@@ -67,7 +68,7 @@ export default async function ContactPage({
 
   return (
     <>
-      <JsonLd data={[breadcrumbJsonLd(crumbs)]} />
+      <JsonLd data={[contactPageJsonLd(), breadcrumbJsonLd(crumbs)]} />
 
       <Section className="pb-0">
         <Container className="flex flex-col gap-4">
@@ -115,20 +116,23 @@ export default async function ContactPage({
               ) : null}
             </ul>
 
+            {/*
+              A <div> inside a <dl> may hold ONLY dt/dd — the icons used to sit
+              between them as bare children, which axe reports as a serious
+              definition-list violation. Each icon now lives inside its <dt>,
+              and the visible label IS the <dt> rather than an sr-only copy.
+            */}
             <dl className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">
-              <div className="flex gap-3">
-                <dt className="sr-only">Service area</dt>
-                <MapPin className="mt-0.5 size-5 shrink-0 text-accent-quiet" aria-hidden="true" />
-                <dd className="flex flex-col gap-1">
-                  <span className="text-sm font-semibold text-foreground">
-                    Service area
-                  </span>
-                  <span className="text-sm text-foreground-muted">
-                    {siteConfig.searchCities.map((city) => city.name).join(", ")},
-                    and the rest of Seminole County.
-                  </span>
+              <div>
+                <dt className="flex items-center gap-3 text-sm font-semibold text-foreground">
+                  <MapPin className="size-5 shrink-0 text-accent-quiet" aria-hidden="true" />
+                  Service area
+                </dt>
+                <dd className="mt-1 pl-8 text-sm text-foreground-muted">
+                  {siteConfig.searchCities.map((city) => city.name).join(", ")},
+                  and the rest of Seminole County.
                   {street ? (
-                    <address className="mt-2 text-sm text-foreground-muted not-italic">
+                    <address className="mt-2 not-italic">
                       {street}
                       <br />
                       {locality}, {region} {postal ?? ""}
@@ -137,15 +141,19 @@ export default async function ContactPage({
                 </dd>
               </div>
 
-              <div className="flex gap-3 border-t border-border pt-4">
-                <dt className="sr-only">Hours</dt>
-                <Clock className="mt-0.5 size-5 shrink-0 text-accent-quiet" aria-hidden="true" />
-                <dd className="flex flex-col gap-1">
-                  <span className="text-sm font-semibold text-foreground">Hours</span>
-                  <span className="text-sm text-foreground-muted">{hours}</span>
-                </dd>
+              <div className="border-t border-border pt-4">
+                <dt className="flex items-center gap-3 text-sm font-semibold text-foreground">
+                  <Clock className="size-5 shrink-0 text-accent-quiet" aria-hidden="true" />
+                  Hours
+                </dt>
+                <dd className="mt-1 pl-8 text-sm text-foreground-muted">{hours}</dd>
               </div>
             </dl>
+
+            <GoogleProfileCard
+              heading="On Google"
+              description="My Google Business Profile — check it before you call, or leave a review once we have worked together."
+            />
 
             {!phone && !email ? (
               <p className="rounded-lg border border-dashed border-border bg-surface-sunken p-4 text-sm text-foreground-muted">

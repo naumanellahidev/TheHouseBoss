@@ -20,6 +20,18 @@ export const metadata: Metadata = {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/apple-icon.png" }],
   },
+  /*
+    Geo meta tags. Google ignores these — it takes location from the Business
+    Profile and the JSON-LD — but Bing and a number of local directories still
+    read them, and they cost nothing. The position is Lake Mary city centre,
+    not her address: this is a service-area business (lib/site-config.ts).
+  */
+  other: {
+    "geo.region": "US-FL",
+    "geo.placename": siteConfig.contact.address.locality,
+    "geo.position": `${siteConfig.geo.latitude};${siteConfig.geo.longitude}`,
+    ICBM: `${siteConfig.geo.latitude}, ${siteConfig.geo.longitude}`,
+  },
 };
 
 export const viewport: Viewport = {

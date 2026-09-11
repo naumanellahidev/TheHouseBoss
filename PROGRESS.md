@@ -67,6 +67,10 @@ several block phases.
 | 9 | ~~Create the Supabase project~~ | — | ✅ Done — us-east-1, PostgreSQL 17.6 |
 | 11 | **Rotate the service-role key** before launch — it was shared over chat, so treat it as exposed | Launch | ⬜ Open |
 | 10 | Create the Vercel account/project (Pro) so previews can be deployed for client review | P0 sign-off, P7 | ⬜ Open |
+| 12 | **Re-upload the logo, inverted logo and portrait** in Admin → Settings. The nightly orphan sweep deleted all three (fixed 2026-09-11 — see session log). Upload only AFTER the fix is live in production, or the next 07:45 UTC sweep deletes them again | Live site header/footer, About portrait, LocalBusiness `logo`/`image` | ⬜ Open — urgent |
+| 13 | **Business name mismatch.** Google profile: "The House Boss Florida". Website: "The House Boss". NAP consistency wants one name everywhere, and Google's naming rules disallow appending a location that is not part of the real business name — recommend renaming the profile to "The House Boss" | Local ranking; profile suspension risk | ⬜ Open |
+| 14 | **Confirm the profile's phone and hours match the site exactly:** +1 240 506 5959 (a Maryland area code on a Florida business — check it is the number on the profile) and Mon–Sat 9am–7pm ET | NAP consistency | ⬜ Open |
+| 15 | **Licensed name spelling.** `site_settings.legal_name` is "Krasimira Kakrova"; the brief and the JSON-LD say "Krisi Kakarova". FREC requires the name exactly as licensed with DBPR — confirm the spelling against licence SL3327932 | Compliance footer, Person JSON-LD | ⬜ Open |
 
 ---
 
@@ -2687,4 +2691,80 @@ with its editor dialog open. The full Playwright suite was NOT run for these
 changes, at the client's request.
 
 ---
+### 2026-09-11 — Local SEO against the Google Business Profile; orphan-sweep data loss fixed
+
+**Google Business Profile, identified without API access.** The client sent a
+knowledge-panel share link. Its `stick` parameter is a gzipped protobuf carrying
+the Maps feature id `0x61d564b58873318b:0xa1aacfa22619f32e`; the second half as
+an unsigned int64 is the CID `11649351681478095662`, and both halves packed as
+two fixed64 fields give the Place ID `ChIJizFziLVk1WERLvMZJqLPqqE`. Google
+resolved that Place ID back to the same feature id, so all three are verified to
+be one profile. It is a **service-area business** (no public address) — the
+feature id's first half is not a Florida S2 cell, and Maps shows no address.
+
+Google would not return the profile's phone, hours or category to a
+non-browser client, so those are **not** verified against the profile — open
+decisions 13–15.
+
+**Shipped**
+- `lib/site-config.ts` — `google` (business name, Place ID, CID, feature id,
+  profile URL, direct review URL), `geo` (Lake Mary city centre — deliberately
+  not her address), structured `openingHours`, `serviceCounties`;
+  `profiles.googleBusiness` set, which lights up the footer icon and `sameAs`
+- `agentJsonLd` is now a full LocalBusiness: `hasMap`, `sameAs`, service-area
+  `address` (locality/region/country, no street), `geo`,
+  `openingHoursSpecification`, `areaServed` (8 cities + 2 counties),
+  `contactPoint`, `hasOfferCatalog` (5 services, each pointing at its page),
+  `identifier` (Place ID + both licence numbers), raster `logo`, `image`,
+  `slogan`, `knowsLanguage`, `founder`, and the profile name as an
+  `alternateName`. Still no `aggregateRating` — self-serving, see docs/09 § 7
+- `contactPageJsonLd` on /contact
+- `<GoogleProfileCard />` on /contact and /reviews — "Leave a Google review"
+  opens the review composer for this exact profile; reviews on the profile are
+  the strongest local signal she controls
+- /llms.txt — new "Business details" section with NAP, hours, service area and
+  the profile link
+- Geo meta tags in the root metadata (Google ignores them; Bing and directories
+  read them)
+- `site_settings.profiles_json.googleBusiness` set in the live DB, merged, so
+  Admin → Settings shows it
+
+**Fixed along the way**
+- **Dangling @id.** `contractorJsonLd` linked its founder to `/#person`; the
+  Person entity is `/#krisi`. The link pointed at nothing. Now imports
+  `PERSON_ID`, and links the business with `parentOrganization`.
+- **/contact `<dl>` violation** — icons sat between `dt` and `dd`. Same trap as
+  twice before.
+- **Postal address.** The code dropped `address` entirely without a street,
+  contradicting the comment in site-config. For a service-area business,
+  locality + region + country IS the complete public address, and it is what
+  reconciles the site with the profile.
+
+**DATA LOSS — the orphan sweep deleted the logo, inverted logo and portrait.**
+Found because the new `logo`/`image` URLs returned 404. `referencedKeys()` in
+`lib/images/orphans.ts` protected `site_settings.hero_key`/`og_key` but not
+`logo_key`, `logo_invert_key` (migration 015) or `portrait_key` (migration
+023). Their media rows were swept and the objects deleted. No copy exists —
+storage has no backup on the free tier and none of the three is in the repo.
+They must be re-uploaded (open decision 12) **after** this fix deploys.
+
+The same function had two more holes, closed together:
+- article inline images live only as media URLs in `body_json` and were
+  unprotected (no articles exist yet, so nothing lost)
+- every read except listings ignored its `error`, so a failed query would have
+  marked a whole table's images as unreferenced and deleted them. All reads now
+  fail closed.
+
+`body_json` and `page_sections.content` are scanned for anything shaped like an
+object path. New guard `npm run check:orphan-keys` (in `guards`) fails when a
+`*_key` column in the migrations is not named in `referencedKeys()` — verified
+against the pre-fix code, where it flags exactly the three lost columns.
+Dry run of the fixed sweep: 0 stray objects, 0 stray rows.
+
+**Verified:** guards clean; build clean; rendered JSON-LD parsed on 5 pages, all
+LocalBusiness fields present, every @id reference resolves; a11y + 9-width
+responsive on /contact and /reviews 24/24.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

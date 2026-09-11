@@ -78,9 +78,68 @@ export const siteConfig = {
     hours: "Monday–Saturday, 9am–7pm ET",
   },
 
-  /* ── PENDING: feeds the footer and the sameAs array in JSON-LD ─────── */
+  /*
+    Google Business Profile — supplied by the client, 2026-09-11.
+
+    Derived from the share link she sent rather than typed by hand. The `stick`
+    parameter in a Google knowledge-panel URL is a gzipped protobuf carrying the
+    Maps feature id (`0x…:0x…`); the second half, read as an unsigned 64-bit
+    integer, is the CID, and the two halves packed as two fixed64 fields are the
+    Place ID. The Place ID was then checked against Google, which resolved it
+    back to the same feature id — so all three below point at one profile.
+
+    It is a SERVICE-AREA business: no public street address, which is why the
+    agent JSON-LD publishes locality + region + `areaServed` and no street, and
+    why there is no map embed or "get directions" link anywhere on the site.
+
+    `businessName` is the name exactly as it appears on the profile. It differs
+    from `name` above ("The House Boss") — see PROGRESS.md, Open client
+    decisions: NAP consistency wants these to match, and Google's own naming
+    guidelines disallow a location appended to a business name that is not
+    part of the real name.
+  */
+  google: {
+    businessName: "The House Boss Florida",
+    placeId: "ChIJizFziLVk1WERLvMZJqLPqqE",
+    cid: "11649351681478095662",
+    featureId: "0x61d564b58873318b:0xa1aacfa22619f32e",
+    /** The stable public link to the profile. Used for `hasMap` and `sameAs`. */
+    mapsUrl: "https://maps.google.com/?cid=11649351681478095662",
+    /** Opens Google's review composer for this profile directly. */
+    reviewUrl:
+      "https://search.google.com/local/writereview?placeid=ChIJizFziLVk1WERLvMZJqLPqqE",
+  },
+
+  /**
+   * Lake Mary city centre — NOT her address.
+   *
+   * A service-area business must not publish its private location. The city
+   * centre gives search engines the correct locality for `geo` and the geo
+   * meta tags without disclosing where she lives.
+   */
+  geo: { latitude: 28.7589, longitude: -81.3178 },
+
+  /**
+   * Structured opening hours for `openingHoursSpecification`.
+   *
+   * Must agree with `contact.hours` (the human-readable line) and with the hours
+   * on the Google Business Profile. The admin's free-text Office Hours field
+   * changes the visible line only; if hours change, change this too.
+   */
+  openingHours: [
+    {
+      days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      opens: "09:00",
+      closes: "19:00",
+    },
+  ],
+
+  /** Counties served, for `areaServed` alongside the individual cities. */
+  serviceCounties: ["Seminole", "Orange"],
+
+  /* ── Profiles: feed the footer icons and the sameAs array in JSON-LD ── */
   profiles: {
-    googleBusiness: PENDING,
+    googleBusiness: "https://maps.google.com/?cid=11649351681478095662",
     realtorDotCom: PENDING,
     zillow: PENDING,
     facebook: PENDING,

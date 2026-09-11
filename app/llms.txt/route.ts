@@ -4,7 +4,7 @@ import { countPublishedListings, getListingsForLlms } from "@/lib/queries/listin
 import { firstSentences } from "@/lib/seo/auto/generate";
 import { articleHref } from "@/lib/utils/routes";
 import { formatPrice } from "@/lib/utils";
-import { siteConfig } from "@/lib/site-config";
+import { allCities, isPending, siteConfig } from "@/lib/site-config";
 
 /**
  * `/llms.txt` — CLAUDE.md hard rule 14, docs/08 § 4.
@@ -169,6 +169,17 @@ export async function GET() {
     `- [About Krisi Kakarova](${base}/about)`,
     `- [Reviews](${base}/reviews) — individual reviews with their source. No aggregate rating is published, deliberately.`,
     `- [Contact](${base}/contact)`,
+    `- [Google Business Profile](${siteConfig.google.mapsUrl}) — listed on Google as "${siteConfig.google.businessName}"`,
+    "",
+    "## Business details",
+    "",
+    `- Business: ${siteConfig.name}, powered by ${siteConfig.brokerage}`,
+    `- Licensed as: ${siteConfig.legalName} — ${siteConfig.licenses.realEstate.label} ${siteConfig.licenses.realEstate.number}; ${siteConfig.licenses.contractor.label} ${siteConfig.licenses.contractor.number}`,
+    ...(isPending(siteConfig.contact.phone) ? [] : [`- Phone: ${siteConfig.contact.phone}`]),
+    ...(isPending(siteConfig.contact.email) ? [] : [`- Email: ${siteConfig.contact.email}`]),
+    `- Hours: ${siteConfig.contact.hours}`,
+    `- Based in: ${siteConfig.contact.address.locality}, ${siteConfig.contact.address.region}. A service-area business — she meets clients at the property, with no public office address.`,
+    `- Serves: ${allCities.map((c) => c.name).join(", ")} — ${siteConfig.serviceCounties.join(" and ")} counties, Florida`,
     "",
     "## Using this content",
     "",

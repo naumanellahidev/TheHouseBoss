@@ -5,6 +5,7 @@ import { ExternalLink, MessageSquareQuote, Star } from "lucide-react";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { Container, Section } from "@/components/site/container";
 import { EmptyState } from "@/components/site/empty-state";
+import { GoogleProfileCard } from "@/components/site/google-profile-card";
 import { JsonLd } from "@/components/site/json-ld";
 import { ReviewForm } from "@/components/site/review-form";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,18 @@ export default async function ReviewsPage({
             page to find the button would be the wrong place to put it.
           */}
           <ReviewForm variant="accent" size="lg" className="self-start" />
+
+          {/*
+            A review on this site and a review on Google do different jobs:
+            this page shows it to visitors, the Google profile is what ranks
+            her in local search and the map pack. Anyone willing to write one
+            is offered the other, directly, without having to find the profile.
+          */}
+          <GoogleProfileCard
+            className="mt-2 max-w-[62ch]"
+            heading="Reviewing on Google helps even more"
+            description="Google reviews are what put a local agent in front of the next person searching. If you can spare a minute there too, this link opens the review box for my profile directly."
+          />
         </Container>
       </Section>
 

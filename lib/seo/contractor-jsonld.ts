@@ -1,3 +1,4 @@
+import { AGENT_ID, PERSON_ID } from "@/lib/seo/jsonld";
 import { siteConfig } from "@/lib/site-config";
 
 /**
@@ -73,7 +74,19 @@ export function contractorJsonLd(input: {
       her as a RealEstateAgent with an @id; repeating her details here would
       create two entities for one person and let them disagree.
     */
-    founder: { "@id": `${siteConfig.url.replace(/\/+$/, "")}/#person` },
+    /*
+      Must be the exact @id `personJsonLd` publishes. This read `/#person`
+      while the Person entity is `/#krisi`, so the link pointed at nothing and
+      a crawler saw a contractor business with an unresolved founder. Imported
+      rather than retyped so the two can never drift again.
+    */
+    founder: { "@id": PERSON_ID },
+    /*
+      Linked to the business entity, NOT given the Google profile as its own
+      `sameAs`/`hasMap`. The profile belongs to the agent entity; claiming it
+      here too would tell Google two different entities are that one profile.
+    */
+    parentOrganization: { "@id": AGENT_ID },
 
     address: {
       "@type": "PostalAddress",

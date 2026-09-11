@@ -36,26 +36,84 @@ function sameAs(overrides?: Record<string, string>): string[] {
   return Object.values(merged).filter((url) => url && !isPending(url));
 }
 
-function postalAddress(settings?: SiteSettings): JsonLdObject | undefined {
+/**
+ * The business address, shaped for a SERVICE-AREA business.
+ *
+ * Her Google Business Profile hides its street address, as Google requires of
+ * a business that goes to its customers. The schema has to say the same thing
+ * the profile says: locality, region and country, and no street. That is not a
+ * "partial" address — it is the complete public address of a service-area
+ * business, and it is what lets Google reconcile this site with the profile.
+ *
+ * A street and postcode are added only if the client ever opens a public
+ * office and both are supplied; one without the other is never emitted, since
+ * a street with no postcode geocodes badly.
+ */
+function postalAddress(settings?: SiteSettings): JsonLdObject {
   const a = siteConfig.contact.address;
 
   const street = settings?.address.street ?? (isPending(a.street) ? null : a.street);
   const postalCode =
     settings?.address.postalCode ?? (isPending(a.postalCode) ? null : a.postalCode);
 
-  // A partial address is worse than none: an incomplete PostalAddress makes the
-  // business look unverifiable rather than simply undisclosed.
-  if (!street || !postalCode) return undefined;
-
   return {
     "@type": "PostalAddress",
-    streetAddress: street,
+    ...(street && postalCode ? { streetAddress: street, postalCode } : {}),
     addressLocality: settings?.address.locality ?? a.locality,
     addressRegion: settings?.address.region ?? a.region,
-    postalCode,
     addressCountry: a.country,
   };
 }
+
+/**
+ * The services she offers, each pointing at the page that describes it.
+ *
+ * `hasOfferCatalog` is how a LocalBusiness tells a search engine what it does,
+ * rather than leaving it to infer from prose. Every entry has a real page
+ * behind it — a service with no page is a claim nothing on the site supports.
+ */
+const SERVICES: { name: string; path: string; description: string }[] = [
+  {
+    name: "VA home buyer representation",
+    path: "/guides/va-home-buyer",
+    description:
+      "Buyer representation for VA-eligible buyers, including a licensed contractor's read on Minimum Property Requirement risk before an offer.",
+  },
+  {
+    name: "Assumable mortgage home search",
+    path: "/assumable-mortgage-homes",
+    description:
+      "Finding and buying homes with an assumable VA, FHA or USDA loan in Central Florida.",
+  },
+  {
+    name: "New-construction buyer representation",
+    path: "/search/new-construction",
+    description:
+      "Independent representation at the builder's sales office, contract review and construction-phase walkthroughs.",
+  },
+  {
+    name: "Home seller representation",
+    path: "/sell-your-central-florida-home",
+    description:
+      "Listing and selling Central Florida homes, with pre-listing repair advice from a licensed contractor.",
+  },
+  {
+    name: "Residential construction and remodeling",
+    path: "/hire-contractor",
+    description:
+      "Remodeling, renovation and construction consulting by a Florida Certified Residential Building Contractor.",
+  },
+];
+
+const DAY_URI: Record<string, string> = {
+  Monday: "https://schema.org/Monday",
+  Tuesday: "https://schema.org/Tuesday",
+  Wednesday: "https://schema.org/Wednesday",
+  Thursday: "https://schema.org/Thursday",
+  Friday: "https://schema.org/Friday",
+  Saturday: "https://schema.org/Saturday",
+  Sunday: "https://schema.org/Sunday",
+};
 
 const KNOWS_ABOUT = [
   "VA home loans",
@@ -71,42 +129,169 @@ const KNOWS_ABOUT = [
 
 /* ── RealEstateAgent — root layout ──────────────────────────────────────── */
 
+/**
+ * The local-business entity. Rendered on every public page by the marketing
+ * layout, so it is present wherever a crawler lands.
+ *
+ * `RealEstateAgent` is itself a `LocalBusiness` subtype in schema.org, so every
+ * LocalBusiness property below is valid on it without a second @type.
+ *
+ * What ties this to her Google Business Profile, in order of weight:
+ *   1. `hasMap` and `sameAs` — the profile's own CID URL
+ *   2. `telephone` — must match the profile digit for digit
+ *   3. `address` — locality/region matching the profile's service area
+ *   4. `name` / `alternateName` — the profile name is listed verbatim
+ *
+ * Deliberately absent: `aggregateRating` and `review`. Google does not show
+ * stars for a business's reviews of itself, and publishing a rating the site
+ * computes about its own owner is exactly the self-serving markup its review
+ * policy excludes (docs/09 § 7).
+ */
 export function agentJsonLd(settings?: SiteSettings): JsonLdObject {
-  const address = postalAddress(settings);
   const links = sameAs(settings?.profiles);
+  const { google, geo, openingHours, serviceCounties } = siteConfig;
+
+  const phone =
+    settings?.phone ?? (isPending(siteConfig.contact.phone) ? null : siteConfig.contact.phone);
+  const email =
+    settings?.email ?? (isPending(siteConfig.contact.email) ? null : siteConfig.contact.email);
+
+  /*
+    Google requires a raster logo of at least 112px — an SVG is ignored. The
+    uploaded logo is preferred; the app icon is the fallback that always exists.
+  */
+  const logo = settings?.logoKey
+    ? keyUrl(settings.logoKey, 800)
+    : absolute("/apple-icon.png");
+
+  /* A LocalBusiness wants an image of the business. Her portrait is the business. */
+  const image = settings?.portraitKey
+    ? keyUrl(settings.portraitKey, 1600)
+    : settings?.ogKey
+      ? keyUrl(settings.ogKey, 1600)
+      : absolute("/opengraph-image");
+
+  const names = [
+    google.businessName,
+    `${siteConfig.legalName} - ${siteConfig.name}`,
+    siteConfig.lockup,
+  ].filter((n) => n !== siteConfig.name);
 
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "@id": AGENT_ID,
     name: siteConfig.name,
-    alternateName: `${siteConfig.legalName} - ${siteConfig.name}`,
+    alternateName: [...new Set(names)],
     description: siteConfig.positioning,
+    slogan: siteConfig.positioning,
     url: siteConfig.url,
-    logo: absolute("/icon.svg"),
+    logo,
+    image,
     priceRange: "$$",
-    ...(settings?.phone ?? !isPending(siteConfig.contact.phone)
-      ? { telephone: settings?.phone ?? siteConfig.contact.phone }
-      : {}),
-    ...(settings?.email ?? !isPending(siteConfig.contact.email)
-      ? { email: settings?.email ?? siteConfig.contact.email }
-      : {}),
-    ...(address ? { address } : {}),
-    areaServed: allCities.map((c) => ({
-      "@type": "City",
-      name: c.name,
-      containedInPlace: {
-        "@type": "AdministrativeArea",
-        name: `${c.county} County, Florida`,
-      },
+    ...(phone ? { telephone: phone } : {}),
+    ...(email ? { email } : {}),
+
+    address: postalAddress(settings),
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: geo.latitude,
+      longitude: geo.longitude,
+    },
+    hasMap: google.mapsUrl,
+
+    openingHoursSpecification: openingHours.map((h) => ({
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: h.days.map((d) => DAY_URI[d]),
+      opens: h.opens,
+      closes: h.closes,
     })),
+
+    areaServed: [
+      ...allCities.map((c) => ({
+        "@type": "City",
+        name: c.name,
+        containedInPlace: {
+          "@type": "AdministrativeArea",
+          name: `${c.county} County, Florida`,
+        },
+      })),
+      ...serviceCounties.map((county) => ({
+        "@type": "AdministrativeArea",
+        name: `${county} County, Florida`,
+      })),
+    ],
+
+    ...(phone || email
+      ? {
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer service",
+            ...(phone ? { telephone: phone } : {}),
+            ...(email ? { email } : {}),
+            areaServed: "US-FL",
+            availableLanguage: ["English"],
+          },
+        }
+      : {}),
+
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Real estate and residential construction services",
+      itemListElement: SERVICES.map((s) => ({
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: s.name,
+          description: s.description,
+          url: absolute(s.path),
+          provider: { "@id": AGENT_ID },
+        },
+      })),
+    },
+
+    identifier: [
+      {
+        "@type": "PropertyValue",
+        propertyID: "Google Place ID",
+        value: google.placeId,
+      },
+      {
+        "@type": "PropertyValue",
+        propertyID: "Florida real estate license",
+        value: siteConfig.licenses.realEstate.number,
+      },
+      {
+        "@type": "PropertyValue",
+        propertyID: "Florida Certified Residential Contractor license",
+        value: siteConfig.licenses.contractor.number,
+      },
+    ],
+
     knowsAbout: KNOWS_ABOUT,
+    knowsLanguage: "en",
     parentOrganization: {
       "@type": "RealEstateAgent",
       name: siteConfig.brokerage,
     },
+    founder: { "@id": PERSON_ID },
     employee: { "@id": PERSON_ID },
     ...(links.length ? { sameAs: links } : {}),
+  };
+}
+
+/**
+ * ContactPage — the /contact page, pointing at the business rather than
+ * restating it. The contact details live once, on the agent entity.
+ */
+export function contactPageJsonLd(): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    url: absolute("/contact"),
+    name: `Contact ${siteConfig.name}`,
+    about: { "@id": AGENT_ID },
+    mainEntity: { "@id": AGENT_ID },
   };
 }
 
