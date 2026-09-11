@@ -58,6 +58,9 @@ test.describe("admin", () => {
     page,
   }) => {
     await page.goto("/admin/login");
+    // Username sign-in is the primary form since 2026-09-04; the magic link is
+    // the fallback, folded into a <details> below it.
+    await page.getByText("Email me a sign-in link instead").click();
     await page.getByLabel("Email address").fill("definitely-not-an-account@example.com");
     await page.getByRole("button", { name: "Send magic link" }).click();
 
@@ -82,7 +85,8 @@ test.describe("admin", () => {
       await expect(page.getByRole("heading", { name: "Dashboard", level: 2 })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Needs attention" })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Storage", level: 3 })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Recent leads" })).toBeVisible();
+      // Renamed in the dashboard redesign: leads are "enquiries" to the client.
+      await expect(page.getByRole("heading", { name: "Recent enquiries" })).toBeVisible();
     });
 
     test("the storage meter is present in the sidebar at desktop width", async ({ page }) => {
