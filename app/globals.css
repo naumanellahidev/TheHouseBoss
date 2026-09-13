@@ -142,6 +142,11 @@
     (docs/03 § Radius rule).
   */
   --radius-2xl: 28px;
+  /*
+    ADMIN cards (docs/06 § 2). Large and soft, from the client's reference
+    dashboard. Not for public listing photography — the rule above still holds.
+  */
+  --radius-card: 24px;
 
   /* ── Elevation — navy-tinted, never neutral gray ────────────────────── */
   --shadow-xs: 0 1px 2px rgb(12 27 58 / 0.05);
@@ -155,6 +160,12 @@
     card reads as a mistake rather than as depth.
   */
   --shadow-float: 0 32px 80px rgb(12 27 58 / 0.18), 0 8px 24px rgb(12 27 58 / 0.08);
+  /*
+    An admin card on the glow canvas. Wide and faint rather than tight: the
+    reference's cards float, and a tight shadow on a 24px radius reads as a
+    button rather than a panel.
+  */
+  --shadow-card: 0 1px 2px rgb(12 27 58 / 0.04), 0 12px 32px rgb(12 27 58 / 0.06);
 
   /*
     ── Glass ──────────────────────────────────────────────────────────────
@@ -526,6 +537,30 @@
   @supports not (backdrop-filter: blur(1px)) {
     background: var(--color-surface);
   }
+}
+
+/*
+  The admin canvas (docs/06 § 2): porcelain with a soft azure glow top-right and
+  a paler one bottom-left, the brand-blue version of the reference's warm light.
+  Fixed to the viewport so the glow stays put while a long table scrolls.
+*/
+@utility admin-canvas {
+  background-color: var(--color-porcelain-100);
+  background-image:
+    radial-gradient(55% 45% at 95% 0%, rgb(138 180 248 / 0.45), transparent 70%),
+    radial-gradient(45% 40% at 0% 100%, rgb(199 219 254 / 0.6), transparent 70%);
+  background-attachment: fixed;
+}
+
+/*
+  An admin content card. OPAQUE on purpose — docs/03 § 3 keeps body text off
+  glass so every pairing stays inside check:contrast's reach.
+*/
+@utility admin-card {
+  background: var(--color-surface);
+  border: 1px solid rgb(255 255 255 / 0.9);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 /* The same treatment over dark grounds — hero overlays, inverted sections. */

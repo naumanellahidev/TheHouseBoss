@@ -24,31 +24,42 @@ leave the user guessing. Rate limit 3 requests per email per 15 minutes.
 
 ## 2. Shell
 
+Redesigned 2026-09-13 from the client's reference dashboard: a light canvas
+with a soft azure glow, floating pills, and very large rounded cards. The plan
+and the three decisions (brand blue, top pill nav, public pages first) are in
+the “House Boss Redesign Plan” artifact.
+
 ```
-┌────────────┬──────────────────────────────────────────┐
-│  THB       │  Page title            [View site] [👤]  │
-│            ├──────────────────────────────────────────┤
-│ Dashboard  │                                          │
-│ Listings   │   content                                │
-│ Articles   │                                          │
-│ Cities     │                                          │
-│ Communities│                                          │
-│ Reviews    │                                          │
-│ Leads  (3) │                                          │
-│ Media      │                                          │
-│ Settings   │                                          │
-│            │                                          │
-│ ─────────  │                                          │
-│ Storage    │                                          │
-│ ▓▓▓▓░░ 62% │                                          │
-└────────────┴──────────────────────────────────────────┘
+ (logo)  ( Dashboard  Listings  Enquiries 3  Content ▾  Reviews 1  Media  SEO )  [▮▯ 34%] (⚙ Settings ▾) (🔔 4) (KK)
+
+ ┌──────────────────────────────────────────────────────────────────────────────┐
+ │  content — opaque cards, 24px radius, soft navy shadow, on the glow canvas   │
+ └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Sidebar 240px at ≥1024px, 64px icon rail at 768–1023px, drawer below 768px.
-- Leads badge shows the count of `status = 'new'`.
-- Storage meter is always visible in the sidebar — it is the constraint that
-  will actually bite, so it stays in her line of sight.
-- "View site" opens the public site in a new tab.
+- **≥1280px:** top pill navigation, no sidebar. Not from 1024px: measured
+  there, the seven-pill tray ran under the logo and the storage chip.
+  - The tray is glass with short labels only, so docs/03 § 3 holds. The
+    current section is a solid navy pill.
+  - **Content ▾** holds Articles, Cities, Communities and Pages.
+  - **Settings ▾** holds Settings, MLS, Users and Audit logs, with View site.
+  - The two new sidebar items are **Enquiries** (the Leads screen — her word
+    for them) and **Reviews**, each carrying its count.
+- **<1280px:** the logo, the storage chip and a menu button that opens a bottom
+  sheet with the same three groups and the full storage meter.
+- **Storage** stays in her line of sight at every width. It is a chip in the bar
+  with a real progress bar and the percentage as text, and it links to Media.
+- **Notifications (🔔):** new enquiries plus reviews waiting, each linking to
+  its screen.
+- **Account:** name and email, View site (new tab) and Sign out.
+- **Cards stay opaque.** The reference's cards are translucent, but text on
+  glass is outside `check:contrast`'s reach (docs/03 § 3), so admin cards are
+  white surfaces over the glowing canvas. They look the same and the contrast
+  stays provable.
+- The page title is a visually hidden `<h1>` at the top of `<main>`. Each
+  screen's visible heading remains its `<h2>` (`AdminPageHeader`).
+- Hiding a section the user lacks permission for is a courtesy. The route and
+  RLS still refuse regardless.
 
 ---
 

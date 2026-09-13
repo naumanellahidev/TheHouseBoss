@@ -67,7 +67,8 @@ export default async function AdminShellLayout({
       pendingReviews={pendingReviews}
       userEmail={admin.user.email ?? ""}
       userName={(admin.profile as { full_name?: string | null }).full_name ?? null}
-      storage={<StorageMeter usage={usage} variant="sidebar" />}
+      // "panel": the full meter now lives in the light mobile sheet, not a navy sidebar.
+      storage={<StorageMeter usage={usage} variant="panel" />}
       storagePercent={percent}
       storageBar={storageLevel(usage).bar}
       permissions={identity?.permissions ?? []}

@@ -89,10 +89,11 @@ test.describe("admin", () => {
       await expect(page.getByRole("heading", { name: "Recent enquiries" })).toBeVisible();
     });
 
-    test("the storage meter is present in the sidebar at desktop width", async ({ page }) => {
+    test("the storage meter is present in the bar at desktop width", async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto("/admin");
-      await expect(page.getByRole("progressbar")).toHaveCount(2); // sidebar + panel
+      // The storage chip in the top bar (docs/06 § 2) + the dashboard's panel.
+      await expect(page.getByRole("progressbar")).toHaveCount(2);
     });
 
     test("every admin screen loads and has exactly one h1", async ({ page }) => {

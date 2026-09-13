@@ -28,7 +28,8 @@ export function AdminPageHeader({
       )}
     >
       <div className="flex min-w-0 flex-col gap-1.5">
-        <h2 className="text-h3">{title}</h2>
+        {/* h2 size on the new canvas: the screen's title is the first thing read (docs/06 § 2). */}
+        <h2 className="text-h2">{title}</h2>
         {description ? (
           <p className="max-w-[70ch] text-sm text-foreground-muted">
             {description}

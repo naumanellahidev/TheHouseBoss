@@ -2998,6 +2998,61 @@ Its first run failed six cases: the 12px overline sat over the lightest part of
 - The Contact button is a pill too.
 - Measured at 1024px and 1440px: all seven items fit on one line, and nothing wraps.
 
+### 2026-09-13 (late) — Admin redesign step 3: tokens and the new shell
+
+**Decision written first:** docs/06 § 2 now describes the new shell. The old
+240px sidebar spec is gone.
+
+**Shell (`components/admin/admin-shell.tsx`)**
+- **Canvas:** a light background with a soft azure glow (`admin-canvas`) replaces
+  the grey page with a navy sidebar.
+- **From 1280px:** floating pills in one row.
+  - The logo.
+  - A glass nav tray: Dashboard · Listings · Enquiries · Content ▾ · Reviews · Media · SEO.
+  - A storage chip: a real progress bar plus the percentage, linking to Media.
+  - Settings ▾: Settings, MLS, Users, Audit logs, View site.
+  - An alerts bell: new enquiries plus reviews to approve.
+  - An account avatar: View site and Sign out.
+  - The current section is a solid navy pill.
+- **Below 1280px:** logo, storage, alerts, account and a menu button. The button
+  opens a bottom sheet with the three groups as tiles and the full storage meter.
+  - Not from 1024px: measured there, the tray ran under the logo and storage chip
+    and hid "SEO".
+- **Menus** use Radix DropdownMenu, which was already installed.
+- **Nav config:** `lib/admin-nav.ts` items carry a `section` (main / content /
+  system). "Leads" is labelled **Enquiries**; the route and heading are unchanged.
+- **Heading:** the page's single `<h1>` is visually hidden at the top of
+  `<main>`. `AdminPageHeader` titles go up to h2 size.
+
+**Tokens:** `--radius-card` (24px), `--shadow-card`, and the utilities
+`admin-canvas` and `admin-card`.
+- **Deviation from the plan:** cards stay **opaque**. The plan said glass cards,
+  but docs/03 § 3 keeps body text off glass because `check:contrast` cannot
+  composite alpha. On the light canvas an opaque card looks the same. Glass is
+  used on the nav tray and pills only, where labels are short.
+
+**Verified locally in a signed-in browser:** 1440, 1280 and 1024px, plus 390px
+with the sheet open. No overflow, one h1, storage progress bars present, no
+console errors.
+- **How:** a local session was created by generating a magic-link token for
+  `admin@thehousebossfl.com` (the only admin) and redeeming it through our own
+  callback on the dev server, as `tests/admin.setup.ts` does.
+
+**Tests.**
+- The admin suite ran for the first time in a while, with
+  `ADMIN_TEST_EMAIL=admin@thehousebossfl.com`, and caught a real accessibility
+  bug: the storage chip's progress bar sat inside an `aria-hidden` span, so screen
+  readers never saw it. Fixed.
+- Admin suite 15/15.
+- hero-contrast, responsive and a11y: 316 passed, 1 skipped, in the same run
+  before the fix. The fix touched only that span.
+- The test's name said "sidebar" and now says "bar".
+
+**Not yet on the new look:** the dashboard's own cards (step 4) and every other
+screen's contents (step 5).
+- Spotted and left for step 5: at 390px the Enquiries filter row overlaps its
+  search button.
+
 **Open**
 - The admin Pages screen and the picker were typechecked and linted but not clicked
   through in a signed-in browser. The admin e2e suite needs `ADMIN_TEST_EMAIL`.
