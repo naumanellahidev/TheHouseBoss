@@ -61,7 +61,7 @@ export function FaqRepeater({
           {value.map((item, index) => (
             <li
               key={index}
-              className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
+              className="flex flex-col gap-3 admin-card p-4"
             >
               <div className="flex items-center gap-2">
                 <span className="text-overline font-semibold tracking-[0.12em] text-accent-quiet uppercase">

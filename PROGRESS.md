@@ -3050,6 +3050,63 @@ console errors.
 
 **Not yet on the new look:** the dashboard's own cards (step 4) and every other
 screen's contents (step 5).
+
+### 2026-09-13 (night, 2) — Admin redesign steps 4 and 5: the dashboard, and every screen on the system
+
+**Dashboard (docs/06 § 3 rewritten first)**
+- **Greeting.** Greeted by the New York hour. A first name only when the profile has
+  a real one; the seeded full name is "admin".
+- **Enquiry pipeline strip.** Proportional pills that link to each status filter.
+- **Big numbers.** Live listings, enquiries in 7 days (with the change on the 7
+  before), published writing, and the for-sale total.
+- **Today card.** "Needs attention" rows by severity, then a dashed time rail of
+  recent activity with the newest entry solid.
+- **Recent enquiries card.** Initials, type, when, status chip and Mark contacted.
+- **Enquiry calendar** (the one navy card). One dot per New York day for 12 weeks.
+- **Enquiries by week.** Server-rendered SVG, buying against selling, with no chart
+  library.
+- **Storage donut.** The listings / articles / other split drawn against the 1 GB
+  ceiling, plus the next purge.
+- **New query `getLeadActivity`.** One read of `created_at`, `lead_type`, `status`.
+  Days are keyed in New York (`dayKey`) and built by calendar arithmetic, so a DST
+  change cannot skip a day. Spam is excluded.
+- **New date helpers:** `dayKey`, `formatShortDay`, `formatLongDay`,
+  `hourInNewYork`, `compactAgo`.
+
+**Every other screen (step 5)**
+- **Cards.** 38 cards across 21 files moved to `admin-card` by a codemod. The
+  codemod's regex had no word boundary and also rewrote `bg-surface-sunken` into a
+  non-existent `admin-card-sunken` in 8 places. Caught on the next read and
+  restored; `grep admin-card-` now returns 0.
+- **Tabs** are a pill switcher: rounded tray, solid navy selected pill. They are
+  used by the listing, city, community and settings editors.
+- **Login.** Glow canvas with one card.
+- **Media.** The dashboard's storage donut plus a Browse card of pill filters.
+- **Enquiries filters.** Search gets its own full row on a phone, and the two selects
+  share the next. Fixes the 390px overlap noted in step 3.
+- **Dashboard at 390px.** The recent enquiry name had squeezed to one letter; it now
+  has a 10rem floor, so the chip and button wrap underneath.
+- **Activity labels.** `city_shown_on_home` and `city_hidden_from_home` now read as
+  sentences, not raw action names.
+
+**Verified in a signed-in browser** (dev server, local session for
+`admin@thehousebossfl.com`): dashboard, enquiries, media, listing editor and SEO at
+1440px and 390px, plus the login screen. No overflow, one h1 each, and no page
+errors.
+
+**Tests.** All guards green.
+- **Full run** (admin, hero-contrast, responsive, a11y): 331 passed and 1 failed.
+  The failure was the admin axe test hitting its 60s timeout mid-scan, not a
+  violation. That run took 12 minutes with two workers.
+- **Admin suite rerun on its own:** 15/15 in 1.9 minutes, including that axe test.
+  Worth watching: if it times out again in a full run, raise that one test's
+  timeout rather than retrying.
+
+**Open**
+- The media grid tiles keep their old card: their selected state swaps the border
+  colour, which would fight `admin-card`'s own border.
+- `components/admin/dashboard/pulse.tsx` (`PulseTile`, `BreakdownBar`) is no longer
+  used by the dashboard. It was left in place and not deleted in this pass.
 - Spotted and left for step 5: at 390px the Enquiries filter row overlaps its
   search button.
 

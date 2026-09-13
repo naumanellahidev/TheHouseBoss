@@ -36,7 +36,7 @@ export function OrphanPanel({
   const total = strayObjects + strayRows;
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 shadow-xs">
+    <div className="flex flex-col gap-4 admin-card p-5 shadow-xs">
       <div className="flex flex-col gap-1.5">
         <h3 className="text-h4">Unused files</h3>
         <p className="max-w-[70ch] text-sm text-foreground-muted">

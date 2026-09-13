@@ -193,7 +193,7 @@ export function SeoConsole({
           {coverage.groups.map((group) => (
             <div
               key={group.label}
-              className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4"
+              className="flex flex-col gap-1 admin-card p-4"
             >
               <dt className="text-xs font-semibold tracking-wide text-foreground-subtle uppercase">
                 {group.label}
@@ -383,7 +383,7 @@ export function SeoConsole({
           Old links keep working. Added automatically when an address changes.</p>
 
         <form
-          className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-4"
+          className="flex flex-wrap items-end gap-3 admin-card p-4"
           onSubmit={async (event) => {
             event.preventDefault();
             const ok = await run("redirect", () => createRedirect(redirectDraft));
@@ -484,13 +484,13 @@ export function SeoConsole({
           Search engines re-crawl on their own schedule.</p>
 
         <dl className="grid gap-3 sm:grid-cols-3">
-          <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
+          <div className="flex flex-col gap-1 admin-card p-4">
             <dt className="text-xs font-semibold tracking-wide text-foreground-subtle uppercase">
               Addresses in the sitemap
             </dt>
             <dd className="tabular text-h3 font-semibold">{sitemapUrlCount}</dd>
           </div>
-          <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
+          <div className="flex flex-col gap-1 admin-card p-4">
             <dt className="text-xs font-semibold tracking-wide text-foreground-subtle uppercase">
               Last refreshed
             </dt>
@@ -500,7 +500,7 @@ export function SeoConsole({
                 : "Not refreshed by hand yet"}
             </dd>
           </div>
-          <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
+          <div className="flex flex-col gap-1 admin-card p-4">
             <dt className="text-xs font-semibold tracking-wide text-foreground-subtle uppercase">
               Redirects live
             </dt>

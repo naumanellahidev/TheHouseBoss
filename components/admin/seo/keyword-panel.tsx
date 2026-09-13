@@ -79,7 +79,7 @@ export function KeywordPanel({
           {shown.map((keyword) => (
             <li
               key={keyword.id}
-              className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface p-4"
+              className="flex flex-col gap-1.5 admin-card p-4"
             >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                 <span className="font-medium text-foreground">{keyword.keyword}</span>

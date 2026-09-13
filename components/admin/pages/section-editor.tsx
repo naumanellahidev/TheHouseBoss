@@ -87,7 +87,7 @@ export function SectionEditor({
     setValue((current) => ({ ...current, [key]: next }));
 
   return (
-    <section className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-6">
+    <section className="flex flex-col gap-5 admin-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h3 className="text-h4 font-semibold">{label}</h3>

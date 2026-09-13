@@ -42,7 +42,7 @@ export default async function AdminCommunitiesPage() {
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {communities.map((community) => (
             <li key={community.id}>
-              <div className="flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-xs">
+              <div className="flex h-full flex-col gap-3 admin-card p-5 shadow-xs">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-h4 font-semibold text-foreground">
                     {community.name}

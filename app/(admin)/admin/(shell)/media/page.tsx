@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 
+import { StorageDonut } from "@/components/admin/dashboard/visuals";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { MediaGrid } from "@/components/admin/media/media-grid";
 import { OrphanPanel } from "@/components/admin/media/orphan-panel";
 import { AdminPagination } from "@/components/admin/pagination";
-import { StorageMeter } from "@/components/admin/storage-meter";
 import { formatBytes } from "@/lib/storage/budget";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/site/empty-state";
@@ -30,7 +30,8 @@ const ENTITY_TABS: { value: string; label: string }[] = [
  * Media library — docs/06 § 9.
  *
  * The storage projection is the useful part of the summary: "you reach 1 GB in
- * about 14 months" is actionable in a way that "37% used" is not.
+ * about 14 months" is actionable in a way that "37% used" is not. The donut is
+ * the same one the dashboard shows, so the two screens cannot disagree.
  */
 export default async function AdminMediaPage({
   searchParams,
@@ -61,13 +62,15 @@ export default async function AdminMediaPage({
         description={`${usage.objectCount} stored images, ${formatBytes(usage.totalBytes)} of ${formatBytes(usage.limitBytes)} used.`}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 shadow-xs lg:col-span-1">
-          <StorageMeter usage={usage} variant="panel" />
-          <StorageProjection usage={usage} />
-        </div>
+      <div className="grid gap-4 lg:grid-cols-12 xl:gap-5">
+        <StorageDonut
+          usage={usage}
+          className="lg:col-span-5 xl:col-span-4"
+          footer={<StorageProjection usage={usage} />}
+        />
 
-        <div className="flex flex-col gap-3 lg:col-span-2">
+        <div className="admin-card flex flex-col gap-4 p-5 lg:col-span-7 xl:col-span-8">
+          <h3 className="text-h4">Browse</h3>
           <nav aria-label="Media sections" className="flex flex-wrap gap-2">
             <TabLink href="/admin/media" active={!showOrphans}>
               All files
@@ -78,7 +81,7 @@ export default async function AdminMediaPage({
           </nav>
 
           {!showOrphans ? (
-            <nav aria-label="Filter by type" className="flex flex-wrap gap-2">
+            <nav aria-label="Filter by type" className="flex flex-wrap gap-2 border-t border-border pt-4">
               {ENTITY_TABS.map((tab) => (
                 <TabLink
                   key={tab.value || "all"}
@@ -146,11 +149,11 @@ function TabLink({
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "inline-flex min-h-11 items-center rounded-md border px-4 text-sm font-medium",
+        "inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold",
         "transition-colors duration-(--dur-fast)",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         active
-          ? "border-accent bg-accent-wash text-foreground"
+          ? "border-primary bg-primary text-primary-fg"
           : "border-border-strong text-foreground-muted hover:bg-surface-sunken hover:text-foreground",
       )}
     >

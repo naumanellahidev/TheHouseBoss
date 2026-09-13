@@ -130,7 +130,7 @@ export function LeadDetail({
   const utmEntries = Object.entries(lead.utm ?? {});
 
   return (
-    <div className="flex flex-col gap-6 rounded-lg border border-border bg-surface p-5 shadow-xs md:p-6">
+    <div className="flex flex-col gap-6 admin-card p-5 shadow-xs md:p-6">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-h3">{lead.name}</h3>

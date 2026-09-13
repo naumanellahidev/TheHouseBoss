@@ -130,7 +130,7 @@ export function MediaPickerField({
       </Field>
 
       {imageKey ? (
-        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 admin-card p-3 sm:flex-row sm:items-center">
           <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md bg-surface-sunken sm:w-64">
             <Image
               src={keyUrl(imageKey, 800)}

@@ -379,7 +379,7 @@ export function PhotoUploader({
           {photos.map((photo, index) => (
             <li
               key={photo.kind === "stored" ? photo.key : photo.url}
-              className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3 shadow-xs"
+              className="flex flex-col gap-3 admin-card p-3 shadow-xs"
             >
               <div className="relative aspect-4/3 overflow-hidden rounded-md bg-surface-sunken">
                 <Image

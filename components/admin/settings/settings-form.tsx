@@ -663,7 +663,7 @@ function MaintenanceRow({
   onRun: () => void | Promise<void>;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-3 admin-card p-5 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 flex-col gap-1.5">
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         <p className="max-w-[60ch] text-xs text-foreground-muted">{description}</p>

@@ -33,7 +33,7 @@ export default async function AdminCitiesPage() {
           const thin = (city.introMd?.length ?? 0) < 200;
           return (
             <li key={city.id}>
-              <div className="flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-xs">
+              <div className="flex h-full flex-col gap-3 admin-card p-5 shadow-xs">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-h4 font-semibold text-foreground">
                     {city.name}

@@ -50,8 +50,12 @@ export default async function LoginPage({
       : undefined;
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-surface-sunken px-5 py-12">
-      <div className="flex w-full max-w-sm flex-col gap-8">
+    /*
+      The admin's canvas and card (docs/06 § 2): the first screen of the
+      dashboard should already look like the dashboard.
+    */
+    <main className="admin-canvas flex min-h-dvh flex-col items-center justify-center px-4 py-12">
+      <div className="admin-card flex w-full max-w-md flex-col gap-8 p-6 sm:p-8">
         <div className="flex flex-col items-center gap-4 text-center">
           {/* The stacked lockup already carries "Powered by {brokerage}", so
               the heading below does not repeat it. */}

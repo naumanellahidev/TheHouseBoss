@@ -322,7 +322,7 @@ export function ArticleForm({
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
         <aside className="flex flex-col gap-6">
-          <div className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-5">
+          <div className="flex flex-col gap-5 admin-card p-5">
             <Field error={errorOf("kind")}>
               <FieldLabel required>Kind</FieldLabel>
               <Select
@@ -370,7 +370,7 @@ export function ArticleForm({
             </Field>
           </div>
 
-          <div className="rounded-lg border border-border bg-surface p-5">
+          <div className="admin-card p-5">
             <ImageField
               label="Cover image"
               description="Appears on cards and when the article is shared."
@@ -395,7 +395,7 @@ export function ArticleForm({
             ) : null}
           </div>
 
-          <div className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-5">
+          <div className="flex flex-col gap-5 admin-card p-5">
             <Field error={errorOf("slug")}>
               <FieldLabel>Web address</FieldLabel>
               <div className="flex items-center gap-1 rounded-md border border-border-strong bg-surface px-3">
@@ -486,7 +486,7 @@ export function ArticleForm({
           </div>
 
           {/* ── Pre-publish checklist ─────────────────────────────────── */}
-          <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5">
+          <div className="flex flex-col gap-3 admin-card p-5">
             <h3 className="text-h4 font-semibold text-foreground">
               Before publishing
             </h3>

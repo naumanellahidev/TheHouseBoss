@@ -167,7 +167,7 @@ export function HealthPanel({
           and the moment it matters is the moment it is non-zero.
         */}
         {queue.queued + queue.processing + queue.failed > 0 ? (
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-lg border border-border bg-surface p-4">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 admin-card p-4">
             <span className="flex items-center gap-2 text-sm">
               <ListChecks className="size-4 text-foreground-subtle" aria-hidden="true" />
               <span className="font-semibold text-foreground">Queue</span>
@@ -260,7 +260,7 @@ export function HealthPanel({
                 {report.findings.map((finding) => (
                   <li
                     key={finding.id}
-                    className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4"
+                    className="flex flex-col gap-2 admin-card p-4"
                   >
                     <div className="flex flex-wrap items-center gap-3">
                       {finding.severity === "high" ? (
@@ -369,7 +369,7 @@ export function HealthPanel({
             {links.map((link) => (
               <li
                 key={link.id}
-                className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4"
+                className="flex flex-col gap-2 admin-card p-4"
               >
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <Link2 className="size-4 text-foreground-subtle" aria-hidden="true" />
@@ -540,7 +540,7 @@ function Stat({
   of?: number;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
+    <div className="flex flex-col gap-1 admin-card p-4">
       <dt className="text-xs font-semibold tracking-wide text-foreground-subtle uppercase">
         {label}
       </dt>

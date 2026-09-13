@@ -112,7 +112,7 @@ export default async function UsersPage() {
             .map((role) => (
               <div
                 key={role}
-                className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-xs"
+                className="flex flex-col gap-2 admin-card p-4 shadow-xs"
               >
                 <h3 className="text-sm font-semibold">{ROLE_LABELS[role]}</h3>
                 <ul className="flex flex-col gap-1">

@@ -86,7 +86,7 @@ export function AccountPanel({
   return (
     <div className="flex max-w-3xl flex-col gap-8">
       {/* ── Who you are ────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-2 rounded-lg border border-border bg-surface p-4">
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-2 admin-card p-4">
         <span className="flex items-center gap-2 text-sm">
           <UserRound className="size-4 text-foreground-subtle" aria-hidden="true" />
           <span className="text-foreground-muted">Signed in as</span>
