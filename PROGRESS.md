@@ -2907,11 +2907,17 @@ Playwright web server rebuilt once more after the planned single build.
 
 ### 2026-09-13 (evening) — GitHub push fixed; hero card and buttons lifted
 
-**GitHub.** Pushes kept failing with "Connection was reset". This repo now sets
-`http.version HTTP/1.1` and a larger `http.postBuffer`, and the push went
-through. **Deploys go through GitHub**: pushing to `main` triggers the
-production build on Vercel. One deploy was also made directly from the CLI
-before that was settled, and it is superseded.
+**GitHub.** Pushes kept failing. DNS resolves normally and no proxy is set, but
+HTTPS to github.com:443 times out or is reset partway through the connection.
+That is interference on this network, not a git problem. Forcing HTTP/1.1 did
+**not** fix it; the one push that got through was luck on a retry. SSH over
+port 443 works and authenticates as `naumanellahidev`, so `origin` is now
+`ssh://git@ssh.github.com:443/naumanellahidev/TheHouseBoss.git`. If pushes
+fail again from another machine, check that its SSH key is added to GitHub.
+
+**Deploys go through GitHub**: pushing to `main` triggers the production build
+on Vercel. One deploy was also made directly from the CLI before that was
+settled, and it is superseded.
 
 **Hero, desktop.** Measured with Playwright on the viewports laptops really
 have once the browser's toolbars are drawn (1280×620, 1366×657, 1536×730):
