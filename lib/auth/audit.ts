@@ -49,6 +49,9 @@ export type AuditAction =
   | "article_updated"
   | "article_published"
   | "article_deleted"
+  /* Home page visibility, migration 025 — toggled from the cities list. */
+  | "city_shown_on_home"
+  | "city_hidden_from_home"
   | "community_created"
   | "community_updated"
   | "community_deleted"

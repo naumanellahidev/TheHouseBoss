@@ -5,7 +5,7 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-05T18:55:05.101Z
+ * Generated: 2026-09-13T01:38:16.495Z
  * Tables: 32 · Views: 3
  */
 
@@ -152,6 +152,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           hero_alt: string | null;
+          show_on_home: boolean;
         };
         Insert: {
           id?: string;
@@ -173,6 +174,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           hero_alt?: string | null;
+          show_on_home?: boolean;
         };
         Update: {
           id?: string;
@@ -194,6 +196,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           hero_alt?: string | null;
+          show_on_home?: boolean;
         };
         Relationships: [];
       };

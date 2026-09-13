@@ -14,7 +14,7 @@ import type { City, Community } from "@/types/domain";
  */
 
 const CITY_COLUMNS =
-  "id, slug, name, county, state, in_search, is_flagship, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc";
+  "id, slug, name, county, state, in_search, is_flagship, show_on_home, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc";
 
 export async function getCities(): Promise<City[]> {
   const db = createSupabasePublicClient();
@@ -31,6 +31,19 @@ export async function getCities(): Promise<City[]> {
 export async function getSearchCities(): Promise<City[]> {
   const cities = await getCities();
   return cities.filter((c) => c.inSearch);
+}
+
+/**
+ * The cities shown on the home page, in the admin's order.
+ *
+ * NOT `getSearchCities()`, which the home page used to use for this. That one
+ * answers "which cities can be searched"; this one answers "which cities does
+ * she want on the front page", and Admin -> Cities now has a switch per city
+ * for it.
+ */
+export async function getHomeCities(): Promise<City[]> {
+  const cities = await getCities();
+  return cities.filter((city) => city.showOnHome);
 }
 
 export async function getCityBySlug(slug: string): Promise<City | null> {
@@ -94,6 +107,7 @@ export async function getCommunityBySlug(
 export async function getCommunitySlugsForStaticParams(): Promise<string[]> {
   const db = createSupabasePublicClient();
   const { data, error } = await db.from("communities").select("slug");
-  if (error) throw new Error(`getCommunitySlugsForStaticParams: ${error.message}`);
+  if (error)
+    throw new Error(`getCommunitySlugsForStaticParams: ${error.message}`);
   return (data ?? []).map((r: { slug: string }) => r.slug);
 }

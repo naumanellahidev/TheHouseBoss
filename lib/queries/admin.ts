@@ -485,7 +485,7 @@ export async function getAdminCities(): Promise<(City & { published: boolean })[
   const { data, error } = await db
     .from("cities")
     .select(
-      "id, slug, name, county, state, in_search, is_flagship, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc, published",
+      "id, slug, name, county, state, in_search, is_flagship, show_on_home, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc, published",
     )
     .order("sort_order", { ascending: true });
 
@@ -623,7 +623,7 @@ export async function getAdminCityById(
   const { data, error } = await db
     .from("cities")
     .select(
-      "id, slug, name, county, state, in_search, is_flagship, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc, published",
+      "id, slug, name, county, state, in_search, is_flagship, show_on_home, hero_key, hero_alt, intro_md, body_md, stats_json, faq_json, meta_title, meta_desc, published",
     )
     .eq("id", id)
     .maybeSingle();

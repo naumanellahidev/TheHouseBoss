@@ -162,6 +162,13 @@ export type City = {
   state: string;
   inSearch: boolean;
   isFlagship: boolean;
+  /**
+   * Appears in the home page's city tiles (migration 025).
+   *
+   * Separate from `inSearch`, which drives the search filter — the home page
+   * used to reuse that flag, so the two could not be set independently.
+   */
+  showOnHome: boolean;
   heroKey: string | null;
   heroAlt: string | null;
   introMd: string | null;

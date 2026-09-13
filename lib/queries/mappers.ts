@@ -185,6 +185,7 @@ export function toCity(row: Row): City {
     state: row.state ?? "FL",
     inSearch: Boolean(row.in_search),
     isFlagship: Boolean(row.is_flagship),
+    showOnHome: row.show_on_home !== false,
     heroKey: str(row.hero_key),
     heroAlt: str(row.hero_alt),
     introMd: str(row.intro_md),

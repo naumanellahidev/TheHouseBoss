@@ -21,17 +21,26 @@ import { CityTiles } from "@/components/site/city-tiles";
 import { Container, Section, SectionHeader } from "@/components/site/container";
 import { FloatCard } from "@/components/site/float-card";
 import { LeadForm } from "@/components/site/lead-form";
-import { MediaFrame, heroPhoto, portraitPhoto } from "@/components/site/media-frame";
+import {
+  MediaFrame,
+  heroPhoto,
+  portraitPhoto,
+} from "@/components/site/media-frame";
 import { ReviewForm } from "@/components/site/review-form";
 import { Reveal } from "@/components/site/reveal";
 import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
+import { HomeSearch, HomeSearchResults } from "@/components/site/home-search";
 import { SearchBar } from "@/components/site/search-bar";
 import { Hero3D } from "@/components/three/hero-3d";
 import { StatTiles } from "@/components/site/stat-tiles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getCityBySlug, getSearchCities } from "@/lib/queries/cities";
+import {
+  getCityBySlug,
+  getHomeCities,
+  getSearchCities,
+} from "@/lib/queries/cities";
 import {
   countPublishedListings,
   getFacets,
@@ -192,29 +201,51 @@ export default async function HomePage() {
     degrades its own section rather than 500-ing the site's front door — the
     same discipline the marketing layout uses for settings.
   */
-  const [cities, facets, featured, published, lakeMary, reviews, settings] =
-    await Promise.all([
-      safeQuery(() => getSearchCities(), [], "getSearchCities(home)"),
-      safeQuery(
-        () => getFacets(),
-        {
-          cities: [],
-          propertyTypes: [],
-          listingTypes: [],
-          price: null,
-          beds: null,
-          sqft: null,
-          year: null,
-          total: 0,
-        },
-        "getFacets(home)",
-      ),
-      safeQuery(() => getFeaturedListings(6), [], "getFeaturedListings(home)"),
-      safeQuery(() => countPublishedListings(), 0, "countPublishedListings(home)"),
-      safeQuery(() => getCityBySlug("lake-mary"), null, "getCityBySlug(home)"),
-      safeQuery(() => getReviews(3), [], "getReviews(home)"),
-      safeQuery(() => getSiteSettings(), EMPTY_SETTINGS, "getSiteSettings(home)"),
-    ]);
+  const [
+    cities,
+    homeCities,
+    facets,
+    featured,
+    published,
+    lakeMary,
+    reviews,
+    settings,
+  ] = await Promise.all([
+    /*
+        Two lists, because they answer different questions.
+
+        `cities` fills the search dropdown — the cities that can be searched
+        (`in_search`, the five in the brief). `homeCities` is what the tiles
+        below show, which the admin now sets per city with a switch on the
+        cities list. Before migration 025 both came from `in_search`, so
+        featuring a city on the front page also forced it into the filter.
+      */
+    safeQuery(() => getSearchCities(), [], "getSearchCities(home)"),
+    safeQuery(() => getHomeCities(), [], "getHomeCities(home)"),
+    safeQuery(
+      () => getFacets(),
+      {
+        cities: [],
+        propertyTypes: [],
+        listingTypes: [],
+        price: null,
+        beds: null,
+        sqft: null,
+        year: null,
+        total: 0,
+      },
+      "getFacets(home)",
+    ),
+    safeQuery(() => getFeaturedListings(6), [], "getFeaturedListings(home)"),
+    safeQuery(
+      () => countPublishedListings(),
+      0,
+      "countPublishedListings(home)",
+    ),
+    safeQuery(() => getCityBySlug("lake-mary"), null, "getCityBySlug(home)"),
+    safeQuery(() => getReviews(3), [], "getReviews(home)"),
+    safeQuery(() => getSiteSettings(), EMPTY_SETTINGS, "getSiteSettings(home)"),
+  ]);
 
   /** Spec: swap the primary CTA rather than advertise an empty search. */
   const inventoryIsThin = published < 5;
@@ -272,8 +303,18 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ── 1. Hero + search ─────────────────────────────────────────── */}
       {/*
+        Hero and results, inside one client island.
+
+        The island is a wrapper that listens for the hero form's submit and
+        answers it in place — see components/site/home-search.tsx. Everything
+        inside it stays server-rendered; passing server components as children
+        through a client component is what keeps the form's database-driven
+        options out of the browser bundle.
+      */}
+      <HomeSearch>
+        {/* ── 1. Hero + search ─────────────────────────────────────────── */}
+        {/*
         A photograph, full bleed, with the words on top of it.
 
         This was a navy panel with a 4:5 photo beside it. The client asked for
@@ -285,25 +326,25 @@ export default async function HomePage() {
         The picture comes from Admin → Settings → Branding, so it can be
         swapped without a deploy.
       */}
-      <section
-        data-hero-bleed=""
-        className="relative isolate flex min-h-[min(84svh,640px)] items-center overflow-hidden bg-surface-invert text-foreground-invert lg:min-h-[min(88svh,780px)]"
-      >
-        {heroBackground ? (
-          <>
-            <div aria-hidden="true" className="absolute inset-0 -z-20">
-              <PropertyImage
-                photo={heroBackground}
-                size={1600}
-                sizes={IMAGE_SIZES.fullBleed}
-                priority
-                aspect="none"
-                wrapperClassName="h-full w-full"
-                className="h-full w-full object-cover object-center motion-safe:animate-[ken-burns_28s_var(--ease-in-out)_infinite_alternate]"
-              />
-            </div>
+        <section
+          data-hero-bleed=""
+          className="relative isolate flex min-h-[min(84svh,640px)] items-center overflow-hidden bg-surface-invert text-foreground-invert lg:min-h-[min(88svh,780px)]"
+        >
+          {heroBackground ? (
+            <>
+              <div aria-hidden="true" className="absolute inset-0 -z-20">
+                <PropertyImage
+                  photo={heroBackground}
+                  size={1600}
+                  sizes={IMAGE_SIZES.fullBleed}
+                  priority
+                  aspect="none"
+                  wrapperClassName="h-full w-full"
+                  className="h-full w-full object-cover object-center motion-safe:animate-[ken-burns_28s_var(--ease-in-out)_infinite_alternate]"
+                />
+              </div>
 
-            {/*
+              {/*
               The overlay, in two parts, and the reason the words stay readable
               over whatever photograph is uploaded next.
 
@@ -320,62 +361,62 @@ export default async function HomePage() {
               screenshots the pixels behind it at five widths and fails below
               WCAG AA. Run it after changing the photograph.
             */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(7_16_35/0.72)_0%,rgb(7_16_35/0.68)_42%,rgb(7_16_35/0.90)_100%)] lg:bg-[linear-gradient(100deg,rgb(7_16_35/0.94)_0%,rgb(7_16_35/0.88)_36%,rgb(7_16_35/0.58)_64%,rgb(7_16_35/0.30)_100%)]"
-            />
-            {/* Keeps the transparent header legible over a bright sky. */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-0 top-0 -z-10 h-40 bg-[linear-gradient(180deg,rgb(7_16_35/0.70),transparent)]"
-            />
-          </>
-        ) : (
-          <>
-            {/*
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(7_16_35/0.76)_0%,rgb(7_16_35/0.80)_42%,rgb(7_16_35/0.92)_100%)] lg:bg-[linear-gradient(100deg,rgb(7_16_35/0.94)_0%,rgb(7_16_35/0.88)_36%,rgb(7_16_35/0.58)_64%,rgb(7_16_35/0.30)_100%)]"
+              />
+              {/* Keeps the transparent header legible over a bright sky. */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 -z-10 h-40 bg-[linear-gradient(180deg,rgb(7_16_35/0.70),transparent)]"
+              />
+            </>
+          ) : (
+            <>
+              {/*
               No photograph uploaded: the navy composition and the 3D scene are
               the design in that case, not a grey box waiting for an image. They
               are not drawn over a photograph — a WebGL scene on top of a hero
               picture is two focal points arguing.
             */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-azure-600)_1px,transparent_1px),linear-gradient(90deg,var(--color-azure-600)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
-            />
-            <Hero3D />
-          </>
-        )}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-azure-600)_1px,transparent_1px),linear-gradient(90deg,var(--color-azure-600)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
+              />
+              <Hero3D />
+            </>
+          )}
 
-        <Container className="w-full pt-6 pb-12 md:pt-8 md:pb-16 xl:pb-20">
-          <div className="grid items-end gap-10 lg:grid-cols-12 lg:gap-12">
-            <div className="flex flex-col items-start gap-6 lg:col-span-8">
-              <Badge
-                tone="accent"
-                className="bg-royal-900/70 text-azure-400 backdrop-blur-sm"
-              >
-                Lake Mary · Seminole &amp; Orange County
-              </Badge>
+          <Container className="w-full pt-6 pb-12 md:pt-8 md:pb-16 xl:pb-20">
+            <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+              <div className="flex flex-col items-start gap-6 lg:col-span-7">
+                <Badge
+                  tone="accent"
+                  className="bg-royal-900/70 text-azure-400 backdrop-blur-sm"
+                >
+                  Lake Mary · Seminole &amp; Orange County
+                </Badge>
 
-              <h1 className="text-display text-foreground-invert [text-shadow:0_2px_24px_rgb(7_16_35/0.5)]">
-                Find your home in{" "}
-                <span className="relative whitespace-nowrap">
-                  Lake Mary
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-x-0 -bottom-1 h-1 bg-accent md:-bottom-2 md:h-1.5"
-                  />
-                </span>
-              </h1>
+                <h1 className="text-display text-foreground-invert [text-shadow:0_2px_24px_rgb(7_16_35/0.5)]">
+                  Find your home in{" "}
+                  <span className="relative whitespace-nowrap">
+                    Lake Mary
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-x-0 -bottom-1 h-1 bg-accent md:-bottom-2 md:h-1.5"
+                    />
+                  </span>
+                </h1>
 
-              <p className="max-w-[52ch] text-lead text-foreground-invert">
-                {siteConfig.positioning}
-              </p>
+                <p className="max-w-[52ch] text-lead text-foreground-invert">
+                  {siteConfig.positioning}
+                </p>
 
-              {/*
+                {/*
                 Hidden on a phone, for two measured reasons.
 
                 It is seven lines there, which pushed the buttons and the search
@@ -384,56 +425,85 @@ export default async function HomePage() {
                 did not clear WCAG AA over the photograph at 360/414px: muted ink
                 at 16px measured 4.43:1 against the brightest part of the picture
                 behind it (`npm run check:hero-contrast`). From 768px there is
-                room for it and it measures 4.57:1 and up.
+                room for it; once the search card moved into the hero's right
+                column the copy sat higher, over the thinner middle of the
+                wash, and measured 4.41:1 at 768px — so that middle stop was
+                deepened from 0.68 to 0.80 and it clears AA again.
 
                 Nothing is lost: the same introduction is the opening of the
                 "Meet The House Boss" section further down the page.
               */}
-              <p className="hidden max-w-[56ch] text-body text-foreground-invert-muted md:block">
-                I&rsquo;m {siteConfig.knownAs} — a licensed Realtor{" "}
-                <em className="text-azure-400 not-italic">and</em> a Certified
-                Residential Building Contractor. I read a property the way a
-                builder does, so you can look past the finishes and make a
-                decision you will still be happy with in five years.
-              </p>
+                <p className="hidden max-w-[56ch] text-body text-foreground-invert-muted md:block">
+                  I&rsquo;m {siteConfig.knownAs} — a licensed Realtor{" "}
+                  <em className="text-azure-400 not-italic">and</em> a Certified
+                  Residential Building Contractor. I read a property the way a
+                  builder does, so you can look past the finishes and make a
+                  decision you will still be happy with in five years.
+                </p>
 
-              {inventoryIsThin ? (
-                <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row sm:flex-wrap">
-                  <Button variant="accent" size="lg" asChild>
-                    <Link href="/contact">Get new listing alerts</Link>
-                  </Button>
-                  <Button variant="invert" size="lg" asChild>
-                    <Link href="/search">Browse what is available</Link>
-                  </Button>
-                  {/*
+                {inventoryIsThin ? (
+                  <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                    <Button variant="accent" size="lg" asChild>
+                      <Link href="/contact">Get new listing alerts</Link>
+                    </Button>
+                    <Button variant="invert" size="lg" asChild>
+                      <Link href="/search">Browse what is available</Link>
+                    </Button>
+                    {/*
                     Third, and deliberately the quietest of the three. It is not
                     what most visitors came for, and a hero with three equally
                     weighted CTAs has none.
                   */}
-                  <ReviewForm
-                    variant="ghost"
-                    size="lg"
-                    className="text-foreground-invert hover:bg-royal-900/70 hover:text-foreground-invert"
-                  />
-                </div>
-              ) : (
-                <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row sm:flex-wrap">
-                  <Button variant="accent" size="lg" asChild>
-                    <Link href="/search">Search homes</Link>
-                  </Button>
-                  <Button variant="invert" size="lg" asChild>
-                    <Link href="/contact">Talk to Krisi</Link>
-                  </Button>
-                  <ReviewForm
-                    variant="ghost"
-                    size="lg"
-                    className="text-foreground-invert hover:bg-royal-900/70 hover:text-foreground-invert"
-                  />
-                </div>
-              )}
-            </div>
+                    <ReviewForm
+                      variant="ghost"
+                      size="lg"
+                      className="text-foreground-invert hover:bg-royal-900/70 hover:text-foreground-invert"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                    <Button variant="accent" size="lg" asChild>
+                      <Link href="/search">Search homes</Link>
+                    </Button>
+                    <Button variant="invert" size="lg" asChild>
+                      <Link href="/contact">Talk to Krisi</Link>
+                    </Button>
+                    <ReviewForm
+                      variant="ghost"
+                      size="lg"
+                      className="text-foreground-invert hover:bg-royal-900/70 hover:text-foreground-invert"
+                    />
+                  </div>
+                )}
 
-            {/*
+                {/*
+                The services, as one line under the buttons.
+
+                They were stacked in the bottom-right corner, mirroring the
+                client's banner — which is exactly where the fixed WhatsApp
+                button sits, so the last two were behind it. On this side they
+                are always legible, and they close the copy column rather than
+                leaving it to end on a row of buttons.
+              */}
+                <ul className="hidden flex-wrap items-center gap-x-3 gap-y-1 pt-2 md:flex">
+                  {HERO_SERVICES.map((service, index) => (
+                    <li
+                      key={service}
+                      className="flex items-center gap-3 text-overline font-semibold tracking-[0.16em] text-foreground-invert uppercase"
+                    >
+                      {index > 0 ? (
+                        <span
+                          aria-hidden="true"
+                          className="h-3 w-px bg-accent/70"
+                        />
+                      ) : null}
+                      {service}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/*
               The services, opposite the copy — the right-hand column of the
               client's own banner, and what balances a composition whose weight
               is otherwise all on the left.
@@ -443,25 +513,38 @@ export default async function HomePage() {
               the four services named on /about rather than the banner's, so the
               site does not advertise something it describes nowhere.
             */}
-            <ul className="hidden lg:col-span-4 lg:flex lg:flex-col lg:items-end lg:gap-2.5 lg:pb-1">
-              <li aria-hidden="true" className="mb-1 h-px w-14 bg-accent" />
-              {HERO_SERVICES.map((service) => (
-                <li
-                  key={service}
-                  className="text-overline font-semibold tracking-[0.16em] text-foreground-invert uppercase"
-                >
-                  {service}
-                </li>
-              ))}
-            </ul>
-          </div>
+              {/*
+              The search, inside the hero rather than beneath it.
 
-          {/* The search card, overlapping the hero's lower edge on desktop. */}
-          <div className="mt-8 lg:mt-12">
-            <SearchBar cities={cities} facets={facets} variant="hero" />
-          </div>
-        </Container>
-      </section>
+              It was a full-width band under the copy, which left a large empty
+              area of photograph to its right and pushed everything else down.
+              In the hero's own second column it fills that space, and the glass
+              treatment lets the photograph read through it instead of covering
+              it with a white slab.
+            */}
+              <div className="lg:col-span-5">
+                {/*
+                Held to 26rem and pushed right. At 5/12 of a 1440 viewport the
+                panel is ~640px wide, which stretches three stacked selects into
+                a shape that reads as a form rather than as a card.
+              */}
+                <SearchBar
+                  cities={cities}
+                  facets={facets}
+                  variant="hero"
+                  className="lg:ml-auto lg:max-w-[26rem]"
+                />
+              </div>
+            </div>
+          </Container>
+        </section>
+
+        {/*
+        The answer, immediately under the question. Renders nothing at all
+        until a search has been run.
+      */}
+        <HomeSearchResults />
+      </HomeSearch>
 
       {/* ── 2. Trust strip ───────────────────────────────────────────── */}
       <Section tone="sunken" className="border-b border-border">
@@ -493,41 +576,43 @@ export default async function HomePage() {
       <Section>
         <Container>
           <Reveal className="flex flex-col gap-8">
-          <SectionHeader
-            overline="What I specialise in"
-            title="Three situations where the right agent changes the outcome"
-            lead="Each of these has a full guide, written from doing the work rather than summarising someone else's article."
-          />
+            <SectionHeader
+              overline="What I specialise in"
+              title="Three situations where the right agent changes the outcome"
+              lead="Each of these has a full guide, written from doing the work rather than summarising someone else's article."
+            />
 
-          <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
-            {specialties.map(({ href, icon: Icon, title, hook }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:p-6"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-11 items-center justify-center rounded-md bg-accent-wash text-accent-quiet"
+            <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
+              {specialties.map(({ href, icon: Icon, title, hook }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:p-6"
                   >
-                    <Icon className="size-6" />
-                  </span>
-                  <span className="text-h4 font-semibold text-foreground">
-                    {title}
-                  </span>
-                  <span className="text-sm text-foreground-muted">{hook}</span>
-                  <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-accent-quiet">
-                    Read the guide
-                    <ArrowRight
+                    <span
                       aria-hidden="true"
-                      className="size-4 transition-transform duration-(--dur-fast) ease-(--ease-out) group-hover:translate-x-0.5"
-                    />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
+                      className="flex size-11 items-center justify-center rounded-md bg-accent-wash text-accent-quiet"
+                    >
+                      <Icon className="size-6" />
+                    </span>
+                    <span className="text-h4 font-semibold text-foreground">
+                      {title}
+                    </span>
+                    <span className="text-sm text-foreground-muted">
+                      {hook}
+                    </span>
+                    <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-accent-quiet">
+                      Read the guide
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="size-4 transition-transform duration-(--dur-fast) ease-(--ease-out) group-hover:translate-x-0.5"
+                      />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </Container>
       </Section>
 
@@ -535,35 +620,35 @@ export default async function HomePage() {
       {showFeatured ? (
         <Section tone="sunken">
           <Container>
-          <Reveal className="flex flex-col gap-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <SectionHeader
-                overline="Featured"
-                title="Homes worth a closer look"
-              />
-              <Button variant="outline" asChild>
-                <Link href="/search">See all homes</Link>
-              </Button>
-            </div>
-            <FeaturedListings listings={featured} />
-          </Reveal>
-        </Container>
+            <Reveal className="flex flex-col gap-8">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <SectionHeader
+                  overline="Featured"
+                  title="Homes worth a closer look"
+                />
+                <Button variant="outline" asChild>
+                  <Link href="/search">See all homes</Link>
+                </Button>
+              </div>
+              <FeaturedListings listings={featured} />
+            </Reveal>
+          </Container>
         </Section>
       ) : null}
 
       {/* ── 5. Search by city ────────────────────────────────────────── */}
-      {cities.length > 0 ? (
+      {homeCities.length > 0 ? (
         <Section>
           <Container>
-          <Reveal className="flex flex-col gap-8">
-            <SectionHeader
-              overline="Search by city"
-              title="Where I work"
-              lead="Seminole and Orange County. Each city has its own guide — schools, commute, what the market is actually doing — not just a list of homes."
-            />
-            <CityTiles cities={cities} facets={facets} />
-          </Reveal>
-        </Container>
+            <Reveal className="flex flex-col gap-8">
+              <SectionHeader
+                overline="Search by city"
+                title="Where I work"
+                lead="Seminole and Orange County. Each city has its own guide — schools, commute, what the market is actually doing — not just a list of homes."
+              />
+              <CityTiles cities={homeCities} facets={facets} />
+            </Reveal>
+          </Container>
         </Section>
       ) : null}
 
@@ -630,34 +715,36 @@ export default async function HomePage() {
       <Section>
         <Container>
           <Reveal className="flex flex-col gap-8">
-          <SectionHeader
-            overline="The difference"
-            title="What a contractor's licence actually changes"
-            lead="Any agent can tell you a kitchen is dated. Knowing what it costs to fix, and whether the wall behind it can move, is a different job."
-          />
+            <SectionHeader
+              overline="The difference"
+              title="What a contractor's licence actually changes"
+              lead="Any agent can tell you a kitchen is dated. Knowing what it costs to fix, and whether the wall behind it can move, is a different job."
+            />
 
-          <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6">
-            {contractorValue.map(({ icon: Icon, title, body }) => (
-              <li
-                key={title}
-                className="flex gap-4 rounded-lg border border-border bg-surface p-5 shadow-xs lg:p-6"
-              >
-                <span
-                  aria-hidden="true"
-                  className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent-wash text-accent-quiet"
+            <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:gap-6">
+              {contractorValue.map(({ icon: Icon, title, body }) => (
+                <li
+                  key={title}
+                  className="flex gap-4 rounded-lg border border-border bg-surface p-5 shadow-xs lg:p-6"
                 >
-                  <Icon className="size-6" />
-                </span>
-                <span className="flex flex-col gap-1.5">
-                  <span className="text-h4 font-semibold text-foreground">
-                    {title}
+                  <span
+                    aria-hidden="true"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent-wash text-accent-quiet"
+                  >
+                    <Icon className="size-6" />
                   </span>
-                  <span className="text-sm text-foreground-muted">{body}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
+                  <span className="flex flex-col gap-1.5">
+                    <span className="text-h4 font-semibold text-foreground">
+                      {title}
+                    </span>
+                    <span className="text-sm text-foreground-muted">
+                      {body}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </Container>
       </Section>
 
@@ -689,7 +776,12 @@ export default async function HomePage() {
 
               <div className="lg:col-span-6">
                 <MediaFrame
-                  photo={heroPhoto(lakeMary.heroKey, lakeMary.heroAlt, 1600, 1200)}
+                  photo={heroPhoto(
+                    lakeMary.heroKey,
+                    lakeMary.heroAlt,
+                    1600,
+                    1200,
+                  )}
                   sizes="(max-width: 1023px) 100vw, 50vw"
                   aspect="4/3"
                 />
@@ -703,32 +795,34 @@ export default async function HomePage() {
       <Section>
         <Container>
           <Reveal className="flex flex-col gap-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <SectionHeader
-              overline="Guides"
-              title="Written to be useful before you call"
-            />
-            <Button variant="outline" asChild>
-              <Link href="/guides">All guides</Link>
-            </Button>
-          </div>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <SectionHeader
+                overline="Guides"
+                title="Written to be useful before you call"
+              />
+              <Button variant="outline" asChild>
+                <Link href="/guides">All guides</Link>
+              </Button>
+            </div>
 
-          <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
-            {guides.map(({ href, title, lead }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                >
-                  <span className="text-h4 font-semibold text-foreground">
-                    {title}
-                  </span>
-                  <span className="text-sm text-foreground-muted">{lead}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
+            <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
+              {guides.map(({ href, title, lead }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    <span className="text-h4 font-semibold text-foreground">
+                      {title}
+                    </span>
+                    <span className="text-sm text-foreground-muted">
+                      {lead}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </Container>
       </Section>
 
@@ -736,49 +830,49 @@ export default async function HomePage() {
       {showReviews ? (
         <Section tone="sunken">
           <Container>
-          <Reveal className="flex flex-col gap-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <SectionHeader overline="Reviews" title="What clients say" />
-              <Button variant="outline" asChild>
-                <Link href="/reviews">Read all reviews</Link>
-              </Button>
-            </div>
+            <Reveal className="flex flex-col gap-8">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <SectionHeader overline="Reviews" title="What clients say" />
+                <Button variant="outline" asChild>
+                  <Link href="/reviews">Read all reviews</Link>
+                </Button>
+              </div>
 
-            <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
-              {reviews.map((review) => (
-                <li
-                  key={review.id}
-                  className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-xs"
-                >
-                  <Quote
-                    aria-hidden="true"
-                    className="size-6 text-accent-quiet"
-                  />
-                  {review.rating ? (
-                    <span
-                      className="flex gap-0.5"
-                      aria-label={`${review.rating} out of 5`}
-                    >
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <Star
-                          key={i}
-                          aria-hidden="true"
-                          className="size-4 fill-accent text-accent"
-                        />
-                      ))}
+              <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
+                {reviews.map((review) => (
+                  <li
+                    key={review.id}
+                    className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-xs"
+                  >
+                    <Quote
+                      aria-hidden="true"
+                      className="size-6 text-accent-quiet"
+                    />
+                    {review.rating ? (
+                      <span
+                        className="flex gap-0.5"
+                        aria-label={`${review.rating} out of 5`}
+                      >
+                        {Array.from({ length: review.rating }).map((_, i) => (
+                          <Star
+                            key={i}
+                            aria-hidden="true"
+                            className="size-4 fill-accent text-accent"
+                          />
+                        ))}
+                      </span>
+                    ) : null}
+                    <blockquote className="text-sm text-foreground-muted">
+                      {review.body}
+                    </blockquote>
+                    <span className="mt-auto text-sm font-semibold text-foreground">
+                      {review.authorName}
                     </span>
-                  ) : null}
-                  <blockquote className="text-sm text-foreground-muted">
-                    {review.body}
-                  </blockquote>
-                  <span className="mt-auto text-sm font-semibold text-foreground">
-                    {review.authorName}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </Container>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </Container>
         </Section>
       ) : null}
 
@@ -879,9 +973,7 @@ export default async function HomePage() {
               ) : (
                 <>
                   <Button asChild size="lg">
-                    <Link href="/search">
-                      Browse every home for sale
-                    </Link>
+                    <Link href="/search">Browse every home for sale</Link>
                   </Button>
                   <Button asChild size="lg" variant="outline">
                     <Link href="/contact">Talk to Krisi</Link>

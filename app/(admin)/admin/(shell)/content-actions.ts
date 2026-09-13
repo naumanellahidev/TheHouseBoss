@@ -7,6 +7,10 @@ import {
   syncCitySeo,
   syncCommunitySeo,
 } from "@/lib/seo/auto/apply";
+import {
+  autoCityHeroAlt,
+  autoCommunityHeroAlt,
+} from "@/lib/seo/auto/generate";
 
 /**
  * Queue the engine for a record that has just been published (§26).
@@ -313,7 +317,18 @@ function cityRow(input: CityInput) {
     county: input.county,
     in_search: input.inSearch,
     hero_key: input.heroKey ?? null,
-    hero_alt: input.heroAlt ?? null,
+    /*
+      A hero photograph with no alt text is both an accessibility failure and
+      an image-search miss, and it is the field most easily forgotten. If one
+      was uploaded and the box was left empty, name the place — see
+      `autoCityHeroAlt` for why it says nothing about what the picture shows.
+      Anything typed here wins.
+    */
+    hero_alt:
+      input.heroAlt?.trim() ||
+      (input.heroKey
+        ? autoCityHeroAlt({ name: input.name, county: input.county })
+        : null),
     intro_md: input.introMd ?? null,
     body_md: input.bodyMd ?? null,
     // Undefined keys are stripped so the stored object holds only real figures
@@ -326,6 +341,46 @@ function cityRow(input: CityInput) {
     meta_desc: input.metaDesc ?? null,
     published: input.published,
   };
+}
+
+/**
+ * Show or hide a city on the home page.
+ *
+ * Its own action rather than a field on the city form: the decision is made
+ * while looking at all the cities at once — "these four on the front page" —
+ * and making her open, edit and save each one to answer that is the wrong
+ * shape for the question. The form still owns everything else about a city.
+ *
+ * Only this column is written, so a toggle can never clobber a draft someone
+ * has open in the editor.
+ */
+export async function setCityOnHome(
+  id: string,
+  showOnHome: boolean,
+): Promise<ContentResult> {
+  const authError = await guard();
+  if (authError) return { ok: false, error: authError };
+
+  const db = await createSupabaseServerClient();
+  const { data, error } = await db
+    .from("cities")
+    .update({ show_on_home: showOnHome })
+    .eq("id", id)
+    .select("slug, name")
+    .single();
+
+  if (error) return { ok: false, error: friendly(error.message, "setCityOnHome") };
+
+  await recordAudit({
+    action: showOnHome ? "city_shown_on_home" : "city_hidden_from_home",
+    entityType: "city",
+    entityId: id,
+    metadata: { slug: String(data.slug), name: String(data.name) },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin/cities");
+  return { ok: true };
 }
 
 export async function saveCity(id: string, raw: unknown): Promise<ContentResult> {
@@ -370,13 +425,33 @@ export async function saveCity(id: string, raw: unknown): Promise<ContentResult>
 
 /* ── Communities ────────────────────────────────────────────────────────── */
 
-function communityRow(input: CommunityInput) {
+/**
+ * The parent city's name, for the generated hero alt text.
+ *
+ * One extra read per save, which is the price of "Heathrow in Lake Mary,
+ * Florida" instead of "Heathrow, Central Florida" — the city is the half that
+ * makes it a local-search phrase.
+ */
+async function parentCityName(
+  db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  cityId: string,
+): Promise<string | null> {
+  const { data } = await db.from("cities").select("name").eq("id", cityId).maybeSingle();
+  return data?.name ?? null;
+}
+
+function communityRow(input: CommunityInput, cityName: string | null = null) {
   return {
     name: input.name,
     slug: input.slug,
     city_id: input.cityId,
     hero_key: input.heroKey ?? null,
-    hero_alt: input.heroAlt ?? null,
+    // See the note in `cityRow`.
+    hero_alt:
+      input.heroAlt?.trim() ||
+      (input.heroKey
+        ? autoCommunityHeroAlt({ name: input.name, cityName })
+        : null),
     intro_md: input.introMd ?? null,
     body_md: input.bodyMd ?? null,
     hoa_info: input.hoaInfo ?? null,
@@ -417,13 +492,26 @@ export async function createCommunity(
   }
 
   const db = await createSupabaseServerClient();
+  const cityName = await parentCityName(db, parsed.data.cityId);
   const { data, error } = await db
     .from("communities")
-    .insert(communityRow(parsed.data))
+    .insert(communityRow(parsed.data, cityName))
     .select("id, slug, cities(slug)")
     .single();
 
   if (error) return { ok: false, error: friendly(error.message, "createCommunity") };
+
+  /*
+    SEO on CREATION, not only on the next edit.
+
+    This was missing: a community added and published in one go got no
+    generated meta description and no keyword run, and stayed that way until
+    somebody happened to open and re-save it. Editing already did both.
+  */
+  if (parsed.data.published) {
+    await syncCommunitySeo(data.slug);
+    await queueSeo("community", data.id, parsed.data.name);
+  }
 
   const city = Array.isArray(data.cities) ? data.cities[0] : data.cities;
   revalidateCommunity(data.slug, [city?.slug ?? null]);
@@ -450,9 +538,10 @@ export async function saveCommunity(id: string, raw: unknown): Promise<ContentRe
     .eq("id", id)
     .maybeSingle();
 
+  const cityName = await parentCityName(db, parsed.data.cityId);
   const { data, error } = await db
     .from("communities")
-    .update(communityRow(parsed.data))
+    .update(communityRow(parsed.data, cityName))
     .eq("id", id)
     .select("slug, cities(slug)")
     .single();

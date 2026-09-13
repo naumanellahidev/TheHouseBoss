@@ -371,6 +371,37 @@ export function autoCommunityDescription(community: Community): string {
   ]);
 }
 
+/**
+ * Alt text for a place's hero photograph.
+ *
+ * Deliberately says only what is CERTAIN about the picture: which place it is
+ * of. A generator has not seen the image, and an invented description — "palm
+ * trees at sunset", "aerial view" — is worse than a plain one: a screen-reader
+ * user is told something that may not be there, and it is the kind of detail
+ * nobody thinks to check.
+ *
+ * The place name is also the useful half for image search, which is what the
+ * client asked this to serve.
+ *
+ * Only ever used to FILL A BLANK. Anything the admin types wins — she has seen
+ * the photograph and this has not.
+ */
+export function autoCityHeroAlt(city: {
+  name: string;
+  county: string;
+}): string {
+  return `${city.name}, ${city.county} County, Florida`;
+}
+
+export function autoCommunityHeroAlt(community: {
+  name: string;
+  cityName?: string | null;
+}): string {
+  return community.cityName
+    ? `${community.name} in ${community.cityName}, Florida`
+    : `${community.name}, Central Florida`;
+}
+
 /** True when a value is safe to publish as a meta description. */
 export function inBand(value: string | null | undefined): boolean {
   const length = value?.trim().length ?? 0;
