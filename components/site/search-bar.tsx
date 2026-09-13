@@ -69,14 +69,29 @@ export function SearchBar({
       role="search"
       aria-label="Search homes"
       className={cn(
-        hero ? "glass rounded-xl p-4 sm:p-5 lg:p-6" : "flex flex-wrap items-end gap-2",
+        hero
+          ? "glass flex flex-col gap-3 rounded-xl p-4 sm:p-5"
+          : "flex flex-wrap items-end gap-2",
         className,
       )}
     >
       {hero ? (
         <>
-          {/* Primary row. Everything most people need, visible without a click. */}
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_auto] lg:items-end">
+          {/*
+            A COLUMN, not a row.
+
+            This panel used to be a full-width band under the hero, so its
+            fields sat side by side. It now lives inside the hero itself, in a
+            five-column slot beside the headline, where a horizontal row would
+            squeeze three selects into ~150px each. Stacked, each control keeps
+            its full 44px target at every width and the panel reads as one
+            object rather than a strip.
+          */}
+          <p className="text-overline font-semibold tracking-[0.12em] text-foreground-subtle uppercase">
+            Find a home
+          </p>
+
+          <div className="grid gap-3">
             <Field id="search-city">
               <FieldLabel>City</FieldLabel>
               <Select name="city" defaultValue="">
@@ -116,7 +131,7 @@ export function SearchBar({
               </Select>
             </Field>
 
-            <Button type="submit" variant="accent" size="lg" className="lg:w-auto">
+            <Button type="submit" variant="accent" size="lg" block className="mt-1">
               <Search className="size-5" aria-hidden="true" />
               Search
             </Button>
@@ -127,7 +142,7 @@ export function SearchBar({
             without a line of JavaScript, and the panel's contents are in the
             DOM either way, so they submit correctly however it is rendered.
           */}
-          <details className="group mt-3 border-t border-border pt-3">
+          <details className="group border-t border-border pt-3">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-semibold text-accent-quiet focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
               <SlidersHorizontal className="size-4" aria-hidden="true" />
               More filters
@@ -137,7 +152,7 @@ export function SearchBar({
               />
             </summary>
 
-            <div className="grid gap-3 pt-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <Field id="search-min">
                 <FieldLabel>Min price</FieldLabel>
                 <Select name="min" defaultValue="">
@@ -221,7 +236,7 @@ export function SearchBar({
             </div>
           </details>
 
-          <p className="mt-3 text-sm text-foreground-muted">
+          <p className="text-sm text-foreground-muted">
             Looking for a new build?{" "}
             <Link
               href="/search/new-construction"
