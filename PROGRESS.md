@@ -2796,4 +2796,70 @@ of `alternateName`. **Domain**: the client is connecting it (open decision 16).
 
 ---
 
+### 2026-09-13 — Speed pass, and a photograph for a hero
+
+**Admin — why tab switching felt slow, and what changed**
+
+Every click did three round trips to Supabase Auth: the proxy, the shell
+layout and `getAdminIdentity()` each called `getUser()`. And there was no
+loading boundary anywhere under /admin, so the old page simply sat there,
+frozen, until the server answered.
+
+- `getVerifiedUser()` verifies the session JWT **locally** with `getClaims()`.
+  The project signs with ES256 and auth-js caches the public key module-wide
+  for ten minutes, so on a warm function it costs no network at all. Wrapped in
+  React `cache()`, so a layout and a page asking "who is this?" share one
+  answer. The trade-off is stated in the code: a revoked session is honoured
+  until its token expires (≤1h), bounded by RLS and by the profile check.
+- One `loading.tsx` for the whole admin shell: the sidebar stays, a skeleton
+  replaces the content immediately, the page streams in behind it.
+- 15/15 admin e2e pass against the new auth. Two of those tests had been
+  failing on stale expectations (the magic-link form moved inside a `<details>`
+  when username sign-in arrived; "Recent leads" became "Recent enquiries").
+
+**Public site.** Baseline on the live deployment: mobile 83/88/88 on search,
+listing and city (LCP 3.7–4.3s); desktop 96–99; a11y, best-practices and SEO
+already 100 everywhere.
+
+| Fix | Why it was costing |
+|---|---|
+| `fetchPriority="high"` on priority images | Next 16's `priority` only preloads now — it no longer sets fetchpriority, and an image preload without it is **Low** in Chrome. The listing hero was Low with ~1.9s of load delay. |
+| Fraunces `axes: ["opsz"]` | SOFT and WONK were 54 kB of a 121 kB font and did nothing: both default to 0 and no CSS ever set them. |
+| Only the LCP image is preloaded | The logo was preloaded twice per page (React 19 auto-preloads eager `<img>`s — fixed with `fetchPriority="low"`), the search grid preloaded three cards where a phone shows one, the home page's desktop-only side photo downloaded on phones, and the city hubs preloaded article covers from the bottom of the page. |
+| zod out of the public bundle | The filter bar and review form each imported one **constant** from a module that builds a schema at top level. Not tree-shakeable: 78 kB gzipped, 100% unused at load, and link prefetching spread it to pages that used neither. |
+| Reveals without GSAP | IntersectionObserver + Web Animations API. Same 24px rise, same easing, no library on any phone. |
+| 3D hero waits for interaction | 866 kB of Three parsed during hydration on every capable desktop. Now: first pointer move / scroll / key, or six seconds. |
+| `preconnect` to Supabase storage | Every photograph is on another origin; the connection was only opened when the LCP image was reached. |
+
+**Measured properly.** Absolute Lighthouse scores on this laptop are worthless
+— its benchmarkIndex under load is ~500–750, and images are fetched from the US
+— so the evidence is an **interleaved A/B**: the pre-change commit built into a
+worktree and served beside the new one, alternating runs, median of three.
+
+| Page | Perf | LCP | TBT | Bytes |
+|---|---|---|---|---|
+| /listing/… | 52 → 62 | 5.5 → 4.9s | 1445 → 723ms | −137 kB |
+| /lake-mary | 55 → 71 | 6.0 → 4.8s | 952 → 429ms | −137 kB |
+| /search | 61 → 67 | 4.7 → 4.5s | 782 → 564ms | −134 kB |
+| / | 59 → 61 | 6.3 → 5.1s | 700 → 695ms | −202 kB |
+
+**Hero.** Rebuilt as the client's banner: one photograph edge to edge, copy
+over it, services opposite, same badge/buttons/search. The photograph is now
+editable in Admin → Settings → Branding — `hero_key` had existed since the
+first migration with no field anywhere in the admin.
+
+`tests/hero-contrast.spec.ts` is new and is the reason the overlay is what it
+is: it hides each piece of hero text, screenshots the pixels behind it at five
+widths, takes the 98th-percentile luminance and fails below AA. It caught the
+intro paragraph at 4.43:1 on a phone — that paragraph is now hidden below
+768px, where it was also pushing the search card off the first screen.
+
+309/309 a11y + responsive + hero-contrast + image-loader pass; guards clean.
+
+**Open**
+- The client is uploading her own hero photograph; run `npm run check:hero-contrast` after she does.
+- Two guards added to `guards`: `check:client-zod`, and `check:orphan-keys` from the previous session.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->
