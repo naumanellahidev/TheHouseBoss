@@ -36,35 +36,17 @@ const csvSlugs = z.string().transform((v) =>
 const int = (min: number, max: number) =>
   z.coerce.number().int().min(min).max(max);
 
-export const LISTING_TYPES = [
-  "resale",
-  "new_construction",
-  "assumable",
-  "va_eligible",
-  "land",
-] as const;
+import {
+  LISTING_TYPES,
+  PAGE_SIZE,
+  PROPERTY_TYPES,
+  SORTS,
+  type Sort,
+} from "@/lib/validation/search-constants";
 
-export const PROPERTY_TYPES = [
-  "single_family",
-  "townhouse",
-  "condo",
-  "villa",
-  "multi_family",
-  "land",
-  "manufactured",
-] as const;
-
-export const SORTS = [
-  "newest",
-  "price_asc",
-  "price_desc",
-  "beds_desc",
-  "sqft_desc",
-] as const;
-
-export type Sort = (typeof SORTS)[number];
-
-export const PAGE_SIZE = 24;
+// Re-exported so server code keeps importing from here. Client components must
+// import from `search-constants` instead — see the note in that file.
+export { LISTING_TYPES, PAGE_SIZE, PROPERTY_TYPES, SORTS, type Sort };
 
 export const searchParamsSchema = z.object({
   city: csvSlugs.optional(),

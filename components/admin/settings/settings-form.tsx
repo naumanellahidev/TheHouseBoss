@@ -107,6 +107,7 @@ export function SettingsForm({
   const [logoKey, setLogoKey] = React.useState(settings.logoKey);
   const [logoInvertKey, setLogoInvertKey] = React.useState(settings.logoInvertKey);
   const [portraitKey, setPortraitKey] = React.useState(settings.portraitKey);
+  const [heroKey, setHeroKey] = React.useState(settings.heroKey);
 
   const [errors, setErrors] = React.useState<Record<string, string[]>>({});
 
@@ -124,6 +125,7 @@ export function SettingsForm({
       logoKey,
       logoInvertKey,
       portraitKey,
+      heroKey,
     });
     setSaving(false);
 
@@ -304,6 +306,23 @@ export function SettingsForm({
                 </FieldDescription>
               </Field>
             </div>
+
+            {/*
+              First in the tab, because it is the largest thing a visitor
+              sees. Decorative by design: it sits behind the headline, so it
+              carries no alt text — the words over it are the content, and a
+              description read out before them would only be noise.
+            */}
+            <ImageField
+              label="Home page hero background"
+              description="The photograph behind the headline on the home page. Landscape, and as large as you have — it is resized automatically. Anything busy in the middle-left makes the headline harder to read."
+              entityType="site"
+              entityId={SITE_ENTITY_ID}
+              imageKey={heroKey}
+              alt={null}
+              hideAlt
+              onChange={(next) => setHeroKey(next.key)}
+            />
 
             <ImageField
               label="Logo"

@@ -18,7 +18,7 @@ import {
   Input,
   Textarea,
 } from "@/components/ui/field";
-import { PUBLIC_REVIEW_MIN } from "@/lib/validation/review";
+import { PUBLIC_REVIEW_MIN } from "@/lib/validation/review-constants";
 import { cn } from "@/lib/utils";
 
 /**

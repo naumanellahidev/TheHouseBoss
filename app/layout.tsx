@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { preconnect } from "react-dom";
 
 import { fontVariables } from "@/app/fonts";
 import { siteConfig } from "@/lib/site-config";
@@ -45,11 +46,32 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+/**
+ * Every photograph on the site is served from Supabase Storage, a different
+ * origin from the page. Without a hint, the browser only opens that connection
+ * (DNS, TCP, TLS — three round trips, ~450 ms on Lighthouse's mobile profile)
+ * when it reaches the first image, which on every photo-led page is the LCP
+ * element. `preconnect` starts it the moment the <head> arrives, in parallel
+ * with the HTML still streaming. No `crossOrigin`: images are fetched no-cors,
+ * and a CORS preconnect would open a second, unused connection.
+ */
+const MEDIA_ORIGIN = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_MEDIA_URL
+      ? new URL(process.env.NEXT_PUBLIC_MEDIA_URL).origin
+      : null;
+  } catch {
+    return null;
+  }
+})();
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  if (MEDIA_ORIGIN) preconnect(MEDIA_ORIGIN);
+
   return (
     <html lang="en" className={`${fontVariables} h-full`}>
       <body className="flex min-h-full flex-col">{children}</body>

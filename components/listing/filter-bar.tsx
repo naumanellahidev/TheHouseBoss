@@ -6,7 +6,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { SORTS, type Sort } from "@/lib/validation/search-params";
+import { SORTS, type Sort } from "@/lib/validation/search-constants";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/utils";
 import type { Facets } from "@/types/domain";

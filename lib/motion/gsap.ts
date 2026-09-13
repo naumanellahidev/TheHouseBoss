@@ -71,17 +71,30 @@ export function prefersReducedMotion(): boolean {
 }
 
 /**
- * The standard section reveal.
+ * The standard section reveal — a 24px rise, staggered, once, as the section
+ * reaches 85% of the viewport.
  *
- * Returns a promise of a cleanup function, and callers MUST call it. A
- * ScrollTrigger that outlives its element keeps a reference to a detached node
- * and recalculates on every scroll — the classic GSAP leak in a client-routed
- * app, where components unmount constantly but the page never reloads to clear
- * them.
+ * NO GSAP. This used to be a GSAP tween driven by ScrollTrigger, which meant
+ * the home page and /hire-contractor downloaded and compiled GSAP plus
+ * ScrollTrigger on every phone, during the window Lighthouse scores for Total
+ * Blocking Time, to move some text 24px. The browser already has both halves:
+ * IntersectionObserver for the trigger, the Web Animations API for the motion.
+ * Same distance, same easing (power3.out is cubic-bezier(.215,.61,.355,1)),
+ * same stagger, same trigger line.
  *
- * Under reduced motion nothing is animated AND nothing is imported: the
- * elements are already at their final position, because the rise below is a
- * transform applied by this function rather than a starting style in CSS.
+ * TRANSFORM ONLY — no opacity, deliberately. A fade-up leaves below-the-fold
+ * content at `opacity: 0` until it is scrolled to, which is genuinely invisible
+ * text; axe reports it as a colour-contrast failure and axe is right. A rise
+ * alone still reads as a reveal and the text is legible at every moment,
+ * including before the trigger fires and if JavaScript never runs.
+ *
+ * Still returns a promise of a cleanup function, and callers MUST call it:
+ * the observer and any running animation are tied to elements that a
+ * client-routed app unmounts constantly.
+ *
+ * Under reduced motion nothing is offset and nothing is observed: the elements
+ * are already at their final position, because the offset is applied here
+ * rather than as a starting style in CSS.
  */
 export async function revealOnScroll(
   targets: Element | Element[] | NodeListOf<Element>,
@@ -89,48 +102,56 @@ export async function revealOnScroll(
 ): Promise<() => void> {
   const items = Array.from(
     targets instanceof Element ? [targets] : (targets as ArrayLike<Element>),
-  );
+  ).filter((el): el is HTMLElement => el instanceof HTMLElement);
   if (items.length === 0) return () => {};
 
-  // Before the import, on purpose. See the note at the top of the file.
-  if (prefersReducedMotion()) return () => {};
+  if (prefersReducedMotion() || typeof IntersectionObserver === "undefined") {
+    return () => {};
+  }
 
-  const gsap = await loadGsap();
+  const y = options.y ?? 24;
+  const stagger = options.stagger ?? 0.08;
+  const delay = options.delay ?? 0;
+  const offset = `translateY(${y}px)`;
+  const running: Animation[] = [];
 
-  /*
-    TRANSFORM ONLY — no opacity, deliberately.
+  // Start offset, exactly as the GSAP `fromTo` did on creation.
+  for (const el of items) el.style.transform = offset;
 
-    A fade-up is the conventional reveal, and it is an accessibility problem:
-    content below the fold sits at `opacity: 0` until it is scrolled to, which
-    means it is genuinely invisible text. axe reports it as a colour-contrast
-    failure and axe is right — a tool or a person sampling the page before that
-    scroll sees nothing.
+  const play = () => {
+    items.forEach((el, i) => {
+      const animation = el.animate(
+        [{ transform: offset }, { transform: "translateY(0)" }],
+        {
+          duration: 700,
+          easing: "cubic-bezier(0.215, 0.61, 0.355, 1)",
+          delay: (delay + i * stagger) * 1000,
+          fill: "backwards",
+        },
+      );
+      // The inline offset holds the element down until its turn in the
+      // stagger; the animation's `backwards` fill covers the delay, so the
+      // inline style can go now and the element ends at its natural position.
+      el.style.transform = "";
+      running.push(animation);
+    });
+  };
 
-    A 24px rise alone still reads as a reveal, still gives the stagger its
-    rhythm, and costs nothing: the text is legible at every moment, including
-    before the trigger fires and if JavaScript never runs at all.
-  */
-  const tween = gsap.fromTo(
-    items,
-    { y: options.y ?? 24 },
-    {
-      y: 0,
-      duration: 0.7,
-      ease: "power3.out",
-      delay: options.delay ?? 0,
-      stagger: options.stagger ?? 0.08,
-      scrollTrigger: {
-        trigger: items[0],
-        start: "top 85%",
-        // `once` rather than toggleActions: a reveal that replays on scroll-up
-        // makes a page feel restless rather than considered.
-        once: true,
-      },
+  // "top 85%" — fire when the first item's top crosses 85% of the viewport.
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        play();
+      }
     },
+    { rootMargin: "0px 0px -15% 0px" },
   );
+  observer.observe(items[0]!);
 
   return () => {
-    tween.scrollTrigger?.kill();
-    tween.kill();
+    observer.disconnect();
+    for (const animation of running) animation.cancel();
+    for (const el of items) el.style.transform = "";
   };
 }

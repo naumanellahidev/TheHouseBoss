@@ -56,6 +56,39 @@ export function Hero3D() {
     getServerCapabilities,
   );
 
+  /*
+    ARMED ON FIRST INTERACTION, not on hydration.
+
+    The capability gate above keeps Three off phones. On a capable desktop it
+    still arrived the moment the page hydrated: 866 kB of JavaScript parsed and
+    compiled during exactly the window Lighthouse scores for Total Blocking
+    Time, and while a visitor's first click was waiting for the main thread.
+    The scene is atmosphere behind the hero, not content — nothing is lost by
+    starting it a beat later.
+
+    So the canvas (and with it the dynamic import) is rendered only after the
+    visitor first moves the pointer, scrolls, touches or presses a key — on a
+    desktop that is usually within the first second — or after six seconds if
+    they do none of those. It fades in either way.
+  */
+  const [armed, setArmed] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!enabled || armed) return;
+
+    const events = ["pointermove", "scroll", "keydown", "touchstart", "wheel"] as const;
+    const arm = () => setArmed(true);
+    for (const event of events) {
+      window.addEventListener(event, arm, { once: true, passive: true });
+    }
+    const timer = window.setTimeout(arm, 6000);
+
+    return () => {
+      window.clearTimeout(timer);
+      for (const event of events) window.removeEventListener(event, arm);
+    };
+  }, [enabled, armed]);
+
   React.useEffect(() => {
     if (!enabled) return;
 
@@ -86,7 +119,7 @@ export function Hero3D() {
   */
   // Nothing rendered means nothing imported: the Three chunk is never
   // requested on a device that cannot use it.
-  if (!enabled) return null;
+  if (!enabled || !armed) return null;
 
   return (
     <div className="pointer-events-none absolute inset-0 -z-10 opacity-0 [animation:fade-in_var(--dur-page)_var(--ease-out)_forwards] motion-reduce:opacity-100">

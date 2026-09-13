@@ -97,6 +97,14 @@ export const settingsSchema = z.object({
   logoInvertKey: optionalText(300),
   /** The agent portrait, migration 023. */
   portraitKey: optionalText(300),
+  /**
+   * The home page's hero photograph.
+   *
+   * The column has existed since the first migration and the home page has
+   * always rendered it — but there was no field for it anywhere in the admin,
+   * so the only way to change the largest image on the site was to write SQL.
+   */
+  heroKey: optionalText(300),
   licenseReLabel: optionalText(120),
   licenseReAuthority: optionalText(200),
   licenseContractorLabel: optionalText(120),

@@ -21,7 +21,9 @@ const optional = (max: number) =>
     z.string().trim().max(max).nullable().optional(),
   );
 
-export const PUBLIC_REVIEW_MIN = 60;
+import { PUBLIC_REVIEW_MIN } from "@/lib/validation/review-constants";
+
+export { PUBLIC_REVIEW_MIN };
 
 export const publicReviewSchema = z.object({
   authorName: z

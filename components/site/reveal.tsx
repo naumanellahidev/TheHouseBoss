@@ -16,16 +16,20 @@ import { revealOnScroll } from "@/lib/motion/gsap";
  * choreography instead of a fade: an overline, a heading and a grid arriving
  * 80ms apart feels authored; the same three arriving together does not.
  *
- * Reduced motion is handled inside `revealOnScroll`, which returns before it
- * even imports GSAP — so a visitor who asked for less motion does not download
- * an animation library. The elements are never left invisible. That matters more here
- * than usual, because GSAP writes inline styles and an inline style beats the
- * `prefers-reduced-motion` block in `globals.css`; the CSS guard cannot save us.
+ * The motion is IntersectionObserver + the Web Animations API — no library
+ * (see `revealOnScroll`; it was GSAP + ScrollTrigger, which put an animation
+ * library on every phone's critical path to move text 24px).
  *
- * The cleanup return from `revealOnScroll` is not optional. A ScrollTrigger
- * that outlives its element holds a detached node and recalculates on every
- * scroll — the classic GSAP leak in a client-routed app, where components
- * unmount constantly but the page never reloads to clear them.
+ * Reduced motion is handled inside `revealOnScroll`, which returns before it
+ * offsets anything. The elements are never left invisible. That matters more
+ * here than usual, because the offset is an inline style and an inline style
+ * beats the `prefers-reduced-motion` block in `globals.css`; the CSS guard
+ * cannot save us.
+ *
+ * The cleanup return from `revealOnScroll` is not optional. An observer or an
+ * animation that outlives its element holds a detached node — in a
+ * client-routed app components unmount constantly but the page never reloads
+ * to clear them.
  */
 export function Reveal({
   children,
@@ -57,12 +61,10 @@ export function Reveal({
         : (Array.from(element.children) as Element[]);
 
     /*
-      `revealOnScroll` is async now — it fetches GSAP on demand rather than
-      having it in the page's critical path. An effect cannot be async, so the
-      cleanup is captured in a mutable slot and a `cancelled` flag covers the
-      unmount-before-load case. Without that flag a component that unmounts
-      during the import would create a ScrollTrigger with no way to kill it,
-      which is the exact leak this cleanup exists to prevent.
+      `revealOnScroll` returns a promise of its cleanup. An effect cannot be
+      async, so the cleanup is captured in a mutable slot and a `cancelled`
+      flag covers the unmount-before-resolve case — without it, a component
+      that unmounts first would leave an observer with no way to disconnect it.
     */
     let cancelled = false;
     let dispose: (() => void) | null = null;

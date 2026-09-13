@@ -29,7 +29,16 @@ export type BadgeProps = React.ComponentProps<"span"> &
   VariantProps<typeof badgeVariants>;
 
 export function Badge({ className, tone, ...props }: BadgeProps) {
-  return <span className={cn(badgeVariants({ tone }), className)} {...props} />;
+  return (
+    <span
+      // A stable hook for tests: hero-contrast.spec.ts measures the badge
+      // against the photograph behind it, and matching on utility classes
+      // would break the moment one of them changed.
+      data-slot="badge"
+      className={cn(badgeVariants({ tone }), className)}
+      {...props}
+    />
+  );
 }
 
 /** Maps a listing status to its badge tone and label. */

@@ -74,6 +74,22 @@ export const metadata: Metadata = buildMetadata({
 
 /* ── Static content ──────────────────────────────────────────────────────── */
 
+/**
+ * The hero's right-hand column, mirroring the client's banner.
+ *
+ * Short forms of the four services named on /about — real estate
+ * representation, construction consulting, residential remodeling and
+ * new-construction guidance. The banner says "Investments" and "Turnkey
+ * solutions"; those are not described anywhere on this site, and a hero is the
+ * wrong place to introduce a service with no page behind it.
+ */
+const HERO_SERVICES = [
+  "Real estate",
+  "Construction",
+  "Remodeling",
+  "New construction",
+] as const;
+
 const trustPoints = [
   {
     icon: Award,
@@ -222,6 +238,15 @@ export default async function HomePage() {
     heroPhoto(leadPhotoCity?.heroKey, leadPhotoCity?.heroAlt, 1600, 1200) ??
     heroPhoto(settings.heroKey, "Central Florida homes", 1600, 1200);
 
+  /*
+    The hero photograph, from Admin → Settings → Branding.
+
+    3:2 is only the intrinsic ratio the <img> declares; the element is sized by
+    CSS and cropped with object-cover, so a portrait upload still fills the
+    band — it is simply cropped harder.
+  */
+  const heroBackground = heroPhoto(settings.heroKey, "", 1600, 1067);
+
   const leadPhotoCaption = leadPhotoCity
     ? `${leadPhotoCity.name}, ${leadPhotoCity.county} County`
     : "Lake Mary and Central Florida";
@@ -248,71 +273,94 @@ export default async function HomePage() {
   return (
     <>
       {/* ── 1. Hero + search ─────────────────────────────────────────── */}
+      {/*
+        A photograph, full bleed, with the words on top of it.
+
+        This was a navy panel with a 4:5 photo beside it. The client asked for
+        the treatment their own banner uses: one large photograph edge to edge,
+        the copy over it, the services listed opposite. The badge, the buttons
+        and the search card are unchanged — a change of composition, not of
+        content.
+
+        The picture comes from Admin → Settings → Branding, so it can be
+        swapped without a deploy.
+      */}
       <section
         data-hero-bleed=""
-        className="relative isolate overflow-hidden bg-surface-invert text-foreground-invert"
+        className="relative isolate flex min-h-[min(84svh,640px)] items-center overflow-hidden bg-surface-invert text-foreground-invert lg:min-h-[min(88svh,780px)]"
       >
-        {/*
-          The navy gradient and gold grid stay as the base layer. They are not
-          dead weight: if the hero photograph is ever missing the section still
-          reads as designed rather than as a black box.
-        */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-azure-600)_1px,transparent_1px),linear-gradient(90deg,var(--color-azure-600)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
-        />
+        {heroBackground ? (
+          <>
+            <div aria-hidden="true" className="absolute inset-0 -z-20">
+              <PropertyImage
+                photo={heroBackground}
+                size={1600}
+                sizes={IMAGE_SIZES.fullBleed}
+                priority
+                aspect="none"
+                wrapperClassName="h-full w-full"
+                className="h-full w-full object-cover object-center motion-safe:animate-[ken-burns_28s_var(--ease-in-out)_infinite_alternate]"
+              />
+            </div>
 
-        {/*
-          The 3D layer. Desktop only, lazy, and it renders nothing at all on a
-          phone, on a reduced-motion setting, or without WebGL — the composition
-          below is the design in those cases, not a fallback for one.
-        */}
-        <Hero3D />
-
-        {heroPhoto(settings.heroKey, "") ? (
-          <div aria-hidden="true" className="absolute inset-0 -z-20">
-            <PropertyImage
-              photo={heroPhoto(settings.heroKey, "")}
-              size={800}
-              sizes={IMAGE_SIZES.fullBleed}
-              priority
-              aspect="none"
-              wrapperClassName="h-full w-full"
-              className="h-full w-full object-cover motion-safe:animate-[ken-burns_24s_var(--ease-in-out)_infinite_alternate]"
-            />
             {/*
-              Scrim, not optional: docs/03 forbids text over an image without
-              one, and the headline sits directly on top of this.
+              The overlay, in two parts, and the reason the words stay readable
+              over whatever photograph is uploaded next.
+
+              Phone: a vertical wash, heaviest at the bottom where the search
+              card sits. The copy runs the full width, so there is no side to
+              keep clear.
+
+              From 1024px: a diagonal wash, nearly solid behind the headline and
+              thinning to almost nothing on the right, so the house is still the
+              picture rather than something behind a grey sheet.
+
+              The stops are not eyeballed: `npm run check:hero-contrast`
+              (tests/hero-contrast.spec.ts) hides each piece of hero text,
+              screenshots the pixels behind it at five widths and fails below
+              WCAG AA. Run it after changing the photograph.
             */}
-            <div className="absolute inset-0 bg-[linear-gradient(105deg,var(--color-royal-950)_18%,rgb(10_20_32/0.78)_52%,rgb(10_20_32/0.55)_100%)]" />
-          </div>
-        ) : null}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(7_16_35/0.72)_0%,rgb(7_16_35/0.68)_42%,rgb(7_16_35/0.90)_100%)] lg:bg-[linear-gradient(100deg,rgb(7_16_35/0.94)_0%,rgb(7_16_35/0.88)_36%,rgb(7_16_35/0.58)_64%,rgb(7_16_35/0.30)_100%)]"
+            />
+            {/* Keeps the transparent header legible over a bright sky. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 -z-10 h-40 bg-[linear-gradient(180deg,rgb(7_16_35/0.70),transparent)]"
+            />
+          </>
+        ) : (
+          <>
+            {/*
+              No photograph uploaded: the navy composition and the 3D scene are
+              the design in that case, not a grey box waiting for an image. They
+              are not drawn over a photograph — a WebGL scene on top of a hero
+              picture is two focal points arguing.
+            */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-20 bg-[radial-gradient(120%_90%_at_15%_0%,var(--color-royal-800),var(--color-royal-950))]"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-20 [background-image:linear-gradient(var(--color-azure-600)_1px,transparent_1px),linear-gradient(90deg,var(--color-azure-600)_1px,transparent_1px)] [background-size:72px_72px] opacity-[0.07]"
+            />
+            <Hero3D />
+          </>
+        )}
 
-        <Container className="pt-3 pb-14 md:pt-4 md:pb-20 xl:pb-24">
-          {/*
-            Asymmetric: copy at 7/12, media at 5/12. The old layout was a
-            centred band, which is what made the page read as a template.
-          */}
-          {/*
-            `items-start`, not `items-center`.
-
-            The media column is a 4:5 frame and is ~130px taller than the copy
-            beside it, so centring pushed the copy that far down — which put the
-            "Lake Mary" badge a long way below the logo and the two CTAs below
-            the fold on a laptop. Top-aligned, both columns begin at the same
-            line and the buttons are on the first screen.
-          */}
-          <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-12">
-            <div className="flex flex-col items-start gap-6 lg:col-span-7">
-              <Badge tone="accent" className="bg-royal-800 text-azure-400">
+        <Container className="w-full pt-6 pb-12 md:pt-8 md:pb-16 xl:pb-20">
+          <div className="grid items-end gap-10 lg:grid-cols-12 lg:gap-12">
+            <div className="flex flex-col items-start gap-6 lg:col-span-8">
+              <Badge
+                tone="accent"
+                className="bg-royal-900/70 text-azure-400 backdrop-blur-sm"
+              >
                 Lake Mary · Seminole &amp; Orange County
               </Badge>
 
-              <h1 className="text-display text-foreground-invert">
+              <h1 className="text-display text-foreground-invert [text-shadow:0_2px_24px_rgb(7_16_35/0.5)]">
                 Find your home in{" "}
                 <span className="relative whitespace-nowrap">
                   Lake Mary
@@ -323,12 +371,26 @@ export default async function HomePage() {
                 </span>
               </h1>
 
-              <p className="max-w-[52ch] text-lead text-foreground-invert-muted">
+              <p className="max-w-[52ch] text-lead text-foreground-invert">
                 {siteConfig.positioning}
               </p>
 
-              <p className="max-w-[56ch] text-body text-foreground-invert-muted">
-                I&rsquo;m Krisi Kakarova — a licensed Realtor{" "}
+              {/*
+                Hidden on a phone, for two measured reasons.
+
+                It is seven lines there, which pushed the buttons and the search
+                card — the thing the client asked the page to lead with — off the
+                first screen entirely. And it is the one piece of hero text that
+                did not clear WCAG AA over the photograph at 360/414px: muted ink
+                at 16px measured 4.43:1 against the brightest part of the picture
+                behind it (`npm run check:hero-contrast`). From 768px there is
+                room for it and it measures 4.57:1 and up.
+
+                Nothing is lost: the same introduction is the opening of the
+                "Meet The House Boss" section further down the page.
+              */}
+              <p className="hidden max-w-[56ch] text-body text-foreground-invert-muted md:block">
+                I&rsquo;m {siteConfig.knownAs} — a licensed Realtor{" "}
                 <em className="text-azure-400 not-italic">and</em> a Certified
                 Residential Building Contractor. I read a property the way a
                 builder does, so you can look past the finishes and make a
@@ -338,25 +400,20 @@ export default async function HomePage() {
               {inventoryIsThin ? (
                 <div className="flex w-full flex-col gap-3 pt-2 sm:w-auto sm:flex-row sm:flex-wrap">
                   <Button variant="accent" size="lg" asChild>
-                    <Link href="/contact">
-                      Get new listing alerts
-                    </Link>
+                    <Link href="/contact">Get new listing alerts</Link>
                   </Button>
                   <Button variant="invert" size="lg" asChild>
                     <Link href="/search">Browse what is available</Link>
                   </Button>
                   {/*
-                    Third, and deliberately the quietest of the three.
-
-                    It is not what most visitors came for, and a hero with
-                    three equally weighted CTAs has none. Ghost on the navy,
-                    which needs the inverted ink named explicitly — the
-                    variant is drawn for a light ground.
+                    Third, and deliberately the quietest of the three. It is not
+                    what most visitors came for, and a hero with three equally
+                    weighted CTAs has none.
                   */}
                   <ReviewForm
                     variant="ghost"
                     size="lg"
-                    className="text-foreground-invert hover:bg-royal-800 hover:text-foreground-invert"
+                    className="text-foreground-invert hover:bg-royal-900/70 hover:text-foreground-invert"
                   />
                 </div>
               ) : (
@@ -367,67 +424,36 @@ export default async function HomePage() {
                   <Button variant="invert" size="lg" asChild>
                     <Link href="/contact">Talk to Krisi</Link>
                   </Button>
-                  {/*
-                    Third, and deliberately the quietest of the three.
-
-                    It is not what most visitors came for, and a hero with
-                    three equally weighted CTAs has none. Ghost on the navy,
-                    which needs the inverted ink named explicitly — the
-                    variant is drawn for a light ground.
-                  */}
                   <ReviewForm
                     variant="ghost"
                     size="lg"
-                    className="text-foreground-invert hover:bg-royal-800 hover:text-foreground-invert"
+                    className="text-foreground-invert hover:bg-royal-900/70 hover:text-foreground-invert"
                   />
                 </div>
               )}
             </div>
 
             {/*
-              The media column is hidden below lg rather than stacked: on a
-              phone it would push the search card off the first screen, and
-              search is what the client asked to lead with.
-            */}
-            {/*
-              Pulled up so the photograph starts just under the bar.
+              The services, opposite the copy — the right-hand column of the
+              client's own banner, and what balances a composition whose weight
+              is otherwise all on the left.
 
-              Only the LEFT column has to clear the hero-sized logo; nothing
-              sits above this one, and leaving it on the same line was the other
-              half of the empty band across the top of the hero. The two offsets
-              are the logo's own height minus the bar's at each width — 40px at
-              1024 where the logo is 136, 96px at 1280 where it is 192 — so the
-              frame lands the same distance below the header either way.
+              Desktop only: on a phone it would push the search card, which the
+              client asked to lead with, off the first screen. The wording is
+              the four services named on /about rather than the banner's, so the
+              site does not advertise something it describes nowhere.
             */}
-            <div className="relative hidden lg:col-span-5 lg:-mt-10 lg:block xl:-mt-24">
-              <MediaFrame
-                photo={heroPhoto(lakeMary?.heroKey, lakeMary?.heroAlt, 1200, 1500)}
-                sizes="(max-width: 1023px) 0px, 40vw"
-                /*
-                  NOT priority. This frame is `hidden` below 1024px, but a
-                  preload ignores CSS: with `priority` every phone downloaded
-                  it at high priority — `sizes` of 0px still fetches the
-                  smallest candidate — alongside the hero it cannot even see.
-                  On desktop the full-bleed hero behind it is the larger paint
-                  and so the LCP; this loads lazily as layout places it.
-                */
-                aspect="4/5"
-              />
-              {lakeMary?.stats.medianPrice != null ? (
-                <FloatCard
-                  className="absolute -bottom-6 -left-6 max-w-[15rem]"
-                  label="Lake Mary median"
-                  value={formatPrice(lakeMary.stats.medianPrice, {
-                    compact: true,
-                  })}
-                  caption={
-                    lakeMary.stats.asOf
-                      ? `As of ${lakeMary.stats.asOf}`
-                      : undefined
-                  }
-                />
-              ) : null}
-            </div>
+            <ul className="hidden lg:col-span-4 lg:flex lg:flex-col lg:items-end lg:gap-2.5 lg:pb-1">
+              <li aria-hidden="true" className="mb-1 h-px w-14 bg-accent" />
+              {HERO_SERVICES.map((service) => (
+                <li
+                  key={service}
+                  className="text-overline font-semibold tracking-[0.16em] text-foreground-invert uppercase"
+                >
+                  {service}
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* The search card, overlapping the hero's lower edge on desktop. */}
