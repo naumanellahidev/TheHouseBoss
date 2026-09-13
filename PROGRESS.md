@@ -2860,6 +2860,51 @@ intro paragraph at 4.43:1 on a phone — that paragraph is now hidden below
 - The client is uploading her own hero photograph; run `npm run check:hero-contrast` after she does.
 - Two guards added to `guards`: `check:client-zod`, and `check:orphan-keys` from the previous session.
 
+### 2026-09-13 (later) — Search in the hero, SEO on every city save, home cities chosen in the admin
+
+**Search moves into the hero; results land under it.** The search card now
+sits in the hero's right column on desktop, glass on the photograph. It is
+still the server-rendered `GET /search` form, so without JavaScript nothing
+changes. With it, `HomeSearch` (`components/site/home-search.tsx`) catches
+the submit, puts the query in the URL, and asks the new `/api/search` for six
+results that render as property cards directly under the hero. That route uses
+the search page's own parser and query, so a query cannot mean two different
+things. Back/forward and shared `/?city=…` links both work. A slower earlier
+response can never overwrite a newer one.
+
+**SEO when a city or community is saved.** Two gaps are closed:
+- `createCommunity` never ran the SEO sync or queued the job; `saveCommunity`
+  did. Both do now.
+- A blank hero alt text is now filled from facts only: `"Lake Mary, Seminole
+  County, Florida"`, or `"Heathrow in Lake Mary, Florida"`. It never
+  describes what the photo shows, because nothing has looked at it, and it
+  never overwrites alt text someone wrote.
+
+**Home page cities are chosen in the admin (migration 025).** Each card on
+Admin → Cities has an "On the home page" switch. The switch is optimistic,
+saves only that one column, is audited, and revalidates `/`.
+`cities.show_on_home` is separate from `in_search`. The home page used to
+render its tiles from `in_search`, so a city could not be featured without
+also joining the search dropdown. The column was backfilled from `in_search`,
+so launch looks identical. Verified against the built site: the tiles are
+exactly the published `show_on_home` cities and the dropdown is exactly the
+`in_search` ones.
+
+**Hero scrim deepened below 1024px.** Once the search card moved, the intro
+paragraph at 768px sat over the thinner middle of the wash and measured
+**4.41:1**. The middle stop went from 0.68 to 0.80, and all five widths pass
+again.
+
+**Verification.** All guards pass, and so do the build and `check:bundle`.
+Results: 304 a11y + responsive + image-loader tests pass, and hero-contrast
+passes 5/5. The admin suite was **skipped** because `ADMIN_TEST_EMAIL` was not
+set in this shell (last run: 15/15). The hero-contrast fix meant the
+Playwright web server rebuilt once more after the planned single build.
+
+**Open**
+- Run the admin suite with `ADMIN_TEST_EMAIL` set.
+- Client: upload the HD hero photo, then run `npm run check:hero-contrast`.
+
 ---
 
 <!-- Append new session entries above this line, newest last. -->
