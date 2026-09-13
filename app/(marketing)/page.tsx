@@ -391,9 +391,9 @@ export default async function HomePage() {
             </>
           )}
 
-          <Container className="w-full pt-6 pb-12 md:pt-8 md:pb-16 xl:pb-20">
-            <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
-              <div className="flex flex-col items-start gap-6 lg:col-span-7">
+          <Container className="w-full pt-6 pb-12 md:pt-8 md:pb-16 lg:pt-0 xl:pb-16">
+            <div className="grid items-center gap-8 lg:grid-cols-12 lg:items-start lg:gap-12">
+              <div className="flex flex-col items-start gap-6 lg:col-span-7 lg:gap-5">
                 <Badge
                   tone="accent"
                   className="bg-royal-900/70 text-azure-400 backdrop-blur-sm"
@@ -522,7 +522,13 @@ export default async function HomePage() {
               treatment lets the photograph read through it instead of covering
               it with a white slab.
             */}
-              <div className="lg:col-span-5">
+              {/*
+                `data-hero-aside` lifts the card to just under the header on
+                desktop (app/globals.css). The section's top padding exists to
+                clear the large logo, which sits over the LEFT column only —
+                without the lift the card sat ~150px below the nav for nothing.
+              */}
+              <div data-hero-aside="" className="lg:col-span-5">
                 {/*
                 Held to 26rem and pushed right. At 5/12 of a 1440 viewport the
                 panel is ~640px wide, which stretches three stacked selects into

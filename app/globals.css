@@ -731,11 +731,35 @@ body:has([data-hero-bleed]) [data-site-header] ~ main {
   [data-hero-bleed]::before {
     height: calc(var(--header-h-lg) * 2.2);
   }
+
+  /*
+    The home hero's search card, lifted out of the logo clearance.
+
+    The padding above clears the hero-size logo, and the logo sits over the
+    left column only. Applied to the right column too it left the card ~150px
+    below the nav with nothing in between. This pulls the card back up to
+    half a rem under the bar; the copy column keeps its clearance.
+  */
+  [data-hero-bleed] [data-hero-aside] {
+    margin-top: calc(var(--bar-h) + 0.5rem - var(--logo-h-hero));
+  }
 }
 
 @media (width >= 80rem) {
   :root {
     --logo-h-hero: 12rem; /* 192 — full size, and the nav has cleared it */
+  }
+}
+
+/*
+  A laptop's viewport, not its screen. A 1366×768 or 1536×864 display leaves
+  roughly 650–730px once the browser's own toolbars are drawn, and the full
+  192px logo clearance pushed the hero's buttons half off that first screen.
+  Short viewports keep the 1024px size instead; tall ones get the full logo.
+*/
+@media (width >= 80rem) and (height < 50rem) {
+  :root {
+    --logo-h-hero: 8.5rem; /* 136 */
   }
 }
 

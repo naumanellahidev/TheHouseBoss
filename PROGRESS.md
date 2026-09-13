@@ -2905,6 +2905,31 @@ Playwright web server rebuilt once more after the planned single build.
 - Run the admin suite with `ADMIN_TEST_EMAIL` set.
 - Client: upload the HD hero photo, then run `npm run check:hero-contrast`.
 
+### 2026-09-13 (evening) — GitHub push fixed; hero card and buttons lifted
+
+**GitHub.** Pushes kept failing with "Connection was reset". This repo now sets
+`http.version HTTP/1.1` and a larger `http.postBuffer`, and the push went
+through. **Deploys go through GitHub**: pushing to `main` triggers the
+production build on Vercel. One deploy was also made directly from the CLI
+before that was settled, and it is superseded.
+
+**Hero, desktop.** Measured with Playwright on the viewports laptops really
+have once the browser's toolbars are drawn (1280×620, 1366×657, 1536×730):
+
+| | Before | After |
+|---|---|---|
+| Search card top (header ends at 97) | 243 | 120 |
+| "Search homes" button bottom | 712, cut off | 608, fully visible |
+
+- The section's top padding clears the hero-size logo, and that logo sits over
+  the left column only. `[data-hero-aside]` (globals.css) pulls the search card
+  back up to just under the bar.
+- The copy column drops its extra desktop top padding and its gap goes 24px →
+  20px.
+- `--logo-h-hero` is 8.5rem instead of 12rem at ≥1280px when the viewport is
+  shorter than 50rem. Tall screens still open with the full logo.
+- Phones are unchanged.
+
 ---
 
 <!-- Append new session entries above this line, newest last. -->
