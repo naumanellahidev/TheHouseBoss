@@ -3102,11 +3102,36 @@ errors.
   Worth watching: if it times out again in a full run, raise that one test's
   timeout rather than retrying.
 
-**Open**
-- The media grid tiles keep their old card: their selected state swaps the border
-  colour, which would fight `admin-card`'s own border.
-- `components/admin/dashboard/pulse.tsx` (`PulseTile`, `BreakdownBar`) is no longer
-  used by the dashboard. It was left in place and not deleted in this pass.
+**Open** — all closed in the next entry.
+
+### 2026-09-14 — Loose ends from the redesign, closed
+
+- **Activity was logged against nobody.** Of ~30 `recordAudit` calls, only username
+  sign-in passed a `userId`. Every admin publish, save and switch was therefore
+  recorded with no actor, and the dashboard said "The system" for things Krisi did.
+  `recordAudit` now resolves the session user when no id is given. That lookup has
+  its own try/catch, so crons and scripts log with an empty actor instead of losing
+  the line. Existing rows are unchanged.
+- **Media tiles** use the card system. Selection is a ring outside the card plus a
+  check mark, rather than a swapped border colour. The selection bar is a sticky
+  pill. The first four photos load eagerly; Next had flagged one as a lazy LCP.
+- **Removed dead code:** `components/admin/dashboard/pulse.tsx`, and the standalone
+  `ActivityFeed`. `activity.tsx` now holds only the action vocabulary.
+- **Logo dev warning.** "loader does not implement width" was a false positive: an
+  800 `src` made the loader's answer for Next's first srcset width identical to
+  `src`. The logo's fallback `src` is now 1600. The srcset, and so the download, is
+  unchanged.
+- **Admin axe test:** its timeout is raised to 180s. Six full scans ran past 60s in
+  a loaded run.
+- **Checked, not a bug:** the home page's "Lake Mary, in detail" photo loads when
+  scrolled to (`complete`, 720px natural width). The white box in the earlier
+  screenshot was lazy loading in a full-page capture.
+- **Choose from Media, clicked through signed in, nothing saved.**
+  - 13 hero candidates are offered: city, site and community photos, all landscape
+    at 1536px or wider. No logos, portrait or 612px listing photo.
+  - Choosing one updates the preview.
+- **390px dashboard:** recent enquiry names are 240px wide. Before the fix they
+  were one letter.
 - Spotted and left for step 5: at 390px the Enquiries filter row overlaps its
   search button.
 

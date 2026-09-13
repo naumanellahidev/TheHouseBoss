@@ -2,6 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 
+import { getVerifiedUser } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
 /**
@@ -121,13 +122,37 @@ async function requestContext(): Promise<{ ip: string | null; agent: string | nu
   }
 }
 
+/**
+ * Who is acting, when the caller did not say.
+ *
+ * Of the ~30 `recordAudit` calls, only the username sign-in passed a `userId`,
+ * so every publish, save and switch in the admin was logged against nobody —
+ * the dashboard's activity rail read "The system took a city off the home
+ * page" for something Krisi did. Resolving the session here fixes every call
+ * site at once instead of threading an id through thirty of them.
+ *
+ * Its own try/catch, separate from the write: outside a request (a cron, a
+ * script) there is no session and `cookies()` throws, and that must leave the
+ * actor empty rather than drop the whole log line.
+ */
+async function sessionUserId(): Promise<string | null> {
+  try {
+    return (await getVerifiedUser())?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function recordAudit(input: AuditInput): Promise<void> {
   try {
-    const { ip, agent } = await requestContext();
+    const [{ ip, agent }, actor] = await Promise.all([
+      requestContext(),
+      input.userId !== undefined ? Promise.resolve(input.userId) : sessionUserId(),
+    ]);
     const db = createServiceClient();
 
     const { error } = await db.from("audit_logs").insert({
-      user_id: input.userId ?? null,
+      user_id: actor ?? null,
       action: input.action,
       entity_type: input.entityType ?? null,
       entity_id: input.entityId ?? null,

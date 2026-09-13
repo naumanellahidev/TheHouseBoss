@@ -256,13 +256,18 @@ export function Logo({
         alt: brandName,
       }}
       /*
-        800, not 400. The logo now renders up to 96px tall in the footer and
-        80px in the header, and the `sizes` below are the WIDTH CAPS from
+        1600 as the fallback `src`; the browser still downloads from the
+        srcset. The `sizes` below are the WIDTH CAPS from
         `--logo-max-w-compact` / `--logo-max-w` rather than a guess at the
         rendered width — because the width depends on the uploaded artwork's
         ratio, which is not known here. Declaring the cap is the only figure
-        that cannot under-request, and `sizes` still lets the loader drop back
-        to the 400 wherever the box is genuinely small.
+        that cannot under-request, and the loader picks 400 or 800 from it.
+
+        It was 800. `lib/image-loader.ts` maps each srcset width to a real
+        derivative and ignores this value, so the download was the same either
+        way — but with an 800 `src`, the loader's answer for Next's first
+        srcset width was the identical URL, and Next's dev check read that as
+        "this loader does not implement width" and warned on every page.
 
         A SQUARE upload therefore renders as a full square at the header's
         height, which is what fills the bar; a wide lockup renders wide and is

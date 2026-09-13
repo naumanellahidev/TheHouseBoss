@@ -1,6 +1,4 @@
-import Link from "next/link";
 import {
-  ArrowRight,
   FileText,
   Home,
   KeyRound,
@@ -10,18 +8,16 @@ import {
   UserRound,
 } from "lucide-react";
 
-import { formatDateTime } from "@/lib/utils/date";
-import type { ActivityEntry } from "@/lib/queries/admin";
-
 /**
- * What has been happening, from the audit log (brief §78, §105).
+ * What has been happening, from the audit log (brief §78, §105), in words.
  *
  * ── Why this is not an invented "activity" widget ─────────────────────────
  *
- * Every row is an `audit_logs` entry that was written when the thing actually
- * happened — a publish, a settings change, a password change, an SEO run. None
- * of it is generated for display, which matters because an activity feed is
- * precisely the component most often faked to make a dashboard look alive.
+ * Every row the dashboard shows is an `audit_logs` entry written when the thing
+ * actually happened — a publish, a settings change, a password change, an SEO
+ * run. None of it is generated for display, which matters because an activity
+ * feed is precisely the component most often faked to make a dashboard look
+ * alive.
  *
  * ── Why the sentences are written out ─────────────────────────────────────
  *
@@ -31,6 +27,10 @@ import type { ActivityEntry } from "@/lib/queries/admin";
  * mapping falls back to its own name with the underscores removed rather than
  * being hidden, so a new action type shows up as slightly ugly text instead of
  * silently vanishing from the record.
+ *
+ * The list itself is drawn by the dashboard's time rail
+ * (`components/admin/dashboard/visuals.tsx`). The old standalone feed that used
+ * to live here was removed with the redesign; only the vocabulary remains.
  */
 
 const VERB: Record<string, { text: string; icon: typeof Home }> = {
@@ -71,89 +71,11 @@ const VERB: Record<string, { text: string; icon: typeof Home }> = {
   user_logout: { text: "signed out", icon: UserRound },
 };
 
-/** The sentence and icon for an audit action, shared with the dashboard's time rail. */
+/** The sentence and icon for an audit action, used by the dashboard's time rail. */
 export function describeActivity(action: string): { text: string; icon: typeof Home } {
   const mapped = VERB[action];
   return {
     text: mapped?.text ?? action.replace(/_/g, " "),
     icon: mapped?.icon ?? Sparkles,
   };
-}
-
-export function ActivityFeed({ entries }: { entries: ActivityEntry[] }) {
-  return (
-    <section aria-labelledby="activity-heading" className="flex flex-col gap-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 id="activity-heading" className="text-h4">
-          Recent activity
-        </h3>
-        <Link
-          href="/admin/audit-logs"
-          className="inline-flex items-center gap-1 text-sm font-medium text-accent-quiet underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-          Full history
-          <ArrowRight className="size-3.5" aria-hidden="true" />
-        </Link>
-      </div>
-
-      {entries.length === 0 ? (
-        <p className="rounded-lg border border-border bg-surface p-5 text-sm text-foreground-muted">
-          Nothing recorded yet. Every publish, upload and settings change appears
-          here as it happens.
-        </p>
-      ) : (
-        <ol className="flex flex-col">
-          {entries.map((entry, index) => {
-            const mapped = VERB[entry.action];
-            const Icon = mapped?.icon ?? Sparkles;
-            const text = mapped?.text ?? entry.action.replace(/_/g, " ");
-
-            return (
-              <li
-                key={entry.id}
-                className="relative flex gap-4 pb-5 last:pb-0"
-              >
-                {/*
-                  The connecting rule, drawn behind the markers and stopped on
-                  the last row so the timeline does not trail off into nothing.
-                */}
-                {index < entries.length - 1 ? (
-                  <span
-                    aria-hidden="true"
-                    /*
-                      `left-4` plus a half-width shift, rather than a hardcoded
-                      offset. The marker is `size-8`, so its centre sits on the
-                      `4` spacing step, and translating the rule back by half
-                      its own width lands it exactly there. HR23 forbids the
-                      arbitrary value, and this is more robust anyway: change
-                      the marker size and the rule follows it.
-                    */
-                    className="absolute top-8 left-4 h-full w-px -translate-x-1/2 bg-border"
-                  />
-                ) : null}
-
-                <span className="relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-surface">
-                  <Icon className="size-4 text-accent-quiet" aria-hidden="true" />
-                </span>
-
-                <span className="flex min-w-0 flex-col gap-0.5 pt-1">
-                  <span className="text-sm text-foreground">
-                    {entry.actor ? (
-                      <span className="font-semibold">{entry.actor}</span>
-                    ) : (
-                      <span className="font-semibold">The system</span>
-                    )}{" "}
-                    {text}
-                  </span>
-                  <span className="text-xs text-foreground-subtle">
-                    {formatDateTime(entry.createdAt)}
-                  </span>
-                </span>
-              </li>
-            );
-          })}
-        </ol>
-      )}
-    </section>
-  );
 }

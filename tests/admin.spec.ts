@@ -114,6 +114,13 @@ test.describe("admin", () => {
     });
 
     test("no critical or serious axe violations on any admin screen", async ({ page }) => {
+      /*
+        Six full axe scans in one test. On its own this takes about 30s, but in
+        a full run beside the responsive suite it hit the default 60s mid-scan
+        (2026-09-14) — a timeout, not a violation. The budget is per-test, so
+        it is raised here rather than retried.
+      */
+      test.setTimeout(180_000);
       for (const target of ADMIN_PAGES) {
         await page.goto(target.path, { waitUntil: "load" });
 

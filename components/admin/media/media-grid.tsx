@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 
 import { deleteMediaKeys } from "@/app/(admin)/admin/(shell)/media/actions";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -25,6 +25,14 @@ import type { MediaItem } from "@/types/domain";
  * Deleting something still referenced is blocked by the server action, and the
  * block comes back with a link to the listing that holds it. That link is the
  * whole point: "cannot delete" without saying what is holding it is a dead end.
+ *
+ * ── Tiles on the card system (docs/06 § 2) ────────────────────────────────
+ *
+ * Each tile is an `admin-card`. Selection is a ring OUTSIDE the card plus a
+ * check mark on the photo, rather than a swapped border colour: `admin-card`
+ * owns the border, and two utilities setting the same property resolve by
+ * stylesheet order rather than by intent. The check mark means the state is
+ * never carried by colour alone (docs/03 § 9).
  */
 export function MediaGrid({ items }: { items: MediaItem[] }) {
   const router = useRouter();
@@ -54,16 +62,16 @@ export function MediaGrid({ items }: { items: MediaItem[] }) {
         <div
           role="region"
           aria-label="Media selection"
-          className="flex flex-wrap items-center gap-3 rounded-lg border border-accent/40 bg-accent-wash p-3"
+          className="sticky top-20 z-30 flex flex-wrap items-center gap-3 rounded-full border border-accent/40 bg-accent-wash py-2 pr-2 pl-5 shadow-card"
         >
           <p className="mr-auto text-sm font-medium text-foreground">
             {selected.size} selected · {formatBytes(selectedBytes)}
           </p>
-          <Button variant="danger" size="sm" onClick={() => setConfirming(true)}>
+          <Button variant="danger" size="sm" className="rounded-full" onClick={() => setConfirming(true)}>
             <Trash2 aria-hidden="true" />
             Delete
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setSelected(new Set())}>
             Clear
           </Button>
         </div>
@@ -72,7 +80,7 @@ export function MediaGrid({ items }: { items: MediaItem[] }) {
       {blocked ? (
         <div
           role="alert"
-          className="flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning-bg p-4"
+          className="flex flex-col gap-2 rounded-2xl border border-warning/30 bg-warning-bg p-4"
         >
           <p className="text-sm font-semibold text-foreground">
             Some of those files are still in use
@@ -100,29 +108,39 @@ export function MediaGrid({ items }: { items: MediaItem[] }) {
         </div>
       ) : null}
 
-      <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-        {items.map((item) => {
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4">
+        {items.map((item, index) => {
           const isSelected = selected.has(item.key);
           return (
             <li
               key={item.id}
               className={cn(
-                "flex flex-col gap-2 rounded-lg border bg-surface p-3 shadow-xs",
-                isSelected ? "border-accent" : "border-border",
+                "admin-card flex flex-col gap-3 p-2.5 transition-shadow duration-(--dur-fast)",
+                isSelected && "ring-2 ring-accent ring-offset-2 ring-offset-background",
               )}
             >
-              <div className="relative aspect-4/3 overflow-hidden rounded-md bg-surface-sunken">
+              <div className="relative aspect-4/3 overflow-hidden rounded-2xl bg-surface-sunken">
                 <Image
                   src={keyUrl(item.key, 400)}
                   alt=""
                   fill
                   sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 45vw"
                   className="object-cover"
+                  /*
+                    The first row is above the fold on every width, and Next
+                    flagged one of these as the page's LCP while still lazy.
+                  */
+                  loading={index < 4 ? "eager" : "lazy"}
                   unoptimized
                 />
+                {isSelected ? (
+                  <span className="absolute top-2 right-2 inline-flex size-7 items-center justify-center rounded-full bg-accent text-accent-fg shadow-sm">
+                    <Check className="size-4" aria-hidden="true" />
+                  </span>
+                ) : null}
               </div>
 
-              <dl className="flex flex-col gap-0.5 text-xs">
+              <dl className="flex flex-col gap-0.5 px-1.5 text-xs">
                 <div className="flex justify-between gap-2">
                   <dt className="text-foreground-subtle">Size</dt>
                   <dd className="font-medium text-foreground tabular">
@@ -145,7 +163,7 @@ export function MediaGrid({ items }: { items: MediaItem[] }) {
                 </div>
               </dl>
 
-              <label className="mt-auto inline-flex min-h-11 items-center gap-2 text-sm text-foreground-muted">
+              <label className="mt-auto inline-flex min-h-11 items-center gap-2 px-1.5 text-sm text-foreground-muted">
                 <input
                   type="checkbox"
                   checked={isSelected}
