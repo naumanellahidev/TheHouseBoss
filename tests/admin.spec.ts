@@ -82,7 +82,10 @@ test.describe("admin", () => {
 
     test("the dashboard renders its panels", async ({ page }) => {
       await page.goto("/admin");
-      await expect(page.getByRole("heading", { name: "Dashboard", level: 2 })).toBeVisible();
+      // The dashboard opens with a greeting since the redesign (docs/06 § 3).
+      await expect(
+        page.getByRole("heading", { name: /^Good (morning|afternoon|evening)/, level: 2 }),
+      ).toBeVisible();
       await expect(page.getByRole("heading", { name: "Needs attention" })).toBeVisible();
       await expect(page.getByRole("heading", { name: "Storage", level: 3 })).toBeVisible();
       // Renamed in the dashboard redesign: leads are "enquiries" to the client.

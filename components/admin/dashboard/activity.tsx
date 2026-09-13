@@ -57,6 +57,10 @@ const VERB: Record<string, { text: string; icon: typeof Home }> = {
   seo_updated: { text: "updated page metadata", icon: Sparkles },
   sitemap_refreshed: { text: "refreshed the sitemap", icon: Sparkles },
 
+  // Migration 025: the per-city home page switch on Admin → Cities.
+  city_shown_on_home: { text: "put a city on the home page", icon: Home },
+  city_hidden_from_home: { text: "took a city off the home page", icon: Home },
+
   settings_updated: { text: "changed settings", icon: SettingsIcon },
   password_changed: { text: "changed their password", icon: KeyRound },
   password_change_failed: { text: "failed a password change", icon: KeyRound },
@@ -66,6 +70,15 @@ const VERB: Record<string, { text: string; icon: typeof Home }> = {
   user_login: { text: "signed in", icon: UserRound },
   user_logout: { text: "signed out", icon: UserRound },
 };
+
+/** The sentence and icon for an audit action, shared with the dashboard's time rail. */
+export function describeActivity(action: string): { text: string; icon: typeof Home } {
+  const mapped = VERB[action];
+  return {
+    text: mapped?.text ?? action.replace(/_/g, " "),
+    icon: mapped?.icon ?? Sparkles,
+  };
+}
 
 export function ActivityFeed({ entries }: { entries: ActivityEntry[] }) {
   return (

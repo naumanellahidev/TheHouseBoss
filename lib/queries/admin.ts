@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { toCity, toCommunity, toListing, toPhotos, toReview } from "@/lib/queries/mappers";
 import { getStorageUsage, getUpcomingPurge } from "@/lib/queries/media";
+import { dayKey } from "@/lib/utils/date";
 import type {
   AdminReview,
   ArticleKind,
@@ -834,6 +835,82 @@ export async function getDashboardPulse(): Promise<DashboardPulse> {
       (sum, row) => sum + Number(row.price ?? 0),
       0,
     ),
+  };
+}
+
+export type LeadActivity = {
+  /** Oldest first, one entry per New York day, ending today. */
+  days: { key: string; count: number }[];
+  /** Rolling 7-day periods, oldest first; `start` is the period's first day. */
+  weeks: { start: string; buying: number; selling: number }[];
+  /** The last 7 days, and the 7 before them. */
+  thisWeek: number;
+  lastWeek: number;
+  total: number;
+};
+
+/**
+ * Enquiries per day for the dashboard's calendar and weekly chart (docs/06 § 3).
+ *
+ * One read of two columns, grouped here: PostgREST cannot GROUP BY without a
+ * view, and a few hundred rows is not worth one.
+ *
+ * ── Days are New York days ───────────────────────────────────────────────
+ *
+ * An enquiry at 9pm in Lake Mary is 1am UTC the next day. Grouping by the UTC
+ * date would put it on the wrong square, so rows are keyed with `dayKey` and
+ * the 84 squares are built by calendar arithmetic from today's New York date —
+ * not by subtracting 24 hours, which skips or repeats a day across a DST change.
+ *
+ * Spam is left out: it is not an enquiry anyone will answer.
+ */
+export async function getLeadActivity(weeks = 12): Promise<LeadActivity> {
+  const service = createServiceClient();
+  const span = weeks * 7;
+  // One spare day either side of the window, then trimmed by key.
+  const since = new Date(Date.now() - (span + 1) * 86_400_000).toISOString();
+
+  const { data, error } = await service
+    .from("leads")
+    .select("created_at, lead_type, status")
+    .gte("created_at", since)
+    .limit(5000);
+
+  if (error) throw new Error(`getLeadActivity: ${error.message}`);
+
+  const [y, m, d] = dayKey(new Date()).split("-").map(Number);
+  const keys: string[] = [];
+  for (let i = span - 1; i >= 0; i -= 1) {
+    keys.push(new Date(Date.UTC(y!, m! - 1, d! - i)).toISOString().slice(0, 10));
+  }
+  const index = new Map(keys.map((key, i) => [key, i]));
+
+  const counts = new Array<number>(span).fill(0);
+  const buying = new Array<number>(weeks).fill(0);
+  const selling = new Array<number>(weeks).fill(0);
+
+  for (const row of data ?? []) {
+    if (row.status === "spam") continue;
+    const i = index.get(dayKey(row.created_at));
+    if (i === undefined) continue;
+    counts[i] = (counts[i] ?? 0) + 1;
+    const w = Math.floor(i / 7);
+    if (row.lead_type === "seller") selling[w] = (selling[w] ?? 0) + 1;
+    else buying[w] = (buying[w] ?? 0) + 1;
+  }
+
+  const sum = (values: number[]) => values.reduce((n, v) => n + v, 0);
+
+  return {
+    days: keys.map((key, i) => ({ key, count: counts[i] ?? 0 })),
+    weeks: Array.from({ length: weeks }, (_, w) => ({
+      start: keys[w * 7]!,
+      buying: buying[w] ?? 0,
+      selling: selling[w] ?? 0,
+    })),
+    thisWeek: sum(counts.slice(-7)),
+    lastWeek: sum(counts.slice(-14, -7)),
+    total: sum(counts),
   };
 }
 

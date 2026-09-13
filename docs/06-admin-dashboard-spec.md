@@ -65,10 +65,40 @@ the “House Boss Redesign Plan” artifact.
 
 ## 3. Dashboard (`/admin`)
 
-Stat tiles: New leads (7d) · Published listings · Active listings · Draft
-listings · Published articles · Storage used.
+Redesigned 2026-09-13 on the reference dashboard's layout. Every element of
+the reference that is kept has real data behind it; nothing is decorative or
+invented.
 
-Then:
+```
+ Saturday, September 13 · Lake Mary                       [+ Add listing] [Write an article]
+ Good evening                                              6          4          0
+ [ Waiting on you 3 ][ Contacted 1 ][ Qualified ][ Closed ]  Live       Enquiries  Published
+                                                            listings   7 days ↗   writing
+┌ Needs attention ┐┌ Recent enquiries ───────────────┐┌ Enquiry calendar (navy) ┐
+│ severity rows   ││ initials · name · type · when · ││ this 7 days / the 7 before│
+│ ─────────────── ││ status chip · Mark contacted    ││ one dot per day, 12 weeks │
+│ Recent activity ││                                 │└───────────────────────────┘
+│ time-rail list  │└─────────────────────────────────┘┌ Storage (donut) ──────────┐
+│                 │┌ Enquiries by week (SVG) ────────┐│ used of 1 GB, by kind,     │
+└─────────────────┘│ buying vs selling, 12 weeks     ││ next purge, media library  │
+                   └─────────────────────────────────┘└───────────────────────────┘
+```
+
+- **Pipeline strip:** proportional pills from lead status counts (spam left out),
+  each linking to the filtered Enquiries list.
+- **Big numbers:** live listings, enquiries in the last 7 days with the change on
+  the 7 before (the only comparison that means anything), published articles.
+- **Enquiry calendar and weekly chart:** counted from `leads.created_at` in New
+  York days, over rolling 7-day periods ending today, spam excluded. "Selling" is
+  `lead_type = seller`; everything else counts as buying or general. The chart is
+  server-rendered SVG with no chart library.
+- **Storage donut:** the listings / articles / other split drawn against the
+  1 GB ceiling, not against what is used. A 4 MB library is a sliver, because
+  that is the truth about how full storage is.
+- **Cards:** opaque on the glow canvas (§ 2), with the calendar as the one navy
+  card.
+
+Retained from the original spec:
 
 - **Recent leads** — five newest, name, type, city, time, one-click "Mark
   contacted".
