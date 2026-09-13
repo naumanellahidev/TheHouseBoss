@@ -1,5 +1,23 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+/*
+  tailwind-merge only knows Tailwind's default type scale. Our sizes are theme
+  tokens (`--text-h2` → `text-h2`), and a `text-*` class it does not recognise
+  as a size is filed as a COLOUR — so `cn("text-h2", "text-foreground-invert")`
+  kept the colour and silently dropped the size. Every inverted SectionHeader
+  heading rendered at body size because of it. Registering the scale here makes
+  size and colour separate groups again.
+*/
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [
+        { text: ["display", "h1", "h2", "h3", "h4", "lead", "body", "overline"] },
+      ],
+    },
+  },
+});
 
 /** Merge Tailwind classes with correct conflict resolution. */
 export function cn(...inputs: ClassValue[]) {

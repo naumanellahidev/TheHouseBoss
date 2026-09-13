@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { recordAudit } from "@/lib/auth/audit";
+import { getHeroImageCandidates } from "@/lib/queries/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import type { MediaItem } from "@/types/domain";
 
 /**
  * Landing-page section editing (brief §34, §35).
@@ -143,4 +145,39 @@ export async function resetPageSection(
   revalidatePath(`/${pageSlug}`);
   revalidatePath("/admin/pages");
   return { ok: true, message: "Reset to the original wording." };
+}
+
+export type HeroImage = Pick<MediaItem, "key" | "width" | "height" | "entityType">;
+
+/**
+ * The photographs a page hero may use, for the Choose-from-Media dialog.
+ *
+ * A server action rather than a prop from the page: the dialog is opened on
+ * demand, and loading sixty thumbnails' worth of rows into every render of the
+ * Pages screen — most of which never open it — would be paid for nothing.
+ */
+export async function listHeroImages(): Promise<
+  { ok: true; items: HeroImage[] } | { ok: false; error: string }
+> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { ok: false, error: "Your session has expired. Sign in again." };
+  }
+
+  try {
+    const items = await getHeroImageCandidates();
+    return {
+      ok: true,
+      items: items.map(({ key, width, height, entityType }) => ({
+        key,
+        width,
+        height,
+        entityType,
+      })),
+    };
+  } catch (error) {
+    console.error("[listHeroImages]", error);
+    return { ok: false, error: "The media library could not be loaded." };
+  }
 }

@@ -7,6 +7,7 @@ import {
   resetPageSection,
   savePageSection,
 } from "@/app/(admin)/admin/(shell)/pages/actions";
+import { MediaPickerField } from "@/components/admin/media/media-picker-field";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -29,6 +30,9 @@ import { useToast } from "@/components/ui/toast";
  * rendering the right control for each is one component instead of eleven that
  * drift apart — and adding a field to `DEFAULT_CONTENT` gives it an editor for
  * free, which is what stops the two going out of step.
+ *
+ * One field name is special: `imageKey` is a media key, and gets the
+ * Choose-from-Media picker instead of a text box nobody could fill in.
  *
  * ── Why long strings get a textarea and short ones an input ───────────────
  *
@@ -54,6 +58,7 @@ export function SectionEditor({
   defaults,
   stored,
   enabled,
+  toggleable = true,
 }: {
   pageSlug: string;
   sectionKey: string;
@@ -64,13 +69,18 @@ export function SectionEditor({
   /** What is stored, if anything. */
   stored: Record<string, Value> | null;
   enabled: boolean;
+  /**
+   * False for a section the page cannot sensibly go without — a list page's
+   * hero. The switch is not offered, rather than offered and ignored.
+   */
+  toggleable?: boolean;
 }) {
   const toast = useToast();
   const [value, setValue] = React.useState<Record<string, Value>>({
     ...defaults,
     ...(stored ?? {}),
   });
-  const [on, setOn] = React.useState(enabled);
+  const [on, setOn] = React.useState(toggleable ? enabled : true);
   const [busy, setBusy] = React.useState<string | null>(null);
 
   const set = (key: string, next: Value) =>
@@ -90,23 +100,35 @@ export function SectionEditor({
         ) : null}
       </div>
 
-      <SwitchField
-        label="Show this section on the page"
-        description="Hides it. Nothing is deleted."
-        checked={on}
-        onCheckedChange={setOn}
-      />
+      {toggleable ? (
+        <SwitchField
+          label="Show this section on the page"
+          description="Hides it. Nothing is deleted."
+          checked={on}
+          onCheckedChange={setOn}
+        />
+      ) : null}
 
       {on
-        ? Object.entries(defaults).map(([key, fallback]) => (
-            <FieldFor
-              key={key}
-              name={key}
-              fallback={fallback}
-              value={value[key]}
-              onChange={(next) => set(key, next)}
-            />
-          ))
+        ? Object.entries(defaults).map(([key, fallback]) =>
+            key === "imageKey" ? (
+              <MediaPickerField
+                key={key}
+                label="Background photograph"
+                description="Shown behind the heading. Left empty, the page uses its default photograph."
+                imageKey={typeof value[key] === "string" && value[key] ? (value[key] as string) : null}
+                onChange={(next) => set(key, next ?? "")}
+              />
+            ) : (
+              <FieldFor
+                key={key}
+                name={key}
+                fallback={fallback}
+                value={value[key]}
+                onChange={(next) => set(key, next)}
+              />
+            ),
+          )
         : null}
 
       <div className="flex flex-wrap gap-3 border-t border-border pt-4">

@@ -1,3 +1,8 @@
+import {
+  PAGE_HEROES,
+  type HeroPageSlug,
+  type PageHeroContent,
+} from "@/lib/content/page-heroes";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
 
 /**
@@ -76,4 +81,29 @@ export function disabledKeys(
   */
   const present = new Map(rows.map((r) => [r.sectionKey, r.enabled]));
   return new Set(all.filter((key) => present.get(key) === false));
+}
+
+/**
+ * The hero of a list page (`/market-updates`, `/reviews`), with edits applied.
+ *
+ * Never throws and never returns a blank field: a stored empty string for a
+ * headline falls back to the shipped headline, because a hero with no heading
+ * is broken, not edited. `imageKey` is the one field where empty is meaningful —
+ * it means "use the page's own fallback photograph".
+ */
+export async function getPageHero(pageSlug: HeroPageSlug): Promise<PageHeroContent> {
+  const fallback = PAGE_HEROES[pageSlug];
+  const rows = await getPageSections(pageSlug);
+  const stored = rows.find((row) => row.sectionKey === "hero")?.content;
+  const merged = mergeSection(fallback, stored);
+
+  const text = (value: unknown, shipped: string) =>
+    typeof value === "string" && value.trim() ? value.trim() : shipped;
+
+  return {
+    overline: text(merged.overline, fallback.overline),
+    title: text(merged.title, fallback.title),
+    lead: text(merged.lead, fallback.lead),
+    imageKey: typeof merged.imageKey === "string" ? merged.imageKey.trim() : "",
+  };
 }

@@ -443,6 +443,32 @@ export async function getMediaItems(opts: {
 }
 
 /**
+ * Photographs in the library that can carry a full-width hero.
+ *
+ * Landscape and at least `minWidth` wide. The library holds logos (522px), a
+ * portrait (682×1024) and a 612px listing photo; any of those stretched across
+ * a 1440px screen is soft or badly cropped, so the picker never offers them.
+ *
+ * Newest first, capped at 60: this is a picker, and the Media screen is where
+ * the whole library is browsed.
+ */
+export async function getHeroImageCandidates(minWidth = 1400): Promise<MediaItem[]> {
+  const db = createServiceClient();
+  const { data, error } = await db
+    .from("media")
+    .select("id, key, variants, bytes, width, height, mime, entity_type, entity_id, created_at")
+    .gte("width", minWidth)
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  if (error) throw new Error(`getHeroImageCandidates: ${error.message}`);
+
+  return (data ?? [])
+    .map(toMediaItem)
+    .filter((item) => (item.width ?? 0) > (item.height ?? 0));
+}
+
+/**
  * Which entity a media row belongs to, resolved to something clickable.
  * Deleting media that is still referenced is blocked, and the block needs a
  * link to the referencing entity (docs/06 § 9).
