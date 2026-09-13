@@ -29,6 +29,12 @@ import { cn } from "@/lib/utils";
  * or dark — is decided in `app/globals.css`. The reasoning is there, next to
  * the rules.
  *
+ * ── The pill navigation ───────────────────────────────────────────────────
+ *
+ * The items sit in one rounded tray and the current page is a solid pill inside
+ * it, the same language as the admin panel. The tray and pill colours are the
+ * `--nav-*` variables, which flip with the header's tone.
+ *
  * docs/04-responsive-spec.md § 3.
  */
 export function Header({ settings }: { settings?: SiteSettings | null }) {
@@ -86,7 +92,13 @@ export function Header({ settings }: { settings?: SiteSettings | null }) {
         />
 
         <nav aria-label="Primary" className="hidden lg:block">
-          <ul className="flex items-center gap-1">
+          <ul
+            className={cn(
+              "flex items-center gap-0.5 rounded-full border p-1",
+              "border-(--nav-tray-border) bg-(--nav-tray) shadow-xs backdrop-blur-md",
+              "transition-colors duration-(--dur-base) ease-(--ease-out)",
+            )}
+          >
             {primaryNav.map((entry) => (
               <li key={entry.label}>
                 {isGroup(entry) ? (
@@ -108,7 +120,7 @@ export function Header({ settings }: { settings?: SiteSettings | null }) {
             variant="accent"
             size="md"
             asChild
-            className="hidden sm:inline-flex"
+            className="hidden rounded-full px-6 sm:inline-flex"
           >
             <Link href="/contact">Contact</Link>
           </Button>
@@ -122,6 +134,25 @@ export function Header({ settings }: { settings?: SiteSettings | null }) {
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
+
+/*
+  One pill. 36px tall inside the 44px tray: the desktop nav only exists from
+  1024px, where the target floor is WCAG 2.2's 24px (tests/pages.ts).
+
+  `px-2.5` until 1280. Seven items and a hero-sized logo share the row at 1024,
+  and "Hire Contractor" wrapping onto two lines is what happened the last time
+  the padding was generous there.
+*/
+const pill = cn(
+  "inline-flex h-9 items-center rounded-full text-sm font-semibold whitespace-nowrap",
+  "transition-colors duration-(--dur-fast) ease-(--ease-out)",
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--nav-ring)",
+);
+
+const pillTone = (active: boolean) =>
+  active
+    ? "bg-(--nav-active-bg) text-(--nav-active-fg)"
+    : "text-(--nav-fg-muted) hover:bg-(--nav-hover) hover:text-(--nav-fg)";
 
 function TopLink({
   href,
@@ -137,32 +168,7 @@ function TopLink({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={cn(
-        /*
-          `px-2` until 1280.
-
-          Eight items and a hero-sized logo do not both fit at 1024 with the
-          roomier padding — measured: "Hire Contractor" wrapped onto two
-          lines and the gap between the mark and the first item fell to
-          16px. The height is untouched, so the 44px target still holds
-          (docs/03 § 9); only the space either side of the label gives.
-        */
-        "relative inline-flex h-11 items-center rounded-md px-2 text-sm font-semibold whitespace-nowrap xl:px-3",
-        "transition-colors duration-(--dur-fast) ease-(--ease-out)",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--nav-ring)",
-        /*
-          `--nav-fg` / `--nav-fg-muted` are set on the header and flip to the
-          inverted pair while it is transparent over a dark hero. Semibold
-          rather than medium: at 14px over a photograph the extra weight is
-          what keeps the label legible once the backdrop is not a flat colour.
-        */
-        active ? "text-(--nav-fg)" : "text-(--nav-fg-muted) hover:text-(--nav-fg)",
-        "after:absolute after:inset-x-2 after:bottom-1.5 after:h-0.5 after:origin-left after:bg-accent xl:after:inset-x-3",
-        "after:transition-transform after:duration-(--dur-base) after:ease-(--ease-out)",
-        active
-          ? "after:scale-x-100"
-          : "after:scale-x-0 hover:after:scale-x-100",
-      )}
+      className={cn(pill, "px-2.5 xl:px-4", pillTone(active))}
     >
       {children}
     </Link>
@@ -170,8 +176,13 @@ function TopLink({
 }
 
 /**
- * Hover-and-focus dropdown. Opens on pointer enter, on click, and on keyboard
- * focus — never hover-only (docs/04 § 2).
+ * A group: its label is a link, the chevron beside it opens the menu.
+ *
+ * The label used to be the trigger itself, which left "Homes" unable to go
+ * anywhere and forced a separate "Home" item beside it. Splitting the two means
+ * the label behaves like every other item in the bar, and the menu is still one
+ * hover, one click or one Tab away. Opens on pointer enter, on the chevron's
+ * click, and on keyboard focus — never hover-only (docs/04 § 2).
  */
 function DesktopDropdown({
   group,
@@ -183,6 +194,7 @@ function DesktopDropdown({
   const [open, setOpen] = React.useState(false);
   const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapRef = React.useRef<HTMLDivElement>(null);
+  const menuId = React.useId();
 
   const cancelClose = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -225,42 +237,53 @@ function DesktopDropdown({
         if (e.key === "Escape") setOpen(false);
       }}
     >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "relative inline-flex h-11 items-center gap-1 rounded-md px-2 text-sm font-semibold whitespace-nowrap xl:px-3",
-          "transition-colors duration-(--dur-fast) ease-(--ease-out)",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--nav-ring)",
-          active ? "text-(--nav-fg)" : "text-(--nav-fg-muted) hover:text-(--nav-fg)",
+      {/* The two halves share one pill, so active and hover read as one item. */}
+      <div className={cn("flex items-center rounded-full", pillTone(Boolean(active)))}>
+        {group.href ? (
+          <Link
+            href={group.href}
+            aria-current={group.href && isActive(pathname, group.href) ? "page" : undefined}
+            className={cn(pill, "pr-0.5 pl-2.5 hover:bg-transparent xl:pl-4")}
+          >
+            {group.label}
+          </Link>
+        ) : (
+          <span className={cn(pill, "pr-0.5 pl-2.5 xl:pl-4")}>{group.label}</span>
         )}
-      >
-        {group.label}
-        <ChevronDown
-          aria-hidden="true"
-          className={cn(
-            "size-4 transition-transform duration-(--dur-base) ease-(--ease-out)",
-            open && "rotate-180",
-          )}
-        />
-      </button>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-haspopup="true"
+          aria-controls={open ? menuId : undefined}
+          aria-label={`${group.label} menu`}
+          onClick={() => setOpen((v) => !v)}
+          className={cn(pill, "w-7 justify-center pr-1 hover:bg-transparent xl:w-8 xl:pr-2")}
+        >
+          <ChevronDown
+            aria-hidden="true"
+            className={cn(
+              "size-4 transition-transform duration-(--dur-base) ease-(--ease-out)",
+              open && "rotate-180",
+            )}
+          />
+        </button>
+      </div>
 
       {open && (
         <div
+          id={menuId}
           className={cn(
-            "absolute top-full left-0 z-50 min-w-64 pt-2",
+            "absolute top-full left-0 z-50 min-w-64 pt-3",
             "motion-safe:animate-in motion-safe:fade-in",
           )}
         >
-          <ul className="overflow-hidden rounded-lg border border-border bg-surface p-1.5 shadow-lg">
+          <ul className="overflow-hidden rounded-2xl border border-border bg-surface p-1.5 shadow-lg">
             {group.items.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex min-h-11 flex-col justify-center gap-0.5 rounded-md px-3 py-2",
+                    "flex min-h-11 flex-col justify-center gap-0.5 rounded-xl px-3 py-2",
                     "transition-colors duration-(--dur-fast)",
                     "hover:bg-surface-sunken focus-visible:bg-surface-sunken",
                   )}

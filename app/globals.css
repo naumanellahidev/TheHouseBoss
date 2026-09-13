@@ -763,10 +763,25 @@ body:has([data-hero-bleed]) [data-site-header] ~ main {
   }
 }
 
+/*
+  The navigation is a pill: a rounded tray holding the items, with the current
+  page as a solid pill inside it — the admin panel's navigation language, used
+  on the public site too (client, 2026-09-13).
+
+  Two tones, like everything else in the header. On a light bar the tray is a
+  white surface and the active pill is navy. Over a dark hero the tray is
+  frosted navy glass and the active pill turns white with navy ink, because a
+  navy pill on a navy photograph would vanish.
+*/
 [data-site-header] {
   --nav-fg: var(--color-foreground);
   --nav-fg-muted: var(--color-foreground-muted);
   --nav-ring: var(--color-ring);
+  --nav-tray: var(--color-surface);
+  --nav-tray-border: var(--color-border);
+  --nav-hover: var(--color-surface-sunken);
+  --nav-active-bg: var(--color-primary);
+  --nav-active-fg: var(--color-primary-fg);
 }
 
 /*
@@ -778,6 +793,11 @@ body:has([data-hero-bleed]) [data-site-header][data-at-top] {
   --nav-fg: var(--color-foreground-invert);
   --nav-fg-muted: var(--color-foreground-invert-muted);
   --nav-ring: var(--color-ring-invert);
+  --nav-tray: var(--color-glass-invert);
+  --nav-tray-border: rgb(255 255 255 / 0.14);
+  --nav-hover: rgb(255 255 255 / 0.1);
+  --nav-active-bg: var(--color-surface);
+  --nav-active-fg: var(--color-primary);
 }
 
 /*

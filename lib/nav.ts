@@ -1,7 +1,14 @@
 import { allCities, siteConfig } from "@/lib/site-config";
 
 export type NavLink = { href: string; label: string; description?: string };
-export type NavGroup = { label: string; href?: string; items: NavLink[] };
+export type NavGroup = {
+  label: string;
+  /** Where the group's own label goes. The chevron beside it opens the menu. */
+  href?: string;
+  /** How that destination is named inside the mobile menu. Defaults to "All {label}". */
+  hrefLabel?: string;
+  items: NavLink[];
+};
 export type NavEntry = NavLink | NavGroup;
 
 export function isGroup(entry: NavEntry): entry is NavGroup {
@@ -22,18 +29,19 @@ export function isGroup(entry: NavEntry): entry is NavGroup {
  */
 export const primaryNav: NavEntry[] = [
   /*
-    Home, and it is not the same thing as "Homes".
+    "Homes" IS the way home.
 
-    "Homes" is a dropdown about property search, and its label is a trigger
-    rather than a link — clicking it opens the menu. There was no way to get
-    back to the landing page from the navigation at all except by clicking
-    the logo, which is a convention rather than an affordance and is not one
-    every visitor knows.
+    There used to be a separate "Home" item beside it, because the Homes label
+    was only a dropdown trigger and the landing page was otherwise reachable
+    only through the logo. Two items a letter apart read as a mistake (client,
+    2026-09-13). Every group label is now a link in its own right with the
+    chevron opening its menu, so Homes links to the home page and the search
+    pages stay one hover away underneath it.
   */
-  { href: "/", label: "Home" },
   {
     label: "Homes",
-    href: "/search",
+    href: "/",
+    hrefLabel: "Home page",
     items: [
       {
         href: "/search",

@@ -2936,6 +2936,73 @@ have once the browser's toolbars are drawn (1280×620, 1366×657, 1536×730):
   shorter than 50rem. Tall screens still open with the full logo.
 - Phones are unchanged.
 
+### 2026-09-13 (night) — Insights and Reviews redesigned; hero photos chosen from Media
+
+This is step 1 and step 2 of the redesign plan (artifact “House Boss Redesign Plan”). Decisions: brand
+blue as the highlight, a top pill nav for the admin, and public pages first. Steps 3–5, the admin
+panel, are next.
+
+**Shared pieces**
+- `PageHero` takes a `photo` (full bleed, `aria-hidden`, `photo-scrim-hero` plus a left
+  wash from 1024px) and an `aside` column. Its text is marked `data-hero-text`, so the
+  contrast test can find it. With no photo it is the navy grid hero, unchanged.
+- **Choose from Media.** `MediaPickerField` offers only landscape photos at least 1400px
+  wide (`getHeroImageCandidates`), so the 612px listing photo and the logos never
+  appear. Uploading from the same dialog files the image against the site entity.
+  The field works in `SectionEditor` for any field named `imageKey`.
+- **Admin → Pages** has tabs: Hire Contractor · Insights · Reviews. The hero copy for
+  the two list pages lives in `lib/content/page-heroes.ts` and can be overridden per field.
+- **The chosen photo is stored in `page_sections.content`**, which the orphan sweep
+  already scans (`keysInJson`). No migration was needed, and there is no new `*_key`
+  column that could be missed in `referencedKeys()`.
+- The fallback photos already exist: the flagship city hero for Insights and the
+  site hero for Reviews.
+
+**/market-updates (“Insights”)**
+- Sections: photo hero → city chips on a glass bar over the hero edge → latest update
+  as a large card → earlier updates → “at a glance” figures → city photo tiles → the
+  “Tell me the street” lead form on navy → the estimate disclaimer.
+- With 0 articles, the empty state is a composed panel with the portrait.
+- The glance section renders only when a city's stats carry `asOf`, per docs/14 § 1.
+
+**/reviews**
+- Sections: photo hero with a glass card holding Write a review and Review on Google →
+  the newest review featured large beside the portrait → “Read them, not a score” →
+  a wall of the rest → Google review in three numbered steps → licence strip.
+- Still no `AggregateRating`. The page looks complete with the one review that exists.
+
+**Bug fixed site-wide: `cn()` dropped heading sizes.** tailwind-merge did not know the
+token type scale, so it treated `text-h2` as a colour, and
+`cn("text-h2", "text-foreground-invert")` kept only the colour. As a result:
+- every inverted `SectionHeader` heading rendered at body size — the home page's navy
+  sections and the styleguide
+- several admin inputs lost `text-body`
+
+`lib/utils.ts` now registers display, h1–h4, lead, body and overline as font sizes.
+
+**Tests.** `hero-contrast.spec.ts` now measures `/`, `/market-updates` and `/reviews`.
+Its first run failed six cases: the 12px overline sat over the lightest part of
+`photo-scrim-hero` and measured 3.42–4.39:1 at 360, 414 and 768px. Below 1024px,
+`PageHero` now uses the home hero's even vertical wash (0.8 / 0.8 / 0.9). From
+1024px the lighter scrim stays, because it passed there.
+
+**Header: one Home, pill navigation (client request).**
+- The separate “Home” item is gone. A group's label is now a link (Homes → `/`), and a
+  chevron button beside it opens the menu. On a phone the first row inside Homes reads
+  “Home page”. For consistency the same split applies to Communities (→ `/lake-mary`)
+  and Buy (→ `/guides`).
+- The items sit in a rounded tray, and the current page is a solid pill in it.
+  - Over a dark hero: frosted navy tray with a white active pill.
+  - On the light bar: white tray with a navy active pill.
+  - The colours are `--nav-*` variables in `globals.css`, set in one place.
+- The Contact button is a pill too.
+- Measured at 1024px and 1440px: all seven items fit on one line, and nothing wraps.
+
+**Open**
+- The admin Pages screen and the picker were typechecked and linted but not clicked
+  through in a signed-in browser. The admin e2e suite needs `ADMIN_TEST_EMAIL`.
+- Steps 3–5 of the plan: admin tokens and shell, dashboard, remaining screens.
+
 ---
 
 <!-- Append new session entries above this line, newest last. -->

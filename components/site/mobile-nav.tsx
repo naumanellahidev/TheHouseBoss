@@ -147,7 +147,7 @@ function MobileNavRow({ entry }: { entry: NavEntry }) {
                 href={entry.href}
                 className="flex min-h-11 items-center text-sm font-medium text-accent-invert"
               >
-                All {entry.label}
+                {entry.hrefLabel ?? `All ${entry.label}`}
               </Link>
             </li>
           )}
