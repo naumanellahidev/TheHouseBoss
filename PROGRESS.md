@@ -3142,4 +3142,31 @@ errors.
 
 ---
 
+### 2026-09-25 — Search Console verification, and an empty inventory to start from
+
+**Google verification.** The token lives in `lib/site-config.ts` and
+`app/layout.tsx` renders it through Next's `verification` field, so
+`<meta name="google-site-verification">` is on every page rather than pasted
+into one. Search Console un-verifies a property whose tag disappears, so it
+belongs in config rather than in a page someone edits later.
+
+**The seeded demo listings are gone.** The client asked to start from nothing.
+
+- Backed up and verified first: `backups/2026-09-25T10-13-00-566Z`.
+- 6 listings deleted. Articles were already 0.
+- **HR11 honoured:** `/listing/<slug>` for each removed listing is now a row in
+  `redirects` pointing at `/search`, so a URL that was once live still answers
+  instead of 404ing. Verified: 308 to /search.
+- Their 6 `seo_pages` rows, the one stored listing photo (3 objects) and one
+  lead's `listing_id` reference were cleaned up in the same pass.
+- `tests/pages.ts` and `scripts/check-seo.mjs` no longer name a demo listing: a
+  hardcoded slug would fail the suite the moment the client adds or sells one.
+
+**Sitemap.** 38 URLs became 32, and it stays correct on its own — it is built
+from the database every hour, so a new listing, article, city or community
+appears without a deploy. `check:seo`: 22 indexable, 5 noindex, robots.txt,
+llms.txt and sitemap.xml all correct.
+
+---
+
 <!-- Append new session entries above this line, newest last. -->

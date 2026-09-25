@@ -16,6 +16,14 @@ export const metadata: Metadata = {
   authors: [{ name: siteConfig.legalName }],
   creator: siteConfig.legalName,
   publisher: siteConfig.brokerage,
+  /*
+    Google Search Console ownership.
+
+    Next renders this as <meta name="google-site-verification"> in <head> on
+    every page, so it verifies whichever property is claimed — the apex, the
+    www host, or both. The token is in lib/site-config.ts.
+  */
+  verification: { google: siteConfig.googleSiteVerification },
   formatDetection: { telephone: true, address: false, email: false },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],

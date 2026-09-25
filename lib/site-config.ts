@@ -41,6 +41,18 @@ export const siteConfig = {
    * canonicals while serving from somewhere else.
    */
   url: process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://thehousebossfl.com",
+  /**
+   * Google Search Console ownership, rendered as a
+   * `<meta name="google-site-verification">` on every page by
+   * `app/layout.tsx`.
+   *
+   * Public by design: it proves control of the domain and reveals nothing.
+   * Search Console asks for the tag to stay after verification succeeds — a
+   * removed tag un-verifies the property weeks later — so it lives here rather
+   * than being pasted into a page once and forgotten.
+   */
+  googleSiteVerification: "dJyyENEExIC4bNQoj5BLy6mTfndsOCd73gwopWNgmfw",
+
   locale: "en_US",
   timezone: "America/New_York",
 
@@ -154,11 +166,12 @@ export const siteConfig = {
   /* ── Profiles: feed the footer icons and the sameAs array in JSON-LD ── */
   profiles: {
     googleBusiness: "https://maps.google.com/?cid=11649351681478095662",
-    realtorDotCom: PENDING,
-    zillow: PENDING,
+    realtorDotCom:
+      "https://www.realtor.com/realestateagents/Krasimira-Kakarova_Winter-Springs_FL_2169787",
+    zillow: "https://www.zillow.com/profile/Krasimira%20Kakarova",
     facebook: PENDING,
     instagram: PENDING,
-    linkedin: PENDING,
+    linkedin: "https://www.linkedin.com/in/krisikakarovahomes",
   } as Record<string, string>,
 
   /** Cities that appear in the search city filter (client-specified five). */

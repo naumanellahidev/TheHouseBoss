@@ -26,11 +26,14 @@ export const PAGES: TestPage[] = [
     noChrome: true,
   },
 
-  // Phase 3
+  /*
+    Phase 3. No listing detail page is covered: the seeded demo listings were
+    removed on 2026-09-25 so the client starts from an empty inventory, and a
+    hardcoded slug here would fail the suite the moment one is added or sold.
+    /search and /sold carry the listing UI in their empty states.
+  */
   { path: "/search", name: "search" },
   { path: "/search/new-construction", name: "search-new-construction" },
-  { path: "/listing/123-lakeview-dr-lake-mary", name: "listing" },
-  { path: "/listing/41-longwood-oaks-ave-longwood", name: "listing-sold" },
   { path: "/sold", name: "sold" },
   { path: "/lake-mary/homes-for-sale", name: "lake-mary-homes" },
 

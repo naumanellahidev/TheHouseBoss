@@ -47,7 +47,6 @@ const INDEXABLE = [
   "/sanford",
   "/oviedo",
   "/communities/heathrow",
-  "/listing/123-lakeview-dr-lake-mary",
 ];
 
 /** Pages that must NOT be indexed. */
@@ -63,7 +62,6 @@ const NOINDEX = [
 /** Substrings that must appear in the raw HTML of a given page. */
 const MUST_CONTAIN = {
   "/guides/va-home-buyer": ["Minimum Property Requirements", "Certificate of Eligibility"],
-  "/listing/123-lakeview-dr-lake-mary": ["RealEstateListing", "Lakeview"],
   "/lake-mary": ["FAQPage", "Lake Mary"],
   "/sanford": ["Where Sanford sits"],
   "/about": ["hasCredential", "CRC1335654"],
@@ -265,7 +263,6 @@ const GRAPH_PAGES = [
   "/about",
   "/lake-mary",
   "/communities/heathrow",
-  "/listing/123-lakeview-dr-lake-mary",
   "/guides/va-home-buyer",
   "/search",
 ];
