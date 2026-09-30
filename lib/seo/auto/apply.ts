@@ -98,12 +98,23 @@ export async function ensureListingSeo(listing: Listing): Promise<Result> {
   const fallback = autoListingDescription(listing);
   const title = trimTitle(listing.metaTitle || autoListingTitle(listing));
 
+  /*
+    The corpus the model is validated against, so it has to name every fact the
+    copy may legitimately use — see the same list in `seo-suggest.ts`.
+  */
   const source = [
     `${listing.address}, ${listing.city.name}, Florida`,
+    `property type ${listing.propertyType.replace(/_/g, " ")}`,
+    `listing type ${listing.listingType.replace(/_/g, " ")}`,
+    `status ${listing.status}`,
     listing.beds ? `${listing.beds} bedrooms` : "",
     listing.baths ? `${listing.baths} bathrooms` : "",
     listing.sqft ? `${listing.sqft} square feet` : "",
     listing.yearBuilt ? `built ${listing.yearBuilt}` : "",
+    listing.pool ? "has a pool" : "",
+    listing.waterfront ? "waterfront" : "",
+    listing.features.length > 0 ? `features: ${listing.features.join(", ")}` : "",
+    listing.contractorsTake ?? "",
     listing.description ?? "",
   ]
     .filter(Boolean)

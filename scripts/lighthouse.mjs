@@ -37,8 +37,9 @@ const arg = (name, fallback) => {
 const PAGES = [
   ["home", "/"],
   ["search", "/search"],
-  ["listing", "/listing/123-lakeview-dr-lake-mary"],
   ["city", "/lake-mary"],
+  ["contractor", "/hire-contractor"],
+  ["answer", "/answers/inspections-and-insurance/four-point-and-wind-mitigation-explained"],
   ["guide", "/guides/va-home-buyer"],
 ];
 
@@ -62,6 +63,24 @@ const RUNS = Number(arg("runs", "1"));
 const CATEGORIES = ONLY
   ? Object.keys(THRESHOLDS).filter((c) => c.startsWith(ONLY))
   : Object.keys(THRESHOLDS);
+
+/*
+  Skip a page that is not there. The page list is checked into the repo and a
+  route can be removed (the demo listings were), in which case Lighthouse
+  would happily score a 404 and report it as a failing page.
+*/
+const LIVE = [];
+for (const [name, path] of PAGES) {
+  try {
+    const res = await fetch(BASE + path, { method: "GET", redirect: "follow" });
+    if (res.ok) LIVE.push([name, path]);
+    else console.log(`  skipping ${name} (${path}): HTTP ${res.status}`);
+  } catch {
+    console.log(`  skipping ${name} (${path}): unreachable`);
+  }
+}
+PAGES.length = 0;
+PAGES.push(...LIVE);
 
 const chrome = await launch({
   chromeFlags: [

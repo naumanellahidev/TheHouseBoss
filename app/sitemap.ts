@@ -1,5 +1,10 @@
 import type { MetadataRoute } from "next";
 
+import {
+  ANSWERS,
+  ANSWER_CATEGORIES,
+  answersInCategory,
+} from "@/lib/content/answers";
 import { getArticles } from "@/lib/queries/articles";
 import { getCities, getCommunities } from "@/lib/queries/cities";
 import { getListingSlugsForStaticParams, getSoldListings } from "@/lib/queries/listings";
@@ -151,8 +156,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
   }));
 
+  /*
+    The answer hub (docs/18 § 6). Content is in the repository rather than the
+    database, so these need no query and cannot fail: the hub, the categories
+    that have published answers, and every answer, with its own review date as
+    lastModified rather than the build time.
+  */
+  const answerEntries: MetadataRoute.Sitemap = [
+    { url: url("/answers"), changeFrequency: "weekly", priority: 0.8, lastModified: now },
+    ...ANSWER_CATEGORIES.filter(
+      (category) => answersInCategory(category.slug).length > 0,
+    ).map((category) => ({
+      url: url(`/answers/${category.slug}`),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+      lastModified: now,
+    })),
+    ...ANSWERS.map((answer) => ({
+      url: url(`/answers/${answer.category}/${answer.slug}`),
+      changeFrequency: "yearly" as const,
+      priority: 0.7,
+      lastModified: new Date(answer.body.updated),
+    })),
+  ];
+
   return [
     ...staticEntries,
+    ...answerEntries,
     ...cityEntries,
     ...communityEntries,
     ...articleEntries,

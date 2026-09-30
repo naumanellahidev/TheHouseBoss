@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AnswerLinks } from "@/components/site/answer-links";
 import { GuideLayout } from "@/components/site/guide-layout";
 import { JsonLd } from "@/components/site/json-ld";
 import {
@@ -15,6 +16,7 @@ import {
   faqJsonLd,
   serviceJsonLd,
 } from "@/lib/seo/jsonld";
+import { ANSWERS } from "@/lib/content/answers";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/site-config";
 import type { FaqItem } from "@/types/domain";
@@ -575,6 +577,20 @@ export default function VaGuidePage() {
 
         <Disclaimer type="lending" />
       </GuideLayout>
+
+      {/* The full answers, linked from the guide that shares their subject (docs/18 § 5). */}
+      <section className="section-y bg-surface-sunken">
+        <div className="container-page">
+          <AnswerLinks
+            answers={ANSWERS.filter((a) => ["va-offer-rejected-florida", "appraisal-came-in-low-options", "inspection-report-many-items-should-i-walk", "when-to-get-a-florida-insurance-quote"].includes(a.slug))}
+            title="Questions VA buyers ask here"
+            lead="The parts of a VA purchase that come up once you are looking at a specific house in Central Florida."
+            moreHref="/answers"
+            moreLabel="Every answer"
+          />
+        </div>
+      </section>
+
     </>
   );
 }

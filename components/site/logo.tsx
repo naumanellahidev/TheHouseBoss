@@ -275,7 +275,13 @@ export function Logo({
         stretched — `object-contain` and `w-auto` keep the file's own ratio.
       */
       size={800}
-      sizes="(max-width: 1023px) 176px, 240px"
+      /*
+        144px below 1024, not the 11rem cap. Measured: the hero-size mark
+        renders 131px wide on a phone, so the cap made the browser fetch the
+        522px file (168 kB) for a slot that wants ~344px at DPR 2.6. 144px
+        lands on the 400px derivative instead. The desktop cap is unchanged.
+      */
+      sizes="(max-width: 1023px) 144px, 240px"
       eager={eager}
       aspect="none"
       bare

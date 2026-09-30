@@ -5,7 +5,11 @@ import { ArticleView } from "@/components/site/article-view";
 import { JsonLd } from "@/components/site/json-ld";
 import { articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/seo/jsonld";
 import { getSeoOverride } from "@/lib/queries/seo";
-import { autoArticleDescription } from "@/lib/seo/auto/generate";
+import {
+  articleMetaDescription,
+  autoArticleDescription,
+  autoArticleTitle,
+} from "@/lib/seo/auto/generate";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { getArticleBySlug, getArticleSlugsForStaticParams } from "@/lib/queries/articles";
 import { keyUrl } from "@/lib/storage/url";
@@ -47,7 +51,7 @@ export async function generateMetadata({
 
   return buildMetadata({
     override,
-    title: article.metaTitle || article.title,
+    title: article.metaTitle || autoArticleTitle(article),
     /*
       Generated, not concatenated.
 
@@ -57,7 +61,7 @@ export async function generateMetadata({
       own text when it is long enough and composes one from the body when it is
       not, so this can no longer emit a short description.
     */
-    description: autoArticleDescription(article),
+    description: articleMetaDescription(article),
     path: `/lake-mary/blog/${article.slug}`,
     // The route generates its own card unless the article has a cover image.
     image: article.coverKey ? keyUrl(article.coverKey, 1600) : null,

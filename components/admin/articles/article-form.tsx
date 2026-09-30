@@ -15,6 +15,7 @@ import {
 } from "@/app/(admin)/admin/(shell)/seo-suggest";
 import { ArticleEditor } from "@/components/admin/articles/editor";
 import { FaqRepeater } from "@/components/admin/faq-repeater";
+import { RecordSeoPanel } from "@/components/admin/seo/record-seo-panel";
 import { ImageField } from "@/components/admin/image-field";
 import { TagInput } from "@/components/admin/tag-input";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,13 @@ import {
   canPublishArticle,
   type ArticleInput,
 } from "@/lib/validation/article";
+import {
+  answerFirstText,
+  articleDescriptionFrom,
+  articleTitleFrom,
+  firstSentences,
+} from "@/lib/seo/auto/generate";
+import { auditArticle } from "@/lib/seo/auto/score";
 import { shortAgo } from "@/lib/utils/date";
 import { cn, slugify } from "@/lib/utils";
 import type { City } from "@/types/domain";
@@ -130,17 +138,82 @@ export function ArticleForm({
   }
 
   /*
+    What the generator reads, in one place.
+
+    The previews, the audit and the "Write it for me" request all come from this,
+    so the panel cannot show one thing and the publish write another.
+    `lib/seo/auto/generate.ts` is pure — no database, no `server-only` — which is
+    what lets the real generator run here as the article is typed.
+  */
+  const articleFacts = React.useMemo(
+    () => ({
+      title: values.title ?? "",
+      excerpt: values.excerpt ?? null,
+      bodyText: values.bodyText ?? null,
+      kind: values.kind ?? null,
+      publishedAt: publishedAt ?? null,
+      cityName: cities.find((city) => city.id === values.cityId)?.name ?? null,
+    }),
+    [values.title, values.excerpt, values.bodyText, values.kind, values.cityId, cities, publishedAt],
+  );
+
+  /*
+    The audit, recomputed as the article is written.
+
+    `bodyJson` is the input that matters and it changes on every keystroke in the
+    editor, so this walks the document on every keystroke. It is a tree walk over
+    a document already in memory — no query, no model — and a score that lags
+    behind the sentence being typed blames the wrong keystroke.
+  */
+  const audit = React.useMemo(
+    () =>
+      auditArticle({
+        ...articleFacts,
+        slug: values.slug ?? "",
+        metaTitle: values.metaTitle ?? null,
+        metaDesc: values.metaDesc ?? null,
+        coverKey: values.coverKey ?? null,
+        coverAlt: values.coverAlt ?? null,
+        tags: values.tags ?? [],
+        faqCount: (values.faq ?? []).filter((item) => item.q?.trim() && item.a?.trim()).length,
+        bodyJson: values.bodyJson,
+      }),
+    [
+      articleFacts,
+      values.slug,
+      values.metaTitle,
+      values.metaDesc,
+      values.coverKey,
+      values.coverAlt,
+      values.tags,
+      values.faq,
+      values.bodyJson,
+    ],
+  );
+
+  /*
+    Where this article will live, which depends on what it is.
+
+    A market update publishes under /market-updates and a Lake Mary blog post
+    under /lake-mary/blog, so a single hard-coded crumb would be wrong for one of
+    them — and the crumb is the part of the preview that tells the writer the
+    kind selector has the consequence it has.
+  */
+  const previewPath =
+    values.kind === "market_update"
+      ? `market-updates › ${values.slug || "…"}`
+      : values.kind === "guide"
+        ? `guides › ${values.slug || "…"}`
+        : `lake-mary › blog › ${values.slug || "…"}`;
+
+  /*
     Same contract as the listing editor's: fill the two fields, save nothing.
     Publishing writes the generated metadata regardless; this shows what it will
     say while there is still time to disagree with it.
   */
   async function writeSeo() {
     setWritingSeo(true);
-    const result = await suggestArticleSeo({
-      title: values.title ?? "",
-      excerpt: values.excerpt ?? null,
-      bodyText: values.bodyText ?? null,
-    });
+    const result = await suggestArticleSeo(articleFacts);
     setWritingSeo(false);
 
     if (!result.ok) {
@@ -412,44 +485,6 @@ export function ArticleForm({
               </FieldDescription>
             </Field>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface-sunken p-4">
-              <p className="max-w-[58ch] text-sm text-foreground-muted">
-                Both of these are optional. When you publish, they are written
-                from your title and opening paragraphs. Press the button to see
-                what that will say.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                loading={writingSeo}
-                onClick={writeSeo}
-              >
-                <Sparkles aria-hidden="true" />
-                Write it for me
-              </Button>
-            </div>
-
-            <Field error={errorOf("metaTitle")}>
-              <FieldLabel>Meta title</FieldLabel>
-              <Input
-                value={values.metaTitle ?? ""}
-                onChange={(event) => set("metaTitle", event.target.value)}
-                placeholder={values.title}
-              />
-            </Field>
-
-            <Field error={errorOf("metaDesc")}>
-              <FieldLabel>Meta description</FieldLabel>
-              <Textarea
-                rows={3}
-                value={values.metaDesc ?? ""}
-                onChange={(event) => set("metaDesc", event.target.value)}
-              />
-              <FieldDescription>
-                <span className="tabular">{(values.metaDesc ?? "").length}</span> / 155.
-                Optional. Written from your opening paragraphs on publish.
-              </FieldDescription>
-            </Field>
           </div>
 
           {/* ── §21. Questions this article answers ───────────────────── */}
@@ -520,6 +555,84 @@ export function ArticleForm({
         </aside>
       </div>
 
+      {/*
+        ── Search and AI visibility ─────────────────────────────────────
+
+        Full width, below the editor, rather than in the sidebar where the two
+        meta fields used to live. The audit is fourteen checks with a sentence
+        each; in a third of the screen it is a column of wrapped text nobody
+        reads, and the checks about the BODY — the answer-first block, the
+        headings, the internal links — belong next to the body, not beside the
+        cover image.
+      */}
+      <section aria-labelledby="article-seo-heading" className="flex flex-col gap-4 admin-card p-5">
+        <div className="flex flex-col gap-1">
+          <h2 id="article-seo-heading" className="text-h3">
+            Search and AI visibility
+          </h2>
+          <p className="max-w-[72ch] text-sm text-foreground-muted">
+            Everything here is checked against this article as you write it. The
+            title and description are optional — leave them blank and they are
+            written from your own words when you publish.
+          </p>
+        </div>
+
+        <RecordSeoPanel
+          audit={audit}
+          generate={{
+            onClick: writeSeo,
+            busy: writingSeo,
+            note: "Written from your title and opening paragraphs.",
+          }}
+          preview={{
+            crumb: `thehousebossfl.com › ${previewPath}`,
+            title: values.metaTitle?.trim() || articleTitleFrom(articleFacts),
+            description:
+              values.metaDesc?.trim() ||
+              articleDescriptionFrom(articleFacts, values.bodyJson),
+            /*
+              The answer-first block, shown on its own.
+
+              This is the passage an assistant lifts, and seeing it out of
+              context is the only way to tell whether it stands up as an answer
+              — which is a different question from whether it reads well as an
+              opening paragraph.
+            */
+            quote: answerFirstText(values.bodyJson) || null,
+            quoteLabel: "What an assistant would quote — your answer-first block",
+          }}
+        >
+          <div className="grid gap-5 lg:grid-cols-2">
+            <Field error={errorOf("metaTitle")}>
+              <FieldLabel>Meta title</FieldLabel>
+              <Input
+                value={values.metaTitle ?? ""}
+                onChange={(event) => set("metaTitle", event.target.value)}
+                placeholder={articleTitleFrom(articleFacts)}
+              />
+              <FieldDescription>
+                Only needed when the headline is too long for a result, or when
+                the search wording differs from the headline.
+              </FieldDescription>
+            </Field>
+
+            <Field error={errorOf("metaDesc")}>
+              <FieldLabel>Meta description</FieldLabel>
+              <Textarea
+                rows={3}
+                value={values.metaDesc ?? ""}
+                onChange={(event) => set("metaDesc", event.target.value)}
+                placeholder={articleDescriptionFrom(articleFacts, values.bodyJson)}
+              />
+              <FieldDescription>
+                <span className="tabular">{(values.metaDesc ?? "").length}</span> / 158.
+                Blank means the description in the preview below is published.
+              </FieldDescription>
+            </Field>
+          </div>
+        </RecordSeoPanel>
+      </section>
+
       {/* ── Sticky action bar ──────────────────────────────────────────── */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-4 py-3 backdrop-blur-md safe-bottom md:px-6">
         <div className="flex flex-wrap items-center gap-3">
@@ -580,13 +693,4 @@ export function ArticleForm({
       </div>
     </form>
   );
-}
-
-/** First couple of sentences, for the excerpt draft button. */
-function firstSentences(text: string, max: number): string {
-  const clean = text.replace(/\s+/g, " ").trim();
-  if (clean.length <= max) return clean;
-  const cut = clean.slice(0, max);
-  const stop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("? "));
-  return stop > max * 0.4 ? cut.slice(0, stop + 1) : `${cut.trimEnd()}…`;
 }

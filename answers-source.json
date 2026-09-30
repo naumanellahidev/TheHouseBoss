@@ -1,0 +1,1304 @@
+{
+ "site": "https://www.thehousebossfl.com",
+ "author": {
+  "name": "Krisi Kakarova",
+  "credentials": "Licensed Florida Realtor (World Properties Group) and Florida Certified Residential Contractor",
+  "yearsExperience": 13,
+  "basedIn": "Lake Mary, FL",
+  "serves": [
+   "Seminole County",
+   "Orange County",
+   "Volusia County"
+  ],
+  "phone": "(240) 506-5959"
+ },
+ "categories": [
+  {
+   "slug": "buying-and-selling",
+   "title": "Buying and selling"
+  },
+  {
+   "slug": "inspections-and-insurance",
+   "title": "Inspections and insurance"
+  },
+  {
+   "slug": "new-construction-and-building",
+   "title": "New construction and building"
+  },
+  {
+   "slug": "hiring-and-project-planning",
+   "title": "Hiring and project planning"
+  },
+  {
+   "slug": "additions-and-conversions",
+   "title": "Additions and conversions"
+  },
+  {
+   "slug": "kitchens-and-bathrooms",
+   "title": "Kitchens and bathrooms"
+  },
+  {
+   "slug": "exterior-and-florida-climate",
+   "title": "Exterior and Florida climate"
+  },
+  {
+   "slug": "systems-and-maintenance",
+   "title": "Systems and maintenance"
+  },
+  {
+   "slug": "investors-and-landlords",
+   "title": "Investors and landlords"
+  }
+ ],
+ "answers": [
+  {
+   "id": 1,
+   "question": "Lake Mary vs Longwood vs Oviedo - which one?",
+   "slug": "lake-mary-vs-longwood-vs-oviedo",
+   "category": "buying-and-selling",
+   "gmbService": "Central Florida relocation consulting",
+   "cities": [
+    "lake-mary",
+    "longwood",
+    "oviedo"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "I live in Lake Mary and sell across all three, so: Lake Mary buys you the Seminole schools plus 46/I-4 access and Colonial Town Park for restaurants, and you pay for that in price per foot. Longwood is older stock, bigger lots, a lot of 70s-80s block ranches that need a kitchen and a repipe but give you trees and often no HOA. Oviedo is the family pick, newer and quieter, and the worst commute of the three if you work downtown. If you buy an older Longwood or Winter Springs house, budget for polybutylene and a roof before you fall in love. I'm a realtor and a licensed residential contractor here, so I look at both sides of that.",
+   "draftWordCount": 120,
+   "relatedAnswers": [
+    "is-lake-mary-worth-the-premium",
+    "is-sanford-worth-buying-into",
+    "moving-to-central-florida-where-to-live"
+   ]
+  },
+  {
+   "id": 2,
+   "question": "Is Lake Mary actually worth the price premium?",
+   "slug": "is-lake-mary-worth-the-premium",
+   "category": "buying-and-selling",
+   "gmbService": "Lake Mary homes for sale",
+   "cities": [
+    "lake-mary",
+    "sanford"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Depends what you think you're paying for. The premium is really three things: Seminole County schools, I-4/417 access, and a 32746 rebuild profile that insurers price better than older stock. No kids and remote? You'll get more house in Sanford or Deltona and keep the difference. Where I watch people overpay is buying a 1990s Lake Mary house at near new-construction pricing and then finding it needs roof, HVAC and a repipe inside three years. That's $45-60k nobody budgeted. Before you write the offer, ask for the roof permit date, the water heater age and whether it's been repiped. I'm a Lake Mary realtor and a Florida certified residential contractor, and that gap is the one I see most.",
+   "draftWordCount": 119,
+   "relatedAnswers": [
+    "is-sanford-worth-buying-into",
+    "moving-to-central-florida-where-to-live",
+    "own-agent-for-new-construction"
+   ]
+  },
+  {
+   "id": 3,
+   "question": "Is Sanford worth buying into right now?",
+   "slug": "is-sanford-worth-buying-into",
+   "category": "buying-and-selling",
+   "gmbService": "Sanford new home construction",
+   "cities": [
+    "lake-mary",
+    "sanford"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Sanford has been about to pop for a decade, but the Riverwalk, the downtown restaurant density and the airport traffic are real now. Separate two things though. Historic downtown Sanford is 1920s-1940s housing: leftover knob-and-tube, no wall insulation, foundations that have moved. Wonderful if you go in with a contractor's eyes and a rehab number. The newer block construction west and south of town is a totally different purchase, boring, and far cheaper to insure and maintain. I'm a realtor and a Florida certified residential contractor based in Lake Mary and I work in both halves of Sanford. They are not the same bet, and people conflate them constantly.",
+   "draftWordCount": 109,
+   "relatedAnswers": [
+    "moving-to-central-florida-where-to-live",
+    "own-agent-for-new-construction",
+    "sell-now-or-wait"
+   ]
+  },
+  {
+   "id": 4,
+   "question": "Moving to Central Florida - where should we land?",
+   "slug": "moving-to-central-florida-where-to-live",
+   "category": "buying-and-selling",
+   "gmbService": "Central Florida relocation consulting",
+   "cities": [
+    "lake-mary",
+    "longwood",
+    "orlando"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Work out where you physically need to be three days a week first, because commutes here decide everything. Downtown Orlando job means Winter Park, College Park, Baldwin Park. Lake Nona or medical city means Lake Nona or St. Cloud. The I-4 corridor employers mean Lake Mary, Heathrow, Longwood or Sanford, which is where I live and work. Seminole County is the usual family landing spot because of the school district. What transplants underestimate: insurance (get a quote before you go under contract, not after), roof age, and whether the house is block or frame. Rent six months if you can, neighborhoods change a lot in two miles here. I'm a realtor and licensed residential contractor in Lake Mary if you want specifics: thehousebossfl.com",
+   "draftWordCount": 123,
+   "relatedAnswers": [
+    "own-agent-for-new-construction",
+    "sell-now-or-wait",
+    "appraisal-came-in-low-options"
+   ]
+  },
+  {
+   "id": 5,
+   "question": "Do I need my own agent for new construction?",
+   "slug": "own-agent-for-new-construction",
+   "category": "buying-and-selling",
+   "gmbService": "Buying agent services",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Yes, and bring them to the very first visit. Builder sales reps are lovely people employed by the builder. The moment you sign in without representation, most builders will not let an agent be added later. Two things your own agent should actually earn: reading the builder addendum, which is nothing like a standard resale contract and usually strips your inspection and delay remedies, and getting an independent inspection at pre-drywall and again before closing. I'm a realtor and a licensed residential contractor, so I do those walks myself, and pre-drywall is where you catch the stuff that is genuinely expensive later. Also: builder incentives usually live in the lender credit, not the price. Ask what the cash price is without their lender.",
+   "draftWordCount": 123,
+   "relatedAnswers": [
+    "sell-now-or-wait",
+    "appraisal-came-in-low-options",
+    "va-offer-rejected-florida"
+   ]
+  },
+  {
+   "id": 6,
+   "question": "Should we sell now or wait another year?",
+   "slug": "sell-now-or-wait",
+   "category": "buying-and-selling",
+   "gmbService": "Home value consultation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Nobody can time it for you, but you can make the question smaller. Pull three things: what did comparable houses in your subdivision actually close at in the last 90 days (not list, closed), what do you owe, and what is your rate. If you're sitting on a sub-4% mortgage and the move is optional, the math usually says stay. If you're moving regardless, the market you sell into and the one you buy into mostly cancel out, so the real variable is your carrying cost while it sits. One thing sellers forget: roof age and HVAC age are now pricing your house, because they price the buyer's insurance. I'm a realtor and a residential contractor, and that is the single biggest silent discount I see.",
+   "draftWordCount": 126,
+   "relatedAnswers": [
+    "appraisal-came-in-low-options",
+    "va-offer-rejected-florida",
+    "assumable-mortgage-realistic"
+   ]
+  },
+  {
+   "id": 7,
+   "question": "Appraisal came in $20k low - what are my options?",
+   "slug": "appraisal-came-in-low-options",
+   "category": "buying-and-selling",
+   "gmbService": "Appraisals",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Four real options and one fake one. Real: seller drops to appraised value; you bring the gap in cash; you split it; you walk if your appraisal contingency is intact. Fake one is 'just get another appraisal', which you generally cannot do on the same loan without a rebuttal. Do file the rebuttal though, properly: send the appraiser three closed comps they missed with dates, and list any permitted work they did not credit. Permitted additions and a permitted re-roof get value, unpermitted ones get nothing, which is why I tell clients to pull the permit history before listing. I'm a realtor and licensed residential contractor and roughly half the low appraisals I see are missing permitted square footage.",
+   "draftWordCount": 119,
+   "relatedAnswers": [
+    "va-offer-rejected-florida",
+    "assumable-mortgage-realistic",
+    "what-to-fix-before-selling"
+   ]
+  },
+  {
+   "id": 8,
+   "question": "Inspection report came back with 40 items - should I walk?",
+   "slug": "inspection-report-many-items-should-i-walk",
+   "category": "inspections-and-insurance",
+   "gmbService": "Inspection repair guidance",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Forty items is a normal report, not a bad house. Inspectors list everything, including missing outlet covers. Sort it into three buckets and ignore the rest. Bucket one, structure and water: foundation movement, roof condition and age, active leaks, grading that sends water at the house. Bucket two, systems with a date on them: roof, HVAC, water heater, electrical panel, and in Florida the plumbing material. Bucket three, safety: double-tapped breakers, missing GFCI, gas issues. Everything else is a Saturday. Ask for money, not repairs, because a seller under pressure hires the cheapest guy. I'm a realtor and a Florida certified residential contractor and I read these reports as a builder first, which changes what I tell people to fight for.",
+   "draftWordCount": 121,
+   "relatedAnswers": [
+    "four-point-and-wind-mitigation-explained",
+    "retrofits-that-lower-florida-insurance",
+    "how-to-compare-roof-replacement-quotes"
+   ]
+  },
+  {
+   "id": 9,
+   "question": "What is a 4-point and wind mitigation and do I need them?",
+   "slug": "four-point-and-wind-mitigation-explained",
+   "category": "inspections-and-insurance",
+   "gmbService": "Home value consultation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "In Florida they are two different reports and both affect your premium. The 4-point covers roof, electrical, plumbing and HVAC, and most carriers require it once the house is around 30 years old. It is pass/fail-ish: an old roof, federal Pacific or Zinsco panel, polybutylene or cloth wiring can make a house uninsurable at normal rates. The wind mitigation is the one that saves you money: it documents roof shape, roof deck attachment, roof-to-wall connections (clips vs straps vs nothing) and opening protection. Hip roof plus straps plus impact glass is a meaningful discount. Get the wind mit even if nobody asks. I'm a realtor and licensed residential contractor in Seminole County and I have seen this swing premiums by thousands.",
+   "draftWordCount": 121,
+   "relatedAnswers": [
+    "retrofits-that-lower-florida-insurance",
+    "how-to-compare-roof-replacement-quotes",
+    "when-to-get-a-florida-insurance-quote"
+   ]
+  },
+  {
+   "id": 10,
+   "question": "Will a VA offer get rejected in this market?",
+   "slug": "va-offer-rejected-florida",
+   "category": "buying-and-selling",
+   "gmbService": "Buying agent services",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Not if it is presented properly, and most of the resistance is myth. Two things that actually matter to a listing agent: is the buyer solid, and will the property pass MPRs. So pre-empt both. Have your lender call the listing agent, not just email a pre-approval. And walk the house for the obvious MPR fails before you write: peeling paint on a pre-1978 house, exposed wiring, active roof leak, broken windows, non-working HVAC, wood rot at the sills. In Florida add standing water and an unpermitted enclosure. Fix-before-close credits can be negotiated. I'm a realtor in Central Florida and a licensed residential contractor, so I do that walk with buyers and it kills most objections before the offer goes out.",
+   "draftWordCount": 121,
+   "relatedAnswers": [
+    "assumable-mortgage-realistic",
+    "what-to-fix-before-selling",
+    "which-renovations-add-value"
+   ]
+  },
+  {
+   "id": 11,
+   "question": "Is chasing an assumable mortgage actually realistic?",
+   "slug": "assumable-mortgage-realistic",
+   "category": "buying-and-selling",
+   "gmbService": "Property investing",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "It's real but the constraint is the gap, not the process. VA and FHA loans are assumable; conventional generally is not. The catch is you owe the seller their equity, so on a house that has appreciated you need the difference in cash or a second. Servicers are also slow, 60-120 days is common, and many listing agents do not know how to structure the timeline. Where it genuinely pencils: newer houses bought 2020-2021 at 2.75-3.25% where the owner hasn't built much equity yet. Ask for the servicer name and the current payoff before you get excited. I'm a realtor in Central Florida and we do run these, they just need a seller willing to wait.",
+   "draftWordCount": 116,
+   "relatedAnswers": [
+    "what-to-fix-before-selling",
+    "which-renovations-add-value",
+    "lake-mary-vs-longwood-vs-oviedo"
+   ]
+  },
+  {
+   "id": 12,
+   "question": "What do I check before buying a lot to build on?",
+   "slug": "what-to-check-before-buying-a-lot",
+   "category": "new-construction-and-building",
+   "gmbService": "Building lot sales",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Before you close, not after: zoning and the actual setbacks (a 60-foot lot with 7.5-foot sides changes your whole plan), utilities at the street versus a well and septic, soil, and the flood zone. Get a boundary survey and a topo. Order a soil boring, because a $1,200 test can find muck that adds $40k of fill or piers. Check impact fees for the county, they surprise people badly. And check whether there is a plat restriction or old HOA that limits square footage or metal roofs. Put a due diligence period in the contract and use it. I'm a Florida certified residential contractor and a realtor and lot selection is where most custom builds quietly go over budget.",
+   "draftWordCount": 119,
+   "relatedAnswers": [
+    "cost-per-square-foot-to-build-florida",
+    "eleven-month-warranty-list",
+    "block-vs-wood-frame-florida"
+   ]
+  },
+  {
+   "id": 13,
+   "question": "What's a realistic per-square-foot build cost right now?",
+   "slug": "cost-per-square-foot-to-build-florida",
+   "category": "new-construction-and-building",
+   "gmbService": "Lake Mary new home construction",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Per square foot is the most abused number in building. It moves with your site, your plan complexity and your finish level, and a quote that is 'one number per foot' is usually hiding something. Ask instead for a line-item budget with allowances called out: cabinets, tile, plumbing fixtures, lighting, flooring. Those five allowances are where a build goes over. Also get the site costs separated out entirely, because fill, clearing, septic and long driveways are site-specific and belong nowhere near a per-foot figure. On top, add permits and impact fees, which in Central Florida counties are not trivial. I'm a Florida certified residential contractor and a realtor and I'd rather show someone a line-item than a per-foot number.",
+   "draftWordCount": 119,
+   "relatedAnswers": [
+    "eleven-month-warranty-list",
+    "block-vs-wood-frame-florida",
+    "new-communities-near-sanford-low-hoa"
+   ]
+  },
+  {
+   "id": 14,
+   "question": "What should I put on my 11-month warranty list?",
+   "slug": "eleven-month-warranty-list",
+   "category": "new-construction-and-building",
+   "gmbService": "New construction warranty walkthrough",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Walk it like an inspector and submit in writing before month 11, not month 12. Common real items: drywall cracks at door and window corners, nail pops, doors that no longer latch as the frame settled, grout and caulk failures at tub and shower, exterior caulk at penetrations, garage slab cracks past hairline, grading that has settled and now slopes toward the house, HVAC not balancing between floors, and any window or slider that leaks in a driving rain. Photograph everything with a date. Pay an independent inspector for a warranty inspection; it costs a few hundred and finds things you cannot see. I'm a Florida certified residential contractor and I do these walks for buyers, the written-before-11-months part is what people miss.",
+   "draftWordCount": 123,
+   "relatedAnswers": [
+    "block-vs-wood-frame-florida",
+    "new-communities-near-sanford-low-hoa",
+    "changing-a-builders-floor-plan"
+   ]
+  },
+  {
+   "id": 15,
+   "question": "Block vs wood frame in Florida - does it matter?",
+   "slug": "block-vs-wood-frame-florida",
+   "category": "new-construction-and-building",
+   "gmbService": "Home building",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Both are code-legal and both work. Block is the Florida default for the first floor: better in wind, no termite food, generally better insurance treatment, and it feels solid. The downsides are real though, block is slower to modify later, running new electrical or plumbing means furring or chasing, and the thermal mass cuts both ways. Frame is faster, cheaper, easier to insulate to a high R-value and much easier to renovate. Most two-story homes here are block down, frame up, which is a sensible compromise. If you are choosing for insurance, call an agent and ask for a quote both ways before you decide, the difference is smaller than people claim. I'm a Florida certified residential contractor in Seminole County.",
+   "draftWordCount": 121,
+   "relatedAnswers": [
+    "new-communities-near-sanford-low-hoa",
+    "changing-a-builders-floor-plan",
+    "which-renovations-need-a-permit"
+   ]
+  },
+  {
+   "id": 16,
+   "question": "Any new communities near Sanford with sane HOA fees?",
+   "slug": "new-communities-near-sanford-low-hoa",
+   "category": "new-construction-and-building",
+   "gmbService": "Kentucky Square Sanford new homes",
+   "cities": [
+    "lake-mary",
+    "sanford"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "There are a few, and the thing to compare is not the monthly number but what it covers and how the CDD sits on top. A $60/month HOA with a $2,400 annual CDD assessment is not cheap. Ask for the budget and the reserve study, not the brochure. Near Sanford specifically, look at what is going in around Historic Downtown and out toward the airport side; there are smaller block-construction communities with low HOAs and no CDD, which is unusual around here. I'm a realtor and a residential contractor in Lake Mary and we're involved in one of those in Sanford, so I'm biased, but the reserve-study question is the right one to ask any of them: thehousebossfl.com",
+   "draftWordCount": 118,
+   "relatedAnswers": [
+    "changing-a-builders-floor-plan",
+    "which-renovations-need-a-permit",
+    "architect-vs-design-build"
+   ]
+  },
+  {
+   "id": 17,
+   "question": "How much can you actually change a builder's floor plan?",
+   "slug": "changing-a-builders-floor-plan",
+   "category": "new-construction-and-building",
+   "gmbService": "New home floor plan customization",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "With a production builder, almost nothing structural, and the options list is the options list. What you can usually get: cabinet and counter upgrades, moving a laundry, adding a bathroom rough-in, extending a lanai if it's a pre-priced option, and pre-wiring. What you cannot: moving a bearing wall, changing the roof line, or anything that needs the plan re-engineered. With a semi-custom or a builder working on your lot, the answer flips and you can move most non-bearing walls and extend the footprint. The rule of thumb: changes made on paper are cheap, changes after the slab is poured are brutal. Decide before permitting. I'm a Florida certified residential contractor and that is the line that costs people money.",
+   "draftWordCount": 119,
+   "relatedAnswers": [
+    "which-renovations-need-a-permit",
+    "architect-vs-design-build",
+    "what-to-check-before-buying-a-lot"
+   ]
+  },
+  {
+   "id": 18,
+   "question": "Which renovations actually need a permit?",
+   "slug": "which-renovations-need-a-permit",
+   "category": "new-construction-and-building",
+   "gmbService": "Permit and inspection management",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Varies by jurisdiction, but the general shape: structural changes, anything electrical beyond swapping a fixture, new or relocated plumbing, HVAC changeouts, roofing, window and door replacement, decks over a certain height, sheds over a certain size, pools and fences. Not usually: paint, flooring, cabinets in the same footprint, countertops, trim. The reason to care is not the fine. It's that unpermitted work shows up at resale, appraisers give it zero value, and some insurers will deny a claim tied to it. If work was done before you bought, you can often permit it after the fact for a fee and an inspection. I'm a Florida certified residential contractor and I pull permits weekly; the after-the-fact route is less painful than people fear.",
+   "draftWordCount": 122,
+   "relatedAnswers": [
+    "architect-vs-design-build",
+    "what-to-check-before-buying-a-lot",
+    "cost-per-square-foot-to-build-florida"
+   ]
+  },
+  {
+   "id": 19,
+   "question": "Architect first, or go straight to a design-build firm?",
+   "slug": "architect-vs-design-build",
+   "category": "new-construction-and-building",
+   "gmbService": "Design-build remodeling",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Depends on how unusual your project is. Hire an architect separately when the design is the hard part: a difficult site, a heavily custom house, historic review, or when you want competitive bids off one set of drawings. Go design-build when the construction is the hard part and you want one contract and one throat to choke, which is most additions and whole-house remodels. The failure mode of the separate route is a beautiful set of drawings that comes back $200k over budget and now you're paying for a redesign. The failure mode of design-build is less price transparency, so ask for an open-book budget. I'm a Florida certified residential contractor and I do design-build, but I'll tell people when they need an architect.",
+   "draftWordCount": 124,
+   "relatedAnswers": [
+    "what-to-check-before-buying-a-lot",
+    "cost-per-square-foot-to-build-florida",
+    "eleven-month-warranty-list"
+   ]
+  },
+  {
+   "id": 20,
+   "question": "Contractor wants 50% upfront - is that normal?",
+   "slug": "contractor-wants-fifty-percent-upfront",
+   "category": "hiring-and-project-planning",
+   "gmbService": "Construction project management",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "No. A large deposit is the single clearest warning sign in residential construction. Normal is a modest mobilization deposit, often 10% or capped at a materials number, then draws tied to completed milestones: demo and rough-in, inspection passed, drywall, finishes, final. Some states cap the deposit by law. What to insist on: a written scope with allowances, a draw schedule tied to milestones and not dates, lien releases from subs at each draw, and proof of license and general liability plus workers comp, verified with the state and the insurer, not a PDF he emailed you. Hold a real retainage at the end. I'm a licensed residential contractor and honest contractors will not blink at any of this.",
+   "draftWordCount": 118,
+   "relatedAnswers": [
+    "how-to-check-a-contractor-is-licensed",
+    "living-in-the-house-during-a-renovation",
+    "what-order-to-pick-finishes"
+   ]
+  },
+  {
+   "id": 21,
+   "question": "How do I check a contractor is legit?",
+   "slug": "how-to-check-a-contractor-is-licensed",
+   "category": "hiring-and-project-planning",
+   "gmbService": "Licensed residential building contractor services",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Four checks, twenty minutes. One, look up the license on the state licensing board site yourself; do not accept a photo of a card, and confirm the name on the license matches the company you're paying. Two, call the insurance agent listed on the certificate and confirm the policy is active and covers your job type; certificates are trivially faked. Three, search the county clerk for liens and suits against the business name and the individual. Four, ask for two addresses of jobs finished 2+ years ago, not last month, because problems show up in year two. Then put the scope in writing. I'm a Florida certified residential contractor and I'd rather every homeowner did this, it clears out the people giving the trade a bad name.",
+   "draftWordCount": 127,
+   "relatedAnswers": [
+    "living-in-the-house-during-a-renovation",
+    "what-order-to-pick-finishes",
+    "contractors-not-calling-back"
+   ]
+  },
+  {
+   "id": 22,
+   "question": "Is an addition cheaper than moving?",
+   "slug": "home-addition-vs-moving",
+   "category": "additions-and-conversions",
+   "gmbService": "Home addition construction",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Sometimes, and the break-even is more about your lot and your current house than the build cost. Additions cost more per foot than new construction because you're tying into an existing structure, matching a roof line, and often upgrading the panel and the HVAC to carry the extra load. Add the cost of not living there comfortably for a few months. It pencils when you love the location, the lot has room inside setbacks, the existing house is structurally sound, and you're adding something the market wants, a bedroom and bath rather than a hobby room. It doesn't pencil when you're pushing the house well above the neighborhood ceiling. I'm a realtor and a residential contractor, so I run both numbers before anyone swings a hammer.",
+   "draftWordCount": 135,
+   "relatedAnswers": [
+    "can-i-build-an-adu-in-my-backyard",
+    "garage-conversion-resale-value",
+    "can-my-house-take-a-second-story"
+   ]
+  },
+  {
+   "id": 23,
+   "question": "Can I put an ADU in my backyard?",
+   "slug": "can-i-build-an-adu-in-my-backyard",
+   "category": "additions-and-conversions",
+   "gmbService": "ADU accessory dwelling unit construction",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Zoning answers this, not the internet. Call or email your county or city planning desk with your parcel ID and ask three specific questions: is an accessory dwelling unit permitted in this zoning district, what is the maximum size and required setback, and is separate utility metering allowed or required. Also check whether your HOA prohibits it regardless of what zoning says, and whether a septic system can handle another bedroom, which is the quiet killer in unincorporated areas. Some jurisdictions allow an attached in-law suite with no separate kitchen far more easily than a detached unit. Get that answer before you pay anyone for drawings. I'm a Florida certified residential contractor and I build these in Seminole and Orange County.",
+   "draftWordCount": 130,
+   "relatedAnswers": [
+    "garage-conversion-resale-value",
+    "can-my-house-take-a-second-story",
+    "is-this-wall-load-bearing"
+   ]
+  },
+  {
+   "id": 24,
+   "question": "Will converting the garage hurt resale?",
+   "slug": "garage-conversion-resale-value",
+   "category": "additions-and-conversions",
+   "gmbService": "Garage conversion",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Usually yes in a market where everyone else has a garage, and Central Florida is one of those. Appraisers will give you square footage credit if the work was permitted and the space is properly conditioned and finished, but buyers still deduct for the missing garage, and in a neighborhood of three-bed two-bath two-car homes you become the odd one. Where it does work: you genuinely need the bedroom or the in-law space, you plan to stay 7+ years, and you keep the garage door in place so it can be reversed. If you do it, permit it, insulate the slab edge and the walls properly, and put real HVAC on it, not a mini-split afterthought. I'm a realtor and a licensed residential contractor and I see the unpermitted ones get discounted hard.",
+   "draftWordCount": 133,
+   "relatedAnswers": [
+    "can-my-house-take-a-second-story",
+    "is-this-wall-load-bearing",
+    "is-a-primary-suite-addition-worth-it"
+   ]
+  },
+  {
+   "id": 25,
+   "question": "Can my house take a second story?",
+   "slug": "can-my-house-take-a-second-story",
+   "category": "additions-and-conversions",
+   "gmbService": "Second-story home addition",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Maybe, and a structural engineer answers it, not a contractor and definitely not a salesman. The three questions are whether the foundation and footings can carry the new load, whether the existing walls can, and whether your lot coverage and height limits allow it. In Florida with a block first floor you're often in decent shape for load, but the engineering and the tie-downs are not cheap. Budget for: engineering, temporary roof removal and weather protection, a new stair that eats floor area downstairs, a second HVAC zone or system, and probably a panel upgrade. Get the engineer's report before you get excited about plans, it's the cheapest step and it's the one that can end the conversation. I'm a Florida certified residential contractor.",
+   "draftWordCount": 124,
+   "relatedAnswers": [
+    "is-this-wall-load-bearing",
+    "is-a-primary-suite-addition-worth-it",
+    "in-law-suite-planning-mistakes"
+   ]
+  },
+  {
+   "id": 26,
+   "question": "How do I know if this wall is load-bearing?",
+   "slug": "is-this-wall-load-bearing",
+   "category": "additions-and-conversions",
+   "gmbService": "Open-concept layout conversion",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Clues, then an engineer. Clues that it is: it runs perpendicular to the joists above, it sits over a beam or a foundation wall, it's near the center of the house, it continues on the floor above, or the joists lap over it. Clues it isn't: parallel to joists, short, at the end of a run, obviously added later. But clues are not a permit. Removing a bearing wall needs a beam sized by an engineer, proper point loads carried down to footings, and an inspection. That last part matters most in Florida because the load path also carries uplift. People do this without permits all the time and it shows up at resale as a red flag. I'm a Florida certified residential contractor and the engineering letter is a few hundred dollars.",
+   "draftWordCount": 133,
+   "relatedAnswers": [
+    "is-a-primary-suite-addition-worth-it",
+    "in-law-suite-planning-mistakes",
+    "home-addition-vs-moving"
+   ]
+  },
+  {
+   "id": 27,
+   "question": "Is adding a primary suite worth it?",
+   "slug": "is-a-primary-suite-addition-worth-it",
+   "category": "additions-and-conversions",
+   "gmbService": "Master suite addition",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "It's one of the better additions for resale, but only up to your neighborhood ceiling. Going from three bed one bath to three bed two bath is the single highest-return change in most older housing stock, because the second full bath moves the house into a different buyer pool. Going from a perfectly fine primary to a grander one in a modest neighborhood returns very little. Practical notes: run the plumbing where it can tie in without trenching under the slab if at all possible, size the HVAC for the added load instead of hoping, and do not steal the closet or the dining room to make it work. I'm a realtor and a residential contractor, and I price the after-value before I price the build.",
+   "draftWordCount": 126,
+   "relatedAnswers": [
+    "in-law-suite-planning-mistakes",
+    "home-addition-vs-moving",
+    "can-i-build-an-adu-in-my-backyard"
+   ]
+  },
+  {
+   "id": 28,
+   "question": "Planning an in-law suite - what do we get wrong?",
+   "slug": "in-law-suite-planning-mistakes",
+   "category": "additions-and-conversions",
+   "gmbService": "In-law suite construction",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Three things, usually. One, accessibility is designed in later or not at all. If a parent is moving in, do a curbless shower, a 36-inch door, blocking in the walls for future grab bars and a bedroom that can take a hospital bed. It costs almost nothing during framing and a fortune afterwards. Two, sound. Share as few walls as possible, and if you must, insulate and use resilient channel. Three, the kitchen question, because a second full kitchen is often what flips a suite into a legal second dwelling with different zoning rules. A wet bar and a fridge frequently gets you 90% of the function with none of the fight. I'm a Florida certified residential contractor and I build these in Seminole County.",
+   "draftWordCount": 125,
+   "relatedAnswers": [
+    "home-addition-vs-moving",
+    "can-i-build-an-adu-in-my-backyard",
+    "garage-conversion-resale-value"
+   ]
+  },
+  {
+   "id": 29,
+   "question": "Got a $30k bathroom quote - is that insane?",
+   "slug": "bathroom-remodel-cost-central-florida",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Bathroom remodeling",
+   "cities": [
+    "lake-mary",
+    "longwood",
+    "sanford"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Not automatically, but you can't tell from the number. Ask for it broken out: demo and haul, plumbing rough and fixtures, electrical, framing, waterproofing, tile and setting materials, vanity and tops, glass, paint, and the allowances. A hall bath with a tub-shower combo and a stock vanity is a different animal from a primary with a curbless shower, a freestanding tub and relocated plumbing. The line I'd look at hardest is waterproofing: a proper bonded membrane or a foam pan system, and whether the glass is measured after tile. Cheap bathrooms fail at the pan. Get three quotes on the same written scope or you're comparing nothing. I'm a Florida certified residential contractor who does bathrooms in Lake Mary, Sanford and Longwood.",
+   "draftWordCount": 131,
+   "relatedAnswers": [
+    "tub-to-walk-in-shower-conversion",
+    "shower-leaking-behind-tile",
+    "reglaze-or-replace-a-bathtub"
+   ]
+  },
+  {
+   "id": 30,
+   "question": "Converting the tub to a walk-in shower - anything to know?",
+   "slug": "tub-to-walk-in-shower-conversion",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Walk-in shower conversion",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Yes, a few. Keep at least one tub in the house if you have small kids or plan to sell to families; losing the last tub costs you buyers. On the build: the drain usually has to move, which on a slab means cutting concrete, so price that in. Get the slope right, a quarter inch per foot to the drain, and waterproof the pan and at least the lower wall properly with a bonded membrane rather than relying on cement board alone. Curbless is lovely and is the accessibility-proof choice but needs the subfloor or slab recessed, so decide early. Niches go in the wet wall, not an exterior wall. I'm a Florida certified residential contractor and the pan is where the failures happen, every time.",
+   "draftWordCount": 127,
+   "relatedAnswers": [
+    "shower-leaking-behind-tile",
+    "reglaze-or-replace-a-bathtub",
+    "why-floor-tiles-crack-and-pop"
+   ]
+  },
+  {
+   "id": 31,
+   "question": "Shower is leaking behind the tile - what went wrong?",
+   "slug": "shower-leaking-behind-tile",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Waterproofing",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Almost always the waterproofing, not the grout. Grout is not waterproof and was never meant to be; it's the membrane behind the tile that keeps water out. Common failures: cement board with no membrane over it, a pre-formed pan that was never sloped correctly, the membrane not lapped up the curb and into the corners, or a mixed system where two incompatible products meet. Once water has been getting behind for a while you usually have wet framing and sometimes mold, so a patch on the surface is throwing money away. The honest fix is usually tear-out to the studs on the wet wall. I'm a Florida certified residential contractor and I'd rather tell someone that up front than sell them a re-grout that fails in eight months.",
+   "draftWordCount": 128,
+   "relatedAnswers": [
+    "reglaze-or-replace-a-bathtub",
+    "why-floor-tiles-crack-and-pop",
+    "cabinet-refacing-vs-replacing"
+   ]
+  },
+  {
+   "id": 32,
+   "question": "Reglaze the tub or replace it?",
+   "slug": "reglaze-or-replace-a-bathtub",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Bathtub refinishing",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Reglaze when the tub is structurally sound and the problem is surface: stains, dullness, small chips, an avocado-green colour you hate. A good refinish by someone who actually etches and preps lasts roughly 8-12 years; a cheap one peels in two. Replace when the tub is cracked, when it's a cheap thin acrylic that flexes, or when you're moving plumbing or retiling the surround anyway, because at that point the tub is the cheap part of the job. The thing people miss: reglazing the tub but not the surround tile ages badly, the new white makes the old tile look tired. Also ventilate hard, the chemicals are no joke. I'm a Florida certified residential contractor and I quote both ways.",
+   "draftWordCount": 120,
+   "relatedAnswers": [
+    "why-floor-tiles-crack-and-pop",
+    "cabinet-refacing-vs-replacing",
+    "quartz-vs-granite-countertops"
+   ]
+  },
+  {
+   "id": 33,
+   "question": "Tiles keep cracking / popping up - why?",
+   "slug": "why-floor-tiles-crack-and-pop",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Tile work replacement",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Usually one of four things, and none of them is the tile. One, movement: no expansion or control joints, or tile run tight to the walls with no perimeter gap, so the slab and the tile fight and the tile loses. Two, a crack in the slab telegraphing straight up, which needs an uncoupling or crack-isolation membrane, not more thinset. Three, poor coverage, hollow spots under the tile from spot-bonding instead of properly combing and back-buttering. Four, the wrong mortar for the tile, large-format porcelain needs an LFT mortar. Tap across the floor: hollow sounds tell you it's coverage. Fixing the tile without fixing the cause just resets the clock. I'm a Florida certified residential contractor and I always want to know which of the four it is first.",
+   "draftWordCount": 129,
+   "relatedAnswers": [
+    "cabinet-refacing-vs-replacing",
+    "quartz-vs-granite-countertops",
+    "lvp-flooring-over-a-concrete-slab"
+   ]
+  },
+  {
+   "id": 34,
+   "question": "Refacing vs replacing kitchen cabinets?",
+   "slug": "cabinet-refacing-vs-replacing",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Cabinet installation and refacing",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Reface when the boxes are solid, the layout works and you like where everything is. You're paying for doors, drawer fronts and veneer, and you keep your existing footprint. It's meaningfully cheaper and much faster. Replace when the boxes are particleboard that's swollen, when you want to change the layout, when you need different sizes, or when you want drawers instead of doors in the base cabinets, which is the single biggest usability upgrade in a kitchen and cannot be done by refacing. Middle path a lot of people miss: keep the boxes, replace the doors, and add roll-outs inside. I'm a Florida certified residential contractor and I open a door and look at the box edge first, that tells you which conversation you're having.",
+   "draftWordCount": 125,
+   "relatedAnswers": [
+    "quartz-vs-granite-countertops",
+    "lvp-flooring-over-a-concrete-slab",
+    "bathroom-remodel-cost-central-florida"
+   ]
+  },
+  {
+   "id": 35,
+   "question": "Quartz or granite?",
+   "slug": "quartz-vs-granite-countertops",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Quartz and granite countertop installation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Quartz for most kitchens: non-porous so no sealing, consistent pattern so the slab you pick is the slab you get, and better stain resistance. Its weaknesses are real though, it can scorch under a hot pan and it will yellow in direct sun, so it's the wrong pick for an outdoor kitchen or a sun-blasted window seat. Granite for outdoors, for heat, and for people who want a natural stone with genuine variation, at the cost of periodic sealing. Whichever you pick, the things that actually determine whether you're happy: seam placement, edge profile and whether they template after the cabinets are set. Go see your actual slab. I'm a Florida certified residential contractor and I send clients to the yard rather than picking from a sample chip.",
+   "draftWordCount": 128,
+   "relatedAnswers": [
+    "lvp-flooring-over-a-concrete-slab",
+    "bathroom-remodel-cost-central-florida",
+    "tub-to-walk-in-shower-conversion"
+   ]
+  },
+  {
+   "id": 36,
+   "question": "LVP over a slab - what prep do I need?",
+   "slug": "lvp-flooring-over-a-concrete-slab",
+   "category": "kitchens-and-bathrooms",
+   "gmbService": "Luxury vinyl plank flooring installation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Flatness and moisture, in that order. Most LVP wants the slab flat within about 3/16 inch over 10 feet; if it isn't, you'll get flex, gapping and locking-joint failures, so grind the high spots and use a self-leveller on the lows. Then moisture: Florida slabs are often on grade with marginal vapour barriers underneath, so do a calcium chloride or RH test rather than assuming, and use an underlayment or membrane rated for your reading. Leave the expansion gap the manufacturer specifies at every wall and vertical, including under the door jambs, and don't trap a floating floor under cabinets. And acclimate the boxes in the room. I'm a Florida certified residential contractor and moisture is what fails these floors here.",
+   "draftWordCount": 121,
+   "relatedAnswers": [
+    "bathroom-remodel-cost-central-florida",
+    "tub-to-walk-in-shower-conversion",
+    "shower-leaking-behind-tile"
+   ]
+  },
+  {
+   "id": 37,
+   "question": "Are impact windows worth the money in Florida?",
+   "slug": "are-impact-windows-worth-it-florida",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Impact window and door installation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "They're worth it for three reasons in this order: you never handle shutters again, the noise reduction is dramatic, and yes there's an insurance credit, though it's rarely enough alone to justify the price. Two things people get wrong. First, partial protection gets you very little, the wind mitigation credit largely wants every opening protected, including the garage door, which is the biggest and weakest opening on most houses. Second, installation is everything: the right fasteners at the right spacing into solid substrate, properly flashed and sealed, with a permit and an inspection. A great window installed badly leaks and fails. Get the NOA or Florida Product Approval number in writing. I'm a Florida certified residential contractor in Seminole County.",
+   "draftWordCount": 129,
+   "relatedAnswers": [
+    "stucco-cracks-cosmetic-or-structural",
+    "pool-cage-repair-or-replace",
+    "cracked-pool-deck-options"
+   ]
+  },
+  {
+   "id": 38,
+   "question": "What retrofits actually lower a Florida insurance bill?",
+   "slug": "retrofits-that-lower-florida-insurance",
+   "category": "inspections-and-insurance",
+   "gmbService": "Hurricane retrofit and structural reinforcement",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "In rough order of impact on the wind mitigation form: roof-to-wall connections (going from toe-nails to clips to straps is a big step each time), the roof deck attachment (nail size and spacing, or a re-nail during a re-roof), a secondary water barrier or sealed roof deck, opening protection on every opening including the garage door, and roof shape, which you can't change but which is credited. The cheapest real win most people have available: when you re-roof, pay for the deck re-nail and the sealed deck, it's a small adder during a job you're already doing and it's credited for years. Get a wind mit inspection after any of this. I'm a Florida certified residential contractor and people leave this money on the table constantly.",
+   "draftWordCount": 126,
+   "relatedAnswers": [
+    "how-to-compare-roof-replacement-quotes",
+    "when-to-get-a-florida-insurance-quote",
+    "inspection-report-many-items-should-i-walk"
+   ]
+  },
+  {
+   "id": 39,
+   "question": "Stucco cracks - cosmetic or should I worry?",
+   "slug": "stucco-cracks-cosmetic-or-structural",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Stucco repair and exterior finishing",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Read the pattern. Hairline cracks in a random web, or a fine crack over a control joint, are usually shrinkage and cosmetic. Worry about: diagonal cracks running from the corners of windows and doors, stair-step cracks following the block joints, horizontal cracks, anything you can fit a coin in, and any crack with staining or bulging around it. Bulging or a hollow sound when you tap means the stucco has delaminated from the substrate and water is already behind it, which on frame construction can mean rotted sheathing. The other Florida-specific one is cracking at the band where frame meets block, that joint moves and needs a proper detail, not caulk. I'm a Florida certified residential contractor and I'd rather look at a photo of the pattern than guess.",
+   "draftWordCount": 129,
+   "relatedAnswers": [
+    "pool-cage-repair-or-replace",
+    "cracked-pool-deck-options",
+    "cracked-driveway-resurface-or-replace"
+   ]
+  },
+  {
+   "id": 40,
+   "question": "Insurer says replace the roof - how do I judge quotes?",
+   "slug": "how-to-compare-roof-replacement-quotes",
+   "category": "inspections-and-insurance",
+   "gmbService": "Roof installation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Compare on the parts nobody itemises. Ask every bidder for: the shingle line and warranty, whether they're re-nailing the deck to current code and replacing bad sheathing at a stated per-sheet price, whether a secondary water barrier or self-adhered underlayment is included, new drip edge and valley metal versus reusing, new pipe boots, and how they handle the ridge vent. Also: is the permit pulled in their name, and are they carrying workers comp, not an exemption. On price, the cheapest bid usually skipped the deck re-nail and the secondary water barrier, which are exactly the two things that earn you insurance credit afterwards. Get the wind mitigation done after. I'm a Florida certified residential contractor and that's the list I'd hand a neighbour.",
+   "draftWordCount": 124,
+   "relatedAnswers": [
+    "when-to-get-a-florida-insurance-quote",
+    "inspection-report-many-items-should-i-walk",
+    "four-point-and-wind-mitigation-explained"
+   ]
+  },
+  {
+   "id": 41,
+   "question": "Pool cage got wrecked - repair or replace?",
+   "slug": "pool-cage-repair-or-replace",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Screen enclosure and lanai construction",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Depends whether the aluminum frame is sound. Re-screening a structurally fine cage is a fraction of the cost and a good value. Replace when the uprights are corroded at the base, where they meet the deck, which is where they always go first in Florida, or when the anchors have pulled or the whole structure has racked. Two things to check on any quote: the screen type (standard versus a heavier or pet-resistant mesh, and whether they're using a no-see-um mesh which cuts airflow) and whether the rebuild is engineered and permitted to the current wind load for your county. An unpermitted cage becomes a problem at resale and after the next storm. I'm a Florida certified residential contractor in Seminole County.",
+   "draftWordCount": 122,
+   "relatedAnswers": [
+    "cracked-pool-deck-options",
+    "cracked-driveway-resurface-or-replace",
+    "how-often-to-repaint-a-florida-house"
+   ]
+  },
+  {
+   "id": 42,
+   "question": "Pool deck is cracked - overlay, pavers, or tear out?",
+   "slug": "cracked-pool-deck-options",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Pool deck construction",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Look at why it cracked. If the slab is stable and the cracking is surface shrinkage, an overlay or a texture-and-coat is a reasonable, cheap-ish fix and will last if they prep and use a proper bond coat. If the slab has settled, heaved, or has cracks that are offset in height, an overlay just cracks again in the same place within a season, and you want tear-out or pavers set on a properly compacted base. Pavers have a real advantage here: they move with the ground and you can lift and reset a section instead of redoing the whole deck. Whatever you do, fix the drainage first or you'll do it twice. I'm a Florida certified residential contractor and drainage is the usual root cause.",
+   "draftWordCount": 126,
+   "relatedAnswers": [
+    "cracked-driveway-resurface-or-replace",
+    "how-often-to-repaint-a-florida-house",
+    "do-i-need-a-survey-before-a-fence"
+   ]
+  },
+  {
+   "id": 43,
+   "question": "Driveway is cracked all over - resurface or replace?",
+   "slug": "cracked-driveway-resurface-or-replace",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Concrete driveway replacement",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Resurfacing only hides cracks, it doesn't stop them, so the question is whether the base is still good. Signs you need replacement rather than a coating: sections at different heights, cracks wider than about a quarter inch, spalling where the surface is flaking off in sheets, or visible sinking near the apron. If you replace, the things that determine whether the new one cracks: a properly compacted base, adequate thickness (four inches is typical residential, thicker at the apron where trucks turn), fibre or mesh reinforcement, and control joints cut early and at sensible spacing, roughly every 8-10 feet. Tree roots are the other usual suspect. I'm a Florida certified residential contractor and the base is what people underpay for.",
+   "draftWordCount": 120,
+   "relatedAnswers": [
+    "how-often-to-repaint-a-florida-house",
+    "do-i-need-a-survey-before-a-fence",
+    "outdoor-kitchen-materials-florida"
+   ]
+  },
+  {
+   "id": 44,
+   "question": "How often should a Florida house be repainted?",
+   "slug": "how-often-to-repaint-a-florida-house",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Exterior painting",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Stucco with a good elastomeric or high-grade acrylic: roughly 7-12 years here, less on the south and west elevations, which take the sun and will always fail first. The lifespan is decided by prep, not by the paint. What should be in a quote: pressure wash and time to dry properly, scrape and treat any mildew, patch and seal cracks with the right flexible sealant rather than paint bridging them, caulk at all penetrations and trim joints, prime bare stucco, then two coats. If a bidder is spraying one heavy coat over unwashed stucco in a day, that's a three-year paint job. Also check they're not painting over a delaminated area. I'm a Florida certified residential contractor and prep is the whole job.",
+   "draftWordCount": 123,
+   "relatedAnswers": [
+    "do-i-need-a-survey-before-a-fence",
+    "outdoor-kitchen-materials-florida",
+    "are-impact-windows-worth-it-florida"
+   ]
+  },
+  {
+   "id": 45,
+   "question": "Putting up a fence - do I need a survey?",
+   "slug": "do-i-need-a-survey-before-a-fence",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Fence building",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Get one, or at least find the existing corners. Fences built on guesswork are the most common neighbour dispute there is, and moving one afterwards costs more than the survey did. Also check three things before you buy material: whether your jurisdiction requires a permit (many do, and it's cheap), what your HOA allows in terms of height, material and which side the finished face goes, and where any easements run, because a utility easement across the back means your fence may have to come out one day at your expense. Set posts in concrete below the frost line, which is not a thing here, but do go deep enough for wind load. I'm a Florida certified residential contractor.",
+   "draftWordCount": 119,
+   "relatedAnswers": [
+    "outdoor-kitchen-materials-florida",
+    "are-impact-windows-worth-it-florida",
+    "stucco-cracks-cosmetic-or-structural"
+   ]
+  },
+  {
+   "id": 46,
+   "question": "Insurer wants polybutylene gone - what's involved?",
+   "slug": "polybutylene-repipe-what-is-involved",
+   "category": "systems-and-maintenance",
+   "gmbService": "Whole-home repipe coordination",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "A whole-home repipe, and it's less awful than it sounds. Typically PEX run through the attic and dropped down walls, which means cutting drywall at each fixture and at the manifold, not trenching your slab. A normal three-bath house is often a few days of work plus drywall repair and paint, which is frequently a separate line and sometimes not included at all, so check. Things to ask: is drywall repair and texture-match included, are they replacing the angle stops and supply lines while they're in there (yes, do it), is the water heater connection being redone, and is the permit pulled and inspected, because your insurer will want proof. Get the permit documentation for your file. I'm a Florida certified residential contractor and I coordinate these constantly.",
+   "draftWordCount": 137,
+   "relatedAnswers": [
+    "hvac-quotes-different-sizes-manual-j",
+    "cut-a-florida-power-bill",
+    "aging-in-place-home-modifications"
+   ]
+  },
+  {
+   "id": 47,
+   "question": "Four HVAC quotes, four different sizes - who's right?",
+   "slug": "hvac-quotes-different-sizes-manual-j",
+   "category": "systems-and-maintenance",
+   "gmbService": "HVAC replacement coordination",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Whoever did a Manual J, and if none of them did, none of them are. Sizing by square footage or by what's currently installed is guessing, and oversizing is the classic Florida mistake: a too-big system cools fast, short-cycles, never runs long enough to pull humidity out, and you end up with a clammy 74-degree house and mould risk. Ask each bidder for the load calculation. Also ask what they're doing about the duct work, because leaky or undersized returns waste a big fraction of a new system's capacity, and about the condensate drain routing. Get the air handler's location and drain pan situation in writing if it's in the attic. I'm a Florida certified residential contractor and I ask for the Manual J every time.",
+   "draftWordCount": 126,
+   "relatedAnswers": [
+    "cut-a-florida-power-bill",
+    "aging-in-place-home-modifications",
+    "first-year-homeowner-maintenance-florida"
+   ]
+  },
+  {
+   "id": 48,
+   "question": "Best bang for buck to cut a Florida power bill?",
+   "slug": "cut-a-florida-power-bill",
+   "category": "systems-and-maintenance",
+   "gmbService": "Energy-efficiency home upgrades",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "In order of return here: air sealing first, which is unglamorous and cheap, sealing the attic penetrations, top plates, can lights and the duct boots before you add any insulation. Then bring attic insulation up to R-38 or better. Then seal and, if they're bad, replace duct work, because ducts in a 130-degree attic leaking 20% is very common and very expensive. Then a radiant barrier, which helps in Florida more than most places but far less than the first three. Windows are last on this list; they're a comfort and noise upgrade more than an energy one, and the payback period is long. Get a blower door test if you can. I'm a Florida certified residential contractor and the order matters more than the products.",
+   "draftWordCount": 126,
+   "relatedAnswers": [
+    "aging-in-place-home-modifications",
+    "first-year-homeowner-maintenance-florida",
+    "drywall-cracks-at-door-corners"
+   ]
+  },
+  {
+   "id": 49,
+   "question": "Making the house safe for an aging parent - where to start?",
+   "slug": "aging-in-place-home-modifications",
+   "category": "systems-and-maintenance",
+   "gmbService": "Aging-in-place accessibility remodeling",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Bathroom first, because that's where the falls happen. A curbless or low-threshold shower, a handheld on a slide bar, a comfort-height toilet, and real grab bars lagged into blocking or studs, not the suction-cup ones. Then lighting, which is badly underrated: motion-sensor night lighting from bed to bathroom prevents more falls than almost anything else. Then thresholds and rugs, a 36-inch door on at least one bathroom, and lever handles instead of knobs. If you're remodelling anything anyway, put plywood blocking in the walls now even if you don't hang the bars yet; it costs almost nothing during construction. I'm a Florida certified residential contractor and I build these in Central Florida, and the cheap stuff genuinely does most of the work.",
+   "draftWordCount": 122,
+   "relatedAnswers": [
+    "first-year-homeowner-maintenance-florida",
+    "drywall-cracks-at-door-corners",
+    "polybutylene-repipe-what-is-involved"
+   ]
+  },
+  {
+   "id": 50,
+   "question": "First-year homeowner - what should I actually be doing?",
+   "slug": "first-year-homeowner-maintenance-florida",
+   "category": "systems-and-maintenance",
+   "gmbService": "General repairs & maintenance",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Florida-specific list. Monthly: check the AC condensate drain line and flush it, a clogged line is the number one cause of ceiling damage here. Change the filter. Quarterly: run water in unused drains, check under sinks and around the water heater for damp, test GFCIs. Twice a year: clear the gutters before the wet season, walk the roof line with binoculars looking at boots and flashing, trim branches back off the roof, check the dryer vent. Annually: HVAC service, re-caulk the tub and shower, check the attic for daylight and wet insulation after a hard rain. Know where your water shutoff is before you need it. I'm a Florida certified residential contractor and 90% of the expensive calls I get started as one of those.",
+   "draftWordCount": 125,
+   "relatedAnswers": [
+    "drywall-cracks-at-door-corners",
+    "polybutylene-repipe-what-is-involved",
+    "hvac-quotes-different-sizes-manual-j"
+   ]
+  },
+  {
+   "id": 51,
+   "question": "How do people keep flips from blowing the budget?",
+   "slug": "how-to-keep-a-flip-on-budget",
+   "category": "investors-and-landlords",
+   "gmbService": "Fix-and-flip renovation for investors",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "By scoping before buying, not after. The overruns I see are almost never the kitchen; they're the things you can't see on a walkthrough: the panel, the plumbing material, the roof, an unpermitted addition that has to be legalised or removed, and a slab or framing issue hidden under flooring. So: get a real inspection even on a cash flip, pull the permit history on the parcel, and put a 15% contingency on top of a line-item scope, not a lump sum. Then get the scope written well enough that three contractors bid the same thing. And fix the unsexy stuff, because the appraiser and the buyer's inspector will find it. I'm a realtor and a Florida certified residential contractor and I scope flips for investors in Seminole and Orange County: thehousebossfl.com",
+   "draftWordCount": 132,
+   "relatedAnswers": [
+    "what-to-replace-between-tenants",
+    "is-a-property-manager-worth-ten-percent",
+    "central-florida-rental-market"
+   ]
+  },
+  {
+   "id": 52,
+   "question": "What's actually worth replacing between tenants?",
+   "slug": "what-to-replace-between-tenants",
+   "category": "investors-and-landlords",
+   "gmbService": "Rental property turnover renovation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Spend on the things that fail and get you a call at 11pm, skimp on the things that look nice for a month. Worth it: LVP instead of carpet everywhere except maybe bedrooms, because it survives and it cleans; one durable paint colour across the whole portfolio so touch-ups need no matching; solid-core or at least decent hardware; and replacing angle stops, supply lines and the wax ring proactively, they're pennies and they flood units. Not worth it: high-end fixtures, trendy tile, anything with a finish that shows water spots. And take dated photos at move-in and move-out of every room, it settles deposit disputes instantly. I'm a Florida certified residential contractor who does turnovers for Seminole and Orange County landlords: thehousebossfl.com",
+   "draftWordCount": 122,
+   "relatedAnswers": [
+    "is-a-property-manager-worth-ten-percent",
+    "central-florida-rental-market",
+    "how-to-keep-a-flip-on-budget"
+   ]
+  },
+  {
+   "id": 53,
+   "question": "What's actually worth fixing before we list?",
+   "slug": "what-to-fix-before-selling",
+   "category": "buying-and-selling",
+   "gmbService": "Pre-sale home renovation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Very short list. Paint in a neutral, deep clean including grout and windows, landscaping and pressure washing, and fix anything that will show up on an inspection and spook a buyer: active leaks, a dead outlet circuit, a broken garage door opener, rotted trim. In Florida add the roof and the HVAC age conversation, because those drive the buyer's insurance quote, and an uninsurable house is a dead listing. What is usually not worth it right before a sale: a full kitchen remodel, a bathroom gut, or new flooring throughout, you rarely get the money back and you delay the listing. Buyers discount a dated kitchen less than they discount a scary inspection. I'm a realtor and a licensed residential contractor, so I price the fix and the after-value together: thehousebossfl.com",
+   "draftWordCount": 131,
+   "relatedAnswers": [
+    "which-renovations-add-value",
+    "lake-mary-vs-longwood-vs-oviedo",
+    "is-lake-mary-worth-the-premium"
+   ]
+  },
+  {
+   "id": 54,
+   "question": "Is a property manager worth 10%?",
+   "slug": "is-a-property-manager-worth-ten-percent",
+   "category": "investors-and-landlords",
+   "gmbService": "Property management",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Worth it if you're more than about 45 minutes away, if you have a day job that can't take a Tuesday-afternoon call, or if you own more than two or three units and haven't built a vendor bench. Not worth it if you're local, handy, and have one solid tenant in one house. What you're really buying is a vendor list and a legal process, not rent collection, so judge a manager on those: ask who their plumber and AC company are and what their response time is, and ask how many evictions they filed last year and how they went. Also read the management agreement for the markup on maintenance, that's where the real cost usually hides. I'm a residential contractor in Central Florida and the vendor bench is the whole value.",
+   "draftWordCount": 133,
+   "relatedAnswers": [
+    "central-florida-rental-market",
+    "how-to-keep-a-flip-on-budget",
+    "what-to-replace-between-tenants"
+   ]
+  },
+  {
+   "id": 55,
+   "question": "Is Central Florida still a decent rental market?",
+   "slug": "central-florida-rental-market",
+   "category": "investors-and-landlords",
+   "gmbService": "Property investing",
+   "cities": [
+    "orlando"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "It's a market where the operating expenses decide the deal, not the rent. Rents have held up reasonably, but run your numbers with current insurance quotes, not last year's, and with a real roof and HVAC reserve, because in this climate a 15-year roof and a 12-year AC are not pessimistic. The submarkets behave very differently: Seminole County is steadier and more owner-occupied, the Orlando tourist corridor is a different business entirely with different rules, and some Osceola growth areas have CDDs that quietly eat your cash flow. Check whether a CDD assessment is on the tax bill before you model anything. I'm a realtor and a licensed residential contractor here and I scope rehab budgets for out-of-state investors.",
+   "draftWordCount": 119,
+   "relatedAnswers": [
+    "how-to-keep-a-flip-on-budget",
+    "what-to-replace-between-tenants",
+    "is-a-property-manager-worth-ten-percent"
+   ]
+  },
+  {
+   "id": 56,
+   "question": "Which renovations actually add value?",
+   "slug": "which-renovations-add-value",
+   "category": "buying-and-selling",
+   "gmbService": "Remodeling ROI consultation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "The ones that fix a functional deficiency, not the ones that upgrade something already adequate. Adding a second full bathroom to a one-bath house, adding a bedroom where the layout allows, replacing a roof or HVAC that's at end of life, fixing an unpermitted conversion so it counts as square footage: those move the number. Kitchens and bathrooms return part of their cost, more if they were genuinely dated, much less if they were merely not your taste. Almost nothing returns above 100% except sweat equity and correcting something broken. And anything above your neighbourhood's ceiling returns close to zero. I'm a realtor and a Florida certified residential contractor, so I can price the build and the after-value in the same conversation, which is the only way this question gets a real answer.",
+   "draftWordCount": 133,
+   "relatedAnswers": [
+    "lake-mary-vs-longwood-vs-oviedo",
+    "is-lake-mary-worth-the-premium",
+    "is-sanford-worth-buying-into"
+   ]
+  },
+  {
+   "id": 57,
+   "question": "Live in the house during a whole-house reno?",
+   "slug": "living-in-the-house-during-a-renovation",
+   "category": "hiring-and-project-planning",
+   "gmbService": "Home renovations",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Possible, miserable, and usually slower. The cost of moving out for 3-4 months is real money, but living in it has costs too: the crew works around you so productivity drops, dust protection has to be constant rather than good enough, and you cannot do floors, HVAC or a whole-house repipe efficiently in phases. The compromise that usually works: move out for the demo and rough-in phase, which is the loud, dusty, no-water part, and move back for finishes. If you must stay throughout, insist on a sealed zone with negative pressure and a working kitchen somewhere, even a temporary one in the garage. And agree the working hours in writing up front. I'm a Florida certified residential contractor and I'd rather set that expectation on day one.",
+   "draftWordCount": 128,
+   "relatedAnswers": [
+    "what-order-to-pick-finishes",
+    "contractors-not-calling-back",
+    "contractor-wants-fifty-percent-upfront"
+   ]
+  },
+  {
+   "id": 58,
+   "question": "Outdoor kitchen in Florida - what actually survives?",
+   "slug": "outdoor-kitchen-materials-florida",
+   "category": "exterior-and-florida-climate",
+   "gmbService": "Outdoor kitchen construction",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Assume everything gets salt air, UV and afternoon rain. What lasts: a block or masonry base rather than wood framing, marine-grade polymer or powder-coated 316 stainless cabinetry (304 will pit near the coast), granite or a proper outdoor-rated stone rather than quartz, which yellows in UV. Cover the whole thing if you possibly can, a roof over it doubles the life of everything under it. Practical stuff people forget: a GFCI circuit that's actually rated for the load, a gas line sized for the grill rather than a dozen tank swaps a year, and slope on the counter and the deck so water runs away from the cabinets. Seal the stone annually. I'm a Florida certified residential contractor in Seminole County.",
+   "draftWordCount": 121,
+   "relatedAnswers": [
+    "are-impact-windows-worth-it-florida",
+    "stucco-cracks-cosmetic-or-structural",
+    "pool-cage-repair-or-replace"
+   ]
+  },
+  {
+   "id": 59,
+   "question": "What order should I pick finishes in?",
+   "slug": "what-order-to-pick-finishes",
+   "category": "hiring-and-project-planning",
+   "gmbService": "Interior design",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Pick the hardest-to-change and most-constrained thing first and work outward. Usually that's the tile or the stone, because those have limited palettes and lead times, then cabinets, then counters, then paint, which is the easiest thing in the world to change and should always be last. Picking paint first and then trying to find a tile that matches it is the classic way to spend three weekends miserable in a tile shop. Also: get physical samples, look at them in the actual room at morning and evening, and lay the tile out on the floor before anyone sets it. Order everything before demo starts, lead times are what stall jobs. I'm a Florida certified residential contractor and 'we'll pick that later' is the phrase that adds two weeks.",
+   "draftWordCount": 128,
+   "relatedAnswers": [
+    "contractors-not-calling-back",
+    "contractor-wants-fifty-percent-upfront",
+    "how-to-check-a-contractor-is-licensed"
+   ]
+  },
+  {
+   "id": 60,
+   "question": "Three contractors, no callbacks - what am I doing wrong?",
+   "slug": "contractors-not-calling-back",
+   "category": "hiring-and-project-planning",
+   "gmbService": "Consultation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Probably nothing, but you can make yourself an easier job to bid. Contractors triage, and vague small jobs go to the bottom. What helps: write the scope down in a few bullets, include photos and rough dimensions, say clearly what your budget range is rather than 'what would it cost', and say when you want it done and that you're flexible if that's true. Say up front you'll pull permits and you expect a licensed and insured contractor, that filters for the ones you want. And call rather than emailing, mornings before 8 or after 5. If it's genuinely a two-hour job, you may want a handyman, not a GC. I'm a licensed residential contractor and honestly a well-written scope gets answered first every time.",
+   "draftWordCount": 125,
+   "relatedAnswers": [
+    "contractor-wants-fifty-percent-upfront",
+    "how-to-check-a-contractor-is-licensed",
+    "living-in-the-house-during-a-renovation"
+   ]
+  },
+  {
+   "id": 61,
+   "question": "Cracks keep coming back at the door corners - normal?",
+   "slug": "drywall-cracks-at-door-corners",
+   "category": "systems-and-maintenance",
+   "gmbService": "Drywall repair",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "hire-contractor"
+   ],
+   "draftBody": "Cracks at the upper corners of doors and windows are the most common ones there are, because that's where the wall is weakest and where any movement concentrates. If they're hairline and they stop growing, it's seasonal movement and the fix is to tape rather than just caulk them: cut out the crack, tape with mesh or paper, three coats, feather wide, texture and paint. Caulk alone will always come back. Worry if they're wider than about an eighth of an inch, if they run diagonally across the wall rather than off the corner, if the door no longer closes squarely, or if you're seeing matching cracks in the slab or the exterior stucco. That pattern is a foundation conversation. I'm a Florida certified residential contractor.",
+   "draftWordCount": 126,
+   "relatedAnswers": [
+    "polybutylene-repipe-what-is-involved",
+    "hvac-quotes-different-sizes-manual-j",
+    "cut-a-florida-power-bill"
+   ]
+  },
+  {
+   "id": 62,
+   "question": "How early should I get an insurance quote in Florida?",
+   "slug": "when-to-get-a-florida-insurance-quote",
+   "category": "inspections-and-insurance",
+   "gmbService": "Home value consultation",
+   "cities": [
+    "lake-mary"
+   ],
+   "relatedServices": [
+    "buy"
+   ],
+   "draftBody": "Before you're in love, ideally before you write the offer. In Florida the insurability of a house is now part of its price, and a house you can't insure affordably is a house you can't buy. Get the roof age and material, the year built, the plumbing material, the electrical panel brand, and any wind mitigation report the seller has, then get a real quote from an independent agent, not an online estimate. Deal-breakers to watch: a roof over about 15 years old for shingle, polybutylene supply lines, Federal Pacific or Zinsco panels, cloth wiring, and an unpermitted addition. Any of those can turn a fine house into a surprise. I'm a realtor and a Florida certified residential contractor and I check this on every deal now.",
+   "draftWordCount": 127,
+   "relatedAnswers": [
+    "inspection-report-many-items-should-i-walk",
+    "four-point-and-wind-mitigation-explained",
+    "retrofits-that-lower-florida-insurance"
+   ]
+  }
+ ]
+}

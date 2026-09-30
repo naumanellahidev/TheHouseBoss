@@ -210,6 +210,109 @@ Rules:
 
 ---
 
+## 5a. Automatic title and description generation
+
+Added in phase 7. Every published record gets a title and a description whether
+or not anybody typed one, and there is exactly **one** generator producing them.
+
+### The modules
+
+| File | Owns |
+|---|---|
+| `lib/seo/auto/vocab.ts` | The words a record may be described with: singular property nouns, the one qualifier a title may carry, status wording, postal address abbreviations. |
+| `lib/seo/auto/compose.ts` | The arithmetic: character budgets, candidate fitting, clause groups, the brand ladder, sentence-safe openings. |
+| `lib/seo/auto/document.ts` | What a Tiptap body actually contains — words, headings, internal and external links, images and their alt text, the answer-first block, over-long paragraphs. |
+| `lib/seo/auto/generate.ts` | The record-specific composition. The only module other code imports. |
+| `lib/seo/auto/score.ts` | The on-page audit for one record, shared by the admin editors. |
+| `lib/seo/auto/ollama.ts` | Optional model polish. May only reword; a numeral not present in the source corpus is treated as invented and the answer is discarded. |
+| `lib/seo/auto/apply.ts` | Persists the result to `seo_pages` on publish. |
+
+### How composition works
+
+A generator offers the composer **several candidates, richest first**, and gets
+back the richest one that fits. It does not build one string and pad it.
+
+- **Titles** are a matrix of heads × tails. Tails carry facts (`4 Bed Pool
+  Home`, `Sold $663k`); heads carry the address at three levels of verbosity.
+  The loop spends the address's spelling before it spends a fact, so a long
+  address loses "Boulevard" and then loses "FL" — but never loses the city.
+- **Descriptions** are openings plus clause groups. An entry in the clause list
+  may be an array, which means "these are wordings of the same clause, longest
+  first, use at most one". Every clause list ends in a short rung, because the
+  band is eighteen characters wide and a description sitting at 138 with nothing
+  shorter than forty-six characters left to add cannot reach the floor.
+
+### The rules generation follows
+
+1. **The intent phrase comes first.** A listing description opens `4 bed, 3 bath
+   pool home for sale in Lake Mary, Florida`, not with the street address. On a
+   phone the first line is all that is shown.
+2. **Rich-result facts before prose.** Beds, baths, square footage, year and
+   price are what a `RealEstateListing` result displays and what an assistant
+   quotes back.
+3. **A record that is not for sale is never described as for sale.** Its page is
+   permanent (CLAUDE.md § 3 rule 11), so the copy has to stay true after the
+   sale. `scripts/check-seo-copy.mts` asserts this across every status.
+4. **Freshness only where it is the news.** A market update carries `Updated
+   September 2026` from `published_at`; an evergreen guide does not, because the
+   same clause only makes it look staler every month.
+5. **Nothing is inferred.** Every interpolated value is a restatement of a stored
+   column. On a property listing an invented number is a misrepresentation under
+   FREC advertising rules, not a style problem.
+
+### Precedence
+
+Her text, when it is publishable, beats anything generated — at every layer:
+
+```
+seo_pages override  →  record.meta_desc (if 140–158)  →  generated
+```
+
+`articleMetaDescription()` and the listing route's `listingDescription()` apply
+that order, so a page rendered before the publish-time write lands still uses
+the author's own words.
+
+### The guard
+
+`npm run check:seo-copy` (in `npm run guards`) generates copy for 1,050 listing
+and 108 article column combinations and asserts every title is within 43
+characters, every description inside 140–158, every one ends on a full stop, and
+no status is ever misdescribed. The failure it exists to catch is not a clumsy
+sentence — it is an **unwriteable** one: `seo_pages` has
+`check (char_length(description) between 140 and 158)`, so a generator producing
+138 characters does not produce a worse description, it produces a rejected row
+and a page that silently keeps whatever it had.
+
+---
+
+## 5b. The on-page audit (`lib/seo/auto/score.ts`)
+
+A pure function over one record returning `{ score, checks[], failed, warned }`.
+Each check has an id, a label, a status (`pass` / `warn` / `fail`), one sentence
+of plain-English detail and the editor tab that fixes it.
+
+It is pure on purpose: it runs on every keystroke in the admin form and again on
+the server, on the same inputs, so the two can never disagree. Anything needing a
+query — slug collisions, sitemap pings, coverage across records — belongs in
+Admin → SEO instead.
+
+Listings are checked on title length and city, description band and city
+position, slug shape, body length, headline, the Contractor's Take, the four
+rich-result specs, price, features, photograph count, alt-text coverage and
+whether a community is linked.
+
+Articles are checked on title, description, excerpt, word count, the
+**answer-first block**, section headings, heading-level order, FAQ pairs,
+internal links, outbound citations, paragraph length, cover image and its alt
+text, body-image alt text, city and tags.
+
+Weights are set so that what cannot be fixed later weighs most. A missing
+description is a five-second fix at any time; a listing published without
+photographs has already been crawled without them, and a sold listing's larger
+derivatives are deleted after seven days (CLAUDE.md § 3 rule 10).
+
+---
+
 ## 6. JSON-LD
 
 `lib/seo/jsonld.ts`, one builder per type. Rendered as a `<script

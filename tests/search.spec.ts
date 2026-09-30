@@ -11,8 +11,70 @@ import { expect, test } from "@playwright/test";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+/**
+ * Whether the demo listings are still in the database.
+ *
+ * ── Why this check exists ─────────────────────────────────────────────────
+ *
+ * Every assertion below about a specific property — the price on
+ * `123-lakeview-dr-lake-mary`, the archived-photos notice on the sold Longwood
+ * record — is an assertion about `supabase/seed.sql`. The client's database no
+ * longer has those rows: the demo listings were deleted before handover so she
+ * starts from an empty site, which is what she asked for.
+ *
+ * A test that fails because the fixture it needs was deliberately removed is
+ * noise, and noise in a suite is how a real failure gets ignored. So these tests
+ * now SKIP with a reason that names the fixture, and the rest of the file — the
+ * facet URLs, the 404, the redirect trigger, which need no particular listing —
+ * keeps running.
+ *
+ * Re-seed with `npm run db:seed` and they all come back.
+ */
+const SEED_LISTING = "123-lakeview-dr-lake-mary";
+let seedPresent: boolean | null = null;
+
+async function hasSeededListings(): Promise<boolean> {
+  if (seedPresent !== null) return seedPresent;
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    seedPresent = false;
+    return seedPresent;
+  }
+
+  const db = createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { persistSession: false },
+  });
+  const { data } = await db
+    .from("listings")
+    .select("slug")
+    .eq("slug", SEED_LISTING)
+    .maybeSingle();
+
+  seedPresent = Boolean(data);
+  return seedPresent;
+}
+
+/**
+ * Call first in any test that needs a particular seeded listing.
+ *
+ * The two reasons are kept apart deliberately. "The fixture was deleted" and "I
+ * could not look" are different states, and a skip that reports the wrong one
+ * sends whoever reads the run at the wrong problem.
+ */
+async function requireSeededListings(): Promise<void> {
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    test.skip(true, "needs SUPABASE_SERVICE_ROLE_KEY to check whether the demo listings exist");
+    return;
+  }
+
+  test.skip(
+    !(await hasSeededListings()),
+    `needs the demo listings from supabase/seed.sql — ${SEED_LISTING} is not in the database`,
+  );
+}
+
 test.describe("search", () => {
   test("the bare search page lists homes and announces the count", async ({ page }) => {
+    await requireSeededListings();
     await page.goto("/search");
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
@@ -31,6 +93,7 @@ test.describe("search", () => {
     page,
     context,
   }) => {
+    await requireSeededListings();
     await page.goto("/search");
 
     // Apply a city through the real control, not by typing a URL.
@@ -53,6 +116,7 @@ test.describe("search", () => {
   });
 
   test("back and forward restore the previous filter state", async ({ page }) => {
+    await requireSeededListings();
     await page.goto("/search");
 
     await page.getByLabel("Filter by city").selectOption("lake-mary");
@@ -148,6 +212,7 @@ test.describe("search", () => {
 
 test.describe("listing detail", () => {
   test("renders price, facts, description and the contact card", async ({ page }) => {
+    await requireSeededListings();
     await page.goto("/listing/123-lakeview-dr-lake-mary");
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Lakeview");
@@ -157,6 +222,7 @@ test.describe("listing detail", () => {
   });
 
   test("emits RealEstateListing structured data with an Offer", async ({ page }) => {
+    await requireSeededListings();
     await page.goto("/listing/123-lakeview-dr-lake-mary");
 
     const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
@@ -173,6 +239,7 @@ test.describe("listing detail", () => {
   });
 
   test("a sold, purged listing still resolves and explains itself", async ({ page }) => {
+    await requireSeededListings();
     const response = await page.goto("/listing/41-longwood-oaks-ave-longwood");
 
     // HR10/HR11: the page survives the purge.
@@ -198,6 +265,7 @@ test.describe("listing detail", () => {
   test("the gallery lightbox is keyboard operable and returns focus on close", async ({
     page,
   }) => {
+    await requireSeededListings();
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/listing/123-lakeview-dr-lake-mary");
 
@@ -225,6 +293,7 @@ test.describe("listing detail", () => {
 
 test.describe("sold archive", () => {
   test("lists sold homes and filters by city", async ({ page }) => {
+    await requireSeededListings();
     await page.goto("/sold");
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Recently sold");

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AnswerLinks } from "@/components/site/answer-links";
 import { GuideLayout } from "@/components/site/guide-layout";
 import { JsonLd } from "@/components/site/json-ld";
 import { AnswerFirst, Callout, TableScroll } from "@/components/site/prose";
@@ -13,6 +14,7 @@ import {
   faqJsonLd,
   serviceJsonLd,
 } from "@/lib/seo/jsonld";
+import { ANSWERS } from "@/lib/content/answers";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { searchListings } from "@/lib/queries/listings";
 import { EMPTY_RESULT, safeQuery } from "@/lib/queries/safe";
@@ -395,6 +397,20 @@ export default async function AssumablePage() {
 
         <h2 id="current">Current assumable listings</h2>
       </GuideLayout>
+
+      {/* The full answers, linked from the guide that shares their subject (docs/18 § 5). */}
+      <section className="section-y bg-surface-sunken">
+        <div className="container-page">
+          <AnswerLinks
+            answers={ANSWERS.filter((a) => ["assumable-mortgage-realistic", "sell-now-or-wait", "own-agent-for-new-construction", "appraisal-came-in-low-options"].includes(a.slug))}
+            title="Questions about rates and timing"
+            lead="Whether an assumption is realistic, and what the alternatives look like from both sides of the market."
+            moreHref="/answers"
+            moreLabel="Every answer"
+          />
+        </div>
+      </section>
+
 
       {/* The live block docs/05 requires, with an alert signup as its empty
           state rather than an empty grid. */}

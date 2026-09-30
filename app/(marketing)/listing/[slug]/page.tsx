@@ -26,6 +26,13 @@ import {
 import { getAcceptedLinks } from "@/lib/queries/links";
 import { RelatedLinks } from "@/components/site/related-links";
 import { listingAnswerFirst } from "@/lib/seo/auto/answer-first";
+import {
+  autoListingDescription,
+  autoListingTitle,
+  DESC_MAX,
+  firstSentences,
+  inBand,
+} from "@/lib/seo/auto/generate";
 import { breadcrumbJsonLd, listingJsonLd } from "@/lib/seo/jsonld";
 import { getSeoOverride } from "@/lib/queries/seo";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -88,11 +95,6 @@ export async function generateMetadata({
     return { title: "Listing not found", robots: { index: false, follow: true } };
   }
 
-  const price =
-    listing.status === "sold" && listing.soldPrice != null
-      ? listing.soldPrice
-      : listing.price;
-
   const override = await getSeoOverride(`/listing/${listing.slug}`);
 
   /*
@@ -119,15 +121,8 @@ export async function generateMetadata({
   return buildMetadata({
     override,
     noindex,
-    title:
-      listing.metaTitle ||
-      `${listing.address}, ${listing.city.name}, FL — ${formatPrice(price)}`,
-    // Falls through until something clears the 140-character floor — a short
-    // description gets padded by search engines with text we did not choose —
-    // and lands on the generated one, which is unconditional. An earlier
-    // version used .find()! and returned undefined for a short address, which
-    // took the whole build down.
-    description: listingDescription(listing, price),
+    title: listing.metaTitle || autoListingTitle(listing),
+    description: listingDescription(listing),
     path: `/listing/${listing.slug}`,
     // null: this route generates its own card in opengraph-image.tsx. A
     // property photograph scaled to 1200x630 is unreadable, and the card
@@ -140,20 +135,30 @@ export async function generateMetadata({
 }
 
 /**
- * Always at least 140 characters. The order is: what she wrote, then the
- * opening of the description, then a generated line that is long enough by
- * construction.
+ * Always in band. What she wrote, then whole sentences of her description, then
+ * the generator — which is long enough by construction.
+ *
+ * ── Why this no longer writes its own sentence ────────────────────────────
+ *
+ * It used to. This route, the admin's SEO tab and `lib/seo/auto/generate.ts`
+ * each had their own idea of what a listing's description says, so the same
+ * property was described three different ways depending on which one produced
+ * the copy in front of you — and the version this route composed was the one
+ * that reached a crawler when `seo_pages` had no row yet. One generator now,
+ * and this route chooses between her text and its output rather than competing
+ * with it.
+ *
+ * `firstSentences` rather than `slice(0, 155)`: a description cut at a fixed
+ * character count ends mid-word, and that is what a search engine displays.
  */
-function listingDescription(listing: Listing, price: number): string {
-  const generated =
-    `${listing.address}, ${listing.city.name}, Florida — ${formatPrice(price)}. ` +
-    `Photographs, key facts, the full description and a licensed residential ` +
-    `contractor's read on the condition of the property.`;
+function listingDescription(listing: Listing): string {
+  const own = listing.metaDesc?.trim();
+  if (own && inBand(own)) return own;
 
-  for (const candidate of [listing.metaDesc, listing.description?.slice(0, 155)]) {
-    if (candidate && candidate.length >= 140) return candidate;
-  }
-  return generated;
+  const opening = firstSentences(listing.description ?? "", DESC_MAX);
+  if (inBand(opening)) return opening;
+
+  return autoListingDescription(listing);
 }
 
 export default async function ListingPage({

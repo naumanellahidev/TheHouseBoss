@@ -108,6 +108,12 @@ export const primaryNav: NavEntry[] = [
     href: "/hire-contractor",
     label: "Hire Contractor",
   },
+  /*
+    The answer hub (docs/18 § 5). It carries 62 question pages, and every one
+    of them needs a route in from the chrome or it is an orphan — the header is
+    the link that makes the whole hub reachable rather than only findable.
+  */
+  { href: "/answers", label: "Answers" },
   { href: "/market-updates", label: "Insights" },
   /*
     Reviews is in the header as well as the footer.
@@ -141,6 +147,7 @@ export const footerNav: { heading: string; items: NavLink[] }[] = [
       { href: "/guides/va-home-buyer", label: "VA Home-Buyer Guide" },
       { href: "/assumable-mortgage-homes", label: "Assumable Mortgages" },
       { href: "/hire-contractor", label: "Hire Contractor" },
+      { href: "/answers", label: "Answers" },
       { href: "/market-updates", label: "Insights" },
     ],
   },

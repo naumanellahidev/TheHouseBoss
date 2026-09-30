@@ -57,6 +57,8 @@ tests/.auth/
 .claude/settings.local.json
 backups/
 lighthouse-results.json
+# local `next start` output, written when verifying a production build
+.next-start.log
 
 .vercel
 .env*

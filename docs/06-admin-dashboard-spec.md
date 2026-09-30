@@ -190,14 +190,35 @@ becomes useless.
   a distinct callout on the public page. Helper text: "Your construction read on
   this property. This is what no other agent's listing has."
 
-**Tab 5 — SEO**
+**Tab 5 — SEO** *(rebuilt in phase 7)*
 
-- Slug (auto-generated from address + city, editable, uniqueness checked live).
-  Changing a published slug shows: "A redirect from the old URL will be created
-  automatically."
-- Meta title (with a 60-char guide and a live Google-result preview)
-- Meta description (155-char guide)
-- OG image (defaults to the cover photo)
+Rendered by `<RecordSeoPanel>` (`components/admin/seo/record-seo-panel.tsx`),
+shared with the article editor. Top to bottom:
+
+1. **Score and one button.** The weighted score from
+   `auditListing()` with a ring, the wording from `scoreLabel()`, a count of what
+   is open, and "Write it for me" — which fills both fields and saves nothing.
+2. **The fields.** Slug (auto-generated from address + city; changing a published
+   one creates the redirect automatically), meta title and meta description. Both
+   use the **real generated copy as their placeholder**, so blank means "publish
+   what you can see".
+3. **How this page appears.** A search result in Google's layout, and separately
+   *what an assistant would quote* — the Contractor's Take on a listing, the
+   answer-first block on an article. Two different questions: a result is judged
+   on whether somebody clicks it, an answer engine never shows the page at all.
+4. **What to do.** The failing and warning checks, one sentence each, with a
+   **Fix** button that switches to the tab that fixes it. Passing checks are in a
+   collapsed `<details>` — worth being able to read, not worth pushing the
+   failures off a phone.
+
+The previews run the real generator (`lib/seo/auto/generate.ts` is pure — no
+database, no `server-only`), so what the panel shows is exactly what publishing
+writes. The old panel showed *"Written for you on publish, from the address, price
+and specs above"*, which is true and tells you nothing about whether you would
+click on it.
+
+The OG image is the cover photo; listings also have a generated card at
+`opengraph-image.tsx`.
 
 **Tab 6 — Publish**
 
@@ -240,7 +261,12 @@ Editor:
 - Image insert goes through the same upload pipeline; images land under
   `articles/{id}/`.
 - Sidebar: kind, city, community, tags, cover image + alt, excerpt (auto-drafted
-  from the first paragraph, editable), slug, SEO fields, publish controls.
+  from the first paragraph, editable), slug, publish controls.
+- **Search and AI visibility** is a full-width section below the editor, not a
+  sidebar card — the same `<RecordSeoPanel>` the listing editor uses. The audit is
+  fourteen checks with a sentence each, and the checks that matter most are about
+  the BODY (the answer-first block, the heading outline, the internal links), so
+  they belong next to the body rather than beside the cover image.
 - Live word count and reading time.
 - Preview opens the real public template in a new tab with a draft token.
 
@@ -302,6 +328,38 @@ date, and where it is used.
   reach 1 GB in about 14 months."
 - Deleting media that is still referenced is blocked, with a link to the
   referencing entity.
+
+---
+
+## 9a. SEO (`/admin/seo`)
+
+Requires the `manage_seo` permission. Rebuilt in phase 7 as **five tabs**
+(`components/admin/seo/seo-workspace.tsx`) in the order somebody actually works,
+instead of one long scroll of five stacked panels — which put the answer to
+"what is wrong" above the answer to "where do I fix it", and both below a table
+nobody reads daily. The active tab lives in the URL hash, so a link to the link
+queue is a link somebody can send.
+
+| Tab | Shows |
+|---|---|
+| **Overview** | Metadata coverage, page counts, sitemap size and last ping, queue state — then a ranked findings list, each with the action that resolves it. |
+| **Pages** | Every row in `seo_pages`: path, title, description, lengths, noindex. Inline edit, badges for out-of-length and missing values. |
+| **Links** | The internal-link suggestions waiting for a decision. Nothing reaches a page until it is accepted. |
+| **Redirects** | The `redirects` table. A published URL is permanent (CLAUDE.md § 3 rule 11), so this is how a route ever changes. |
+| **Engine** | How it publishes (review vs automatic), what it may touch, **what it may never say**, and the job queue. |
+
+Two badges sit on the tabs themselves — the number of pages out of length or
+missing metadata, and the number of pending links — because those are the only
+two numbers that mean "there is work here".
+
+The **Engine** tab's third group is not a preference list. Those switches are
+what stop generated copy claiming a feature a record does not have, which is the
+rule the whole engine is built around; turning one off lets it write something
+the record does not support.
+
+Per-record actions do **not** live here. Filling one listing's alt text needs a
+listing id, so it belongs in that listing's editor (`<RecordSeoActions>`) — a
+site-wide button for it was written and removed for exactly that reason.
 
 ---
 

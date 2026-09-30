@@ -10,7 +10,6 @@ import {
   ChevronRight,
   ExternalLink,
   Save,
-  Sparkles,
 } from "lucide-react";
 
 import {
@@ -20,6 +19,14 @@ import {
   suggestSlug,
 } from "@/app/(admin)/admin/(shell)/listings/actions";
 import { suggestListingSeo } from "@/app/(admin)/admin/(shell)/seo-suggest";
+import { RecordSeoPanel } from "@/components/admin/seo/record-seo-panel";
+import {
+  firstSentences,
+  listingDescriptionFrom,
+  listingTitleFrom,
+  type ListingFacts,
+} from "@/lib/seo/auto/generate";
+import { auditListing } from "@/lib/seo/auto/score";
 import { TagInput } from "@/components/admin/tag-input";
 import { PhotoUploader } from "@/components/admin/listings/photo-uploader";
 import { PrePublishChecklist } from "@/components/admin/listings/pre-publish-checklist";
@@ -468,6 +475,53 @@ export function ListingForm({
     };
   }
 
+  /*
+    The facts the SEO generator reads, in one place.
+
+    Both the audit and the two previews are built from this, and so is the
+    "Write it for me" request — so what the panel shows and what the server
+    would write cannot drift apart. `lib/seo/auto/generate.ts` is a pure module
+    with no database and no `server-only`, which is what makes it possible to
+    run the real generator here on every keystroke instead of describing what it
+    would probably say.
+  */
+  const seoFacts = React.useMemo<ListingFacts>(
+    () => ({
+      address: values.address ?? "",
+      cityName: selectedCity?.name ?? "",
+      status: values.status ?? "active",
+      price: values.price ?? null,
+      soldPrice: values.soldPrice ?? null,
+      beds: values.beds ?? null,
+      baths: values.baths ?? null,
+      sqft: values.sqft ?? null,
+      yearBuilt: values.yearBuilt ?? null,
+      pool: Boolean(values.pool),
+      waterfront: Boolean(values.waterfront),
+      contractorsTake: values.contractorsTake ?? null,
+      propertyType: values.propertyType ?? null,
+      listingType: values.listingType ?? null,
+      features: values.features ?? null,
+    }),
+    [
+      values.address,
+      values.status,
+      values.price,
+      values.soldPrice,
+      values.beds,
+      values.baths,
+      values.sqft,
+      values.yearBuilt,
+      values.pool,
+      values.waterfront,
+      values.contractorsTake,
+      values.propertyType,
+      values.listingType,
+      values.features,
+      selectedCity?.name,
+    ],
+  );
+
   const [writingSeo, setWritingSeo] = React.useState(false);
 
   /*
@@ -484,16 +538,12 @@ export function ListingForm({
     const v = getValues();
 
     const result = await suggestListingSeo({
+      ...seoFacts,
+      // Read again at the moment of the press: `seoFacts` is memoized against a
+      // render, and a keystroke in a field this depends on may not have landed
+      // in it yet.
       address: v.address ?? "",
       cityName: selectedCity?.name ?? "",
-      status: v.status ?? "active",
-      price: v.price ?? null,
-      soldPrice: v.soldPrice ?? null,
-      beds: v.beds ?? null,
-      baths: v.baths ?? null,
-      sqft: v.sqft ?? null,
-      yearBuilt: v.yearBuilt ?? null,
-      pool: Boolean(v.pool),
       contractorsTake: v.contractorsTake ?? null,
     });
     setWritingSeo(false);
@@ -527,7 +577,42 @@ export function ListingForm({
 
   /* ── Photos ──────────────────────────────────────────────────────────── */
 
-  const photos = (values.photos ?? []) as Photo[];
+  // Memoized because the audit below depends on it, and a fresh array literal on
+  // every render would recompute the audit on every render.
+  const photos = React.useMemo(() => (values.photos ?? []) as Photo[], [values.photos]);
+
+  /*
+    The audit, recomputed as the listing is typed.
+
+    Deliberately not debounced. Every check is a pure function over values
+    already in memory — no query, no model, no network — and a score that lags
+    behind the field you are editing is worse than no score, because it credits
+    or blames the wrong keystroke.
+  */
+  const audit = React.useMemo(
+    () =>
+      auditListing({
+        ...seoFacts,
+        slug: values.slug ?? "",
+        metaTitle: values.metaTitle ?? null,
+        metaDesc: values.metaDesc ?? null,
+        description: values.description ?? null,
+        headline: values.headline ?? null,
+        photoCount: photos.length,
+        photosWithAlt: photos.filter((p) => p.alt?.trim()).length,
+        hasCommunity: Boolean(values.communityId),
+      }),
+    [
+      seoFacts,
+      values.slug,
+      values.metaTitle,
+      values.metaDesc,
+      values.description,
+      values.headline,
+      values.communityId,
+      photos,
+    ],
+  );
 
   function setPhotos(next: Photo[]) {
     setValue("photos", next, { shouldDirty: true, shouldValidate: true });
@@ -924,7 +1009,38 @@ export function ListingForm({
     ),
 
     seo: (
-      <div className="flex flex-col gap-5">
+      <RecordSeoPanel
+        audit={audit}
+        currentTab="seo"
+        onGoToTab={goToSection}
+        generate={{
+          onClick: writeSeo,
+          busy: writingSeo,
+          note: "Facts only. Every number it uses comes from this listing.",
+        }}
+        preview={{
+          crumb: `thehousebossfl.com › listing › ${values.slug || "…"}`,
+          /*
+            The REAL generated copy, not a placeholder describing it.
+
+            The generator is a pure module, so the preview can run it here and
+            show the exact title and description that publishing will write. The
+            old preview said "Written for you on publish, from the address, price
+            and specs above" — which is true, and tells you nothing about whether
+            you would click on it.
+          */
+          title: values.metaTitle?.trim() || listingTitleFrom(seoFacts),
+          description: values.metaDesc?.trim() || listingDescriptionFrom(seoFacts),
+          quote: values.contractorsTake?.trim()
+            ? firstSentences(values.contractorsTake, 240)
+            : values.description?.trim()
+              ? firstSentences(values.description, 240)
+              : null,
+          quoteLabel: values.contractorsTake?.trim()
+            ? "What an assistant would quote — your contractor's read"
+            : "What an assistant would quote",
+        }}
+      >
         <Field error={errorOf("slug")}>
           <FieldLabel required>Web address</FieldLabel>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -946,37 +1062,17 @@ export function ListingForm({
           </FieldDescription>
         </Field>
 
-        {/*
-          The generate button sits ABOVE both fields, not beside one of them.
-          It writes both, and a control that changes two fields should not look
-          like it belongs to the first.
-        */}
-        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface-sunken p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="max-w-[60ch] text-sm text-foreground-muted">
-              You do not have to fill these in. When you publish, a title and
-              description are written from this listing&rsquo;s own details. Use
-              the button to see what that will say, and edit it if you want
-              something different.
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              loading={writingSeo}
-              onClick={writeSeo}
-            >
-              <Sparkles aria-hidden="true" />
-              Write it for me
-            </Button>
-          </div>
-        </div>
-
         <TextField
           name="metaTitle"
           label="Meta title"
           register={register}
           error={errorOf("metaTitle")}
-          description={`${(values.metaTitle ?? "").length} / 60 is the practical limit before search results truncate it.`}
+          placeholder={listingTitleFrom(seoFacts)}
+          description={
+            values.metaTitle?.trim()
+              ? `${values.metaTitle.length} characters. Google shows about 60 including the site name.`
+              : "Leave it blank and the line in the preview above is what gets published."
+          }
         />
 
         <TextareaField
@@ -985,31 +1081,12 @@ export function ListingForm({
           register={register}
           error={errorOf("metaDesc")}
           rows={3}
-          maxLength={155}
+          maxLength={158}
           currentLength={(values.metaDesc ?? "").length}
-          description="Optional. Written for you on publish unless you fill it in."
+          placeholder={listingDescriptionFrom(seoFacts)}
+          description="Leave it blank and the description in the preview above is what gets published."
         />
-
-        {/* Search-result preview. Shows what the page will actually look like
-            in a result, which is far more useful than two character counters. */}
-        <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface-sunken p-4">
-          <p className="text-overline font-semibold tracking-[0.12em] text-accent-quiet uppercase">
-            Search result preview
-          </p>
-          <p className="truncate text-xs text-foreground-muted">
-            thehousebossfl.com › listing › {values.slug || "…"}
-          </p>
-          <p className="line-clamp-1 text-lead font-medium text-info">
-            {values.metaTitle?.trim() ||
-              `${values.address || "Address"}, ${selectedCity?.name ?? "City"}, FL`}
-          </p>
-          <p className="line-clamp-2 text-sm text-foreground-muted">
-            {values.metaDesc?.trim() ||
-              values.description?.trim().slice(0, 155) ||
-              "Written for you on publish, from the address, price and specs above."}
-          </p>
-        </div>
-      </div>
+      </RecordSeoPanel>
     ),
 
     publish: (

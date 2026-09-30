@@ -1,9 +1,9 @@
 import { ShieldAlert } from "lucide-react";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
-import { HealthPanel } from "@/components/admin/seo/health-panel";
-import { SeoConsole } from "@/components/admin/seo/seo-console";
+import { SeoWorkspace } from "@/components/admin/seo/seo-workspace";
 import { EmptyState } from "@/components/site/empty-state";
+import { ANSWERS } from "@/lib/content/answers";
 import { getAdminIdentity } from "@/lib/auth/permissions";
 import {
   getEngineSettings,
@@ -14,20 +14,33 @@ import {
 } from "@/lib/queries/platform";
 import { getAdminSettings } from "@/lib/queries/settings";
 
+/**
+ * More than thirty days since the last sitemap ping.
+ *
+ * A plain function outside the component on purpose. Reading a clock while
+ * rendering makes a component return different output from identical props,
+ * which React calls impure and the lint rule refuses — so the subtraction is
+ * done here and the component is handed a boolean. This page is dynamic, so it
+ * is recomputed on every visit.
+ */
+function isSitemapStale(lastPing: string | null): boolean {
+  if (!lastPing) return false;
+  return Date.now() - new Date(lastPing).getTime() > 30 * 86_400_000;
+}
+
 export const dynamic = "force-dynamic";
+export const metadata = { title: "SEO" };
 
 /**
- * The SEO centre.
+ * The SEO centre — docs/06 § 12.
  *
- * Read-only until now: it listed `seo_pages` and said, in as many words, that
- * there was deliberately no button. That was true while metadata was typed by
- * hand into each record and this table was a curiosity. Generation changed the
- * question — the useful one is "what is missing", and it has to be answerable
- * and fixable from one screen.
+ * This file fetches and checks the permission; every control lives in
+ * `SeoWorkspace`, because almost all of it is buttons. That is the split every
+ * other admin screen uses.
  *
- * The work lives in `SeoConsole`, a client component, because almost all of it
- * is buttons. This file stays a server component that fetches and checks the
- * permission, which is the split every other admin screen uses.
+ * The screen was one long scroll of five stacked panels. It is now five tabs
+ * in the order somebody actually works: what is wrong, the pages themselves,
+ * the link queue, redirects, then the engine that writes it all.
  */
 export default async function SeoPage() {
   const identity = await getAdminIdentity();
@@ -58,39 +71,33 @@ export default async function SeoPage() {
     ]);
 
   /*
-    The static routes the sitemap always carries, plus one entry per published
-    record. Counted here rather than by fetching /sitemap.xml and parsing it:
-    the numbers come from the same rows the sitemap is built from, and an admin
-    screen should not make an HTTP request to its own site to answer a question
-    it already has the data for.
+    What the sitemap carries, counted from the same rows it is built from
+    rather than by fetching and parsing our own sitemap.xml.
+
+    The static routes, the answer hub (its own page, nine categories and every
+    published answer — docs/18 § 6), and one entry per published record.
   */
   const STATIC_ROUTES = 14;
+  const ANSWER_ROUTES = 1 + 9 + ANSWERS.length;
   const sitemapUrlCount =
-    STATIC_ROUTES + coverage.groups.reduce((total, group) => total + group.total, 0);
+    STATIC_ROUTES +
+    ANSWER_ROUTES +
+    coverage.groups.reduce((total, group) => total + group.total, 0);
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       <AdminPageHeader
         title="SEO"
-        description="What search engines and AI assistants read: page titles, descriptions, redirects and the sitemap."
+        description="What search engines and AI assistants read: page titles, descriptions, internal links, redirects and the sitemap."
       />
 
-      {/*
-        Health, link review and engine settings come FIRST.
-
-        Someone opening this screen wants to know what is wrong. The metadata
-        table below is a reference — useful, and not what the visit is for.
-      */}
-      <HealthPanel
-        initialSettings={engineSettings}
-        pendingLinks={pendingLinks}
-        queue={queue}
-      />
-
-      <SeoConsole
+      <SeoWorkspace
         pages={pages}
         redirects={redirects}
         coverage={coverage}
+        engineSettings={engineSettings}
+        pendingLinks={pendingLinks}
+        queue={queue}
         /*
           The model NAME, not whether a key exists. "gemma4:31b" tells the
           operator which writer produced the copy in front of them; a boolean
@@ -99,8 +106,17 @@ export default async function SeoPage() {
         */
         modelName={process.env.OLLAMA_API_KEY ? (process.env.OLLAMA_MODEL ?? null) : null}
         lastSitemapRefresh={settings.lastSitemapPing}
+        /*
+          The subtraction happens here, where there is a clock.
+
+          A client component reading Date.now() during render produces a
+          different tree from the same props, which React treats as a bug and the
+          lint rule refuses outright. This page is already dynamic, so the answer
+          is recomputed on every visit.
+        */
+        sitemapStale={isSitemapStale(settings.lastSitemapPing)}
         sitemapUrlCount={sitemapUrlCount}
       />
-    </>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, MapPinned } from "lucide-react";
 
+import { AnswerLinks } from "@/components/site/answer-links";
 import { ArticleGrid } from "@/components/site/article-card";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { Container, Section, SectionHeader } from "@/components/site/container";
@@ -19,6 +20,7 @@ import {
   placeJsonLd,
   placeServiceJsonLd,
 } from "@/lib/seo/jsonld";
+import { answersForCity } from "@/lib/content/answers";
 import { formatDate } from "@/lib/utils/date";
 import { formatNumber, formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,9 @@ export function CityHub({
   isFlagship: boolean;
 }) {
   const crumbs = [{ href: `/${city.slug}`, label: city.name }];
+
+  // Questions tagged with this city in answers-source.json (docs/18 § 5).
+  const cityAnswers = answersForCity(city.slug, 5);
 
   const stats = [
     city.stats.medianPrice != null
@@ -293,6 +298,28 @@ export function CityHub({
           <Container className="flex max-w-[68ch] flex-col gap-6">
             <h2 className="text-h2">Common questions about {city.name}</h2>
             <FaqAccordion items={city.faq} defaultOpenFirst />
+          </Container>
+        </Section>
+      ) : null}
+
+      {/*
+        7b. Questions from this city (docs/18 § 5).
+
+        The answer hub is only worth building if the pages are reachable, and
+        a city page is the most relevant place to link the questions tagged
+        with that city. Five, so it reads as a considered list rather than an
+        index dump.
+      */}
+      {cityAnswers.length > 0 ? (
+        <Section tone="sunken">
+          <Container>
+            <AnswerLinks
+              answers={cityAnswers}
+              title={`Questions from ${city.name} homeowners`}
+              lead={`Straight answers to what people ask before they buy, sell or build in ${city.name} — written by someone who holds a real-estate licence and a contractor licence.`}
+              moreHref="/answers"
+              moreLabel="Every answer"
+            />
           </Container>
         </Section>
       ) : null}

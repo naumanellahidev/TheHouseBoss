@@ -771,3 +771,51 @@ export function placeJsonLd(place: {
       : {}),
   };
 }
+
+/* ── Answer hub ─────────────────────────────────────────────────────────── */
+
+/**
+ * One question, one accepted answer — docs/18 § 4.
+ *
+ * `QAPage` rather than `FAQPage`, because each answer page carries exactly one
+ * question. `FAQPage` stays reserved for a page where several questions share
+ * one URL, which on this site is /hire-contractor.
+ *
+ * The author is the EXISTING Person entity by reference. Emitting a second,
+ * unlinked author would give the graph two people with the same name and no
+ * connection to the business; `{ "@id": PERSON_ID }` joins the answer to the
+ * licences in `personJsonLd`, which is the whole point of publishing these.
+ *
+ * `text` is the full answer as plain text, so the markup says the same thing
+ * the page says. Google rejects an answer that is markup-only.
+ */
+export function qaPageJsonLd(q: {
+  question: string;
+  answerText: string;
+  path: string;
+  updated?: string;
+}): JsonLdObject {
+  const url = absolute(q.path);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    "@id": `${url}#qa`,
+    mainEntity: {
+      "@type": "Question",
+      name: q.question,
+      text: q.question,
+      answerCount: 1,
+      ...(q.updated ? { dateModified: q.updated } : {}),
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: q.answerText,
+        url,
+        ...(q.updated ? { dateModified: q.updated } : {}),
+        author: { "@id": PERSON_ID },
+      },
+    },
+    isPartOf: { "@id": WEBSITE_ID },
+    about: { "@id": AGENT_ID },
+  };
+}

@@ -47,8 +47,21 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     }
 
     const element = container.current;
-    // Before the import: a reduced-motion visitor never downloads GSAP at all.
-    if (!element || prefersReducedMotion()) return;
+    /*
+      Before the import, so these visitors never download GSAP at all:
+
+        - reduced motion, a preference we honour everywhere
+        - a coarse pointer, which is every phone and tablet
+
+      The second is a measured performance decision. The library was landing
+      on the main thread after hydration on mobile, where the fade it buys is
+      least noticeable, and mobile TBT on the home page was 370ms before this.
+      Desktop keeps the transition.
+    */
+    const coarse =
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: coarse)").matches;
+    if (!element || coarse || prefersReducedMotion()) return;
 
     let cancelled = false;
     let tween: gsap.core.Tween | null = null;

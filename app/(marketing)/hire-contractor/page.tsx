@@ -9,6 +9,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { AnswerLinks } from "@/components/site/answer-links";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { Container, Section, SectionHeader } from "@/components/site/container";
 import { Disclaimer } from "@/components/site/disclaimer";
@@ -28,6 +29,7 @@ import {
   type HireContractorContent,
 } from "@/lib/content/hire-contractor";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
+import { answersForService } from "@/lib/content/answers";
 import { getAcceptedLinks } from "@/lib/queries/links";
 import {
   disabledKeys,
@@ -129,6 +131,34 @@ export default async function HireContractorPage() {
   };
 
   const hero = heroPhoto(settings.heroKey, "");
+
+  /*
+    The answer hub, twice (docs/18 § 5).
+
+    `contractorAnswers` is the block near the foot of the page. `faqMore`
+    hangs a link to the full answer under the short FAQ rows that have one,
+    keyed by question text — the FAQ is editable in Admin, so an edited
+    question simply loses its link rather than breaking the page.
+  */
+  const contractorAnswers = answersForService("hire-contractor", 10);
+
+  const faqMore: Record<string, { href: string }> = {
+    "Do you provide remodeling services?": {
+      href: "/answers/kitchens-and-bathrooms/bathroom-remodel-cost-central-florida",
+    },
+    "Can you help with new construction?": {
+      href: "/answers/new-construction-and-building/cost-per-square-foot-to-build-florida",
+    },
+    "What is the advantage of working with a Realtor who also holds a contractor licence?": {
+      href: "/answers/buying-and-selling/which-renovations-add-value",
+    },
+    "How do I discuss my project?": {
+      href: "/answers/hiring-and-project-planning/contractors-not-calling-back",
+    },
+    "What should I consider before starting a renovation?": {
+      href: "/answers/new-construction-and-building/which-renovations-need-a-permit",
+    },
+  };
 
   /*
     §26. The city pages that exist, so the service-area list links to real
@@ -635,7 +665,7 @@ export default async function HireContractorPage() {
               the markup cannot describe a question the page does not render.
             */}
             <div className="mt-8 max-w-[68ch]">
-              <FaqAccordion items={c.faq.items} defaultOpenFirst />
+              <FaqAccordion items={c.faq.items} defaultOpenFirst more={faqMore} />
             </div>
 
             <div className="mt-10 max-w-[68ch]">
@@ -644,6 +674,26 @@ export default async function HireContractorPage() {
           </Container>
         </Section>
       ) : null}
+
+      {/*
+        ═══ THE ANSWER HUB (docs/18 § 5) ═══════════════════════════════
+
+        The FAQ above is seven short answers that belong to this page. These
+        are the full pages, and this block is what keeps them out of orphan
+        status: ten construction questions, linked from the page whose subject
+        they share.
+      */}
+      <Section tone="sunken">
+        <Container>
+          <AnswerLinks
+            answers={contractorAnswers}
+            title="Questions people ask before they hire"
+            lead="Longer answers to the ones that come up in every first conversation — deposits, permits, timelines and what actually fails."
+            moreHref="/answers"
+            moreLabel="Every answer"
+          />
+        </Container>
+      </Section>
 
       {/* ═══ FINAL CTA (§28) ════════════════════════════════════════════ */}
       {!off.has("cta") ? (

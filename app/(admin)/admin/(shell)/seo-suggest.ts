@@ -56,12 +56,29 @@ export async function suggestListingSeo(facts: ListingFacts): Promise<Suggestion
   }
 
   const fallback = listingDescriptionFrom(facts);
+
+  /*
+    Everything the model is allowed to know, and nothing else.
+
+    This string is also the corpus `ollama.ts` validates the answer against — a
+    numeral in the output that is not in here is treated as invented and the
+    answer is discarded. So a fact left out of this list is a fact the model
+    cannot use even when the record has it, which is why the property type, the
+    pool and the feature list are now included: without them the polish step
+    could only ever reword the geography.
+  */
   const source = [
     `${facts.address}, ${facts.cityName}, Florida`,
+    facts.propertyType ? `property type ${facts.propertyType.replace(/_/g, " ")}` : "",
+    facts.listingType ? `listing type ${facts.listingType.replace(/_/g, " ")}` : "",
+    `status ${facts.status}`,
     facts.beds ? `${facts.beds} bedrooms` : "",
     facts.baths ? `${facts.baths} bathrooms` : "",
     facts.sqft ? `${facts.sqft} square feet` : "",
     facts.yearBuilt ? `built ${facts.yearBuilt}` : "",
+    facts.pool ? "has a pool" : "",
+    facts.waterfront ? "waterfront" : "",
+    facts.features?.length ? `features: ${facts.features.join(", ")}` : "",
     facts.contractorsTake ?? "",
   ]
     .filter(Boolean)
@@ -93,7 +110,13 @@ export async function suggestArticleSeo(facts: ArticleFacts): Promise<Suggestion
   }
 
   const fallback = articleDescriptionFrom(facts);
-  const source = `${facts.title}. ${(facts.bodyText ?? facts.excerpt ?? "").slice(0, 600)}`;
+  const source = [
+    facts.title,
+    facts.cityName ? `about ${facts.cityName}, Florida` : "",
+    (facts.bodyText ?? facts.excerpt ?? "").slice(0, 600),
+  ]
+    .filter(Boolean)
+    .join(". ");
 
   const { text, usedModel } = await polishDescription({
     fallback,

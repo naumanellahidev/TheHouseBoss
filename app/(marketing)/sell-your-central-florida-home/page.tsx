@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AnswerLinks } from "@/components/site/answer-links";
 import { GuideLayout } from "@/components/site/guide-layout";
 import { JsonLd } from "@/components/site/json-ld";
 import { AnswerFirst, Callout, TableScroll } from "@/components/site/prose";
@@ -13,6 +14,7 @@ import {
   faqJsonLd,
   serviceJsonLd,
 } from "@/lib/seo/jsonld";
+import { ANSWERS } from "@/lib/content/answers";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { getSoldListings } from "@/lib/queries/listings";
 import { safeQuery } from "@/lib/queries/safe";
@@ -388,6 +390,20 @@ export default async function SellPage() {
 
         <h2 id="sold">Recently sold</h2>
       </GuideLayout>
+
+      {/* The full answers, linked from the guide that shares their subject (docs/18 § 5). */}
+      <section className="section-y bg-surface-sunken">
+        <div className="container-page">
+          <AnswerLinks
+            answers={ANSWERS.filter((a) => ["what-to-fix-before-selling", "which-renovations-add-value", "sell-now-or-wait", "appraisal-came-in-low-options"].includes(a.slug))}
+            title="Questions sellers ask first"
+            lead="What to fix, what to leave, and how the roof and the air conditioning end up pricing your house."
+            moreHref="/answers"
+            moreLabel="Every answer"
+          />
+        </div>
+      </section>
+
 
       <section aria-labelledby="sold-recent" className="section-y bg-surface-sunken">
         <div className="container-page flex flex-col gap-6">

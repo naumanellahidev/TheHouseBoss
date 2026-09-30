@@ -53,6 +53,14 @@ export const PAGES: TestPage[] = [
   { path: "/hire-contractor", name: "hire-contractor" },
   { path: "/sell-your-central-florida-home", name: "sell" },
   { path: "/reviews", name: "reviews" },
+
+  // The answer hub (docs/18). One of each route shape: hub, category, answer.
+  { path: "/answers", name: "answers-hub" },
+  { path: "/answers/inspections-and-insurance", name: "answers-category" },
+  {
+    path: "/answers/inspections-and-insurance/four-point-and-wind-mitigation-explained",
+    name: "answer",
+  },
   { path: "/contact", name: "contact" },
   { path: "/legal/privacy", name: "privacy" },
   { path: "/legal/terms", name: "terms" },
