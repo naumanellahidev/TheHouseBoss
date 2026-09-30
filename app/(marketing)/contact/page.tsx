@@ -4,6 +4,7 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { Container, Section } from "@/components/site/container";
 import { GoogleProfileCard } from "@/components/site/google-profile-card";
+import { SocialLinks } from "@/components/site/social-links";
 import { JsonLd } from "@/components/site/json-ld";
 import { LeadForm } from "@/components/site/lead-form";
 import { breadcrumbJsonLd, contactPageJsonLd } from "@/lib/seo/jsonld";
@@ -154,6 +155,18 @@ export default async function ContactPage({
               heading="On Google"
               description="My Google Business Profile — check it before you call, or leave a review once we have worked together."
             />
+
+            {/*
+              The same profile links the footer carries, on the page people
+              actually come to in order to get in touch.
+
+              Not decoration: these are the accounts a search engine and an
+              assistant use to confirm that the person behind this site is the
+              person behind those profiles, which is the corroboration docs/08 § 8
+              asks for. The admin's values win over the compile-time list, exactly
+              as they do in the footer.
+            */}
+            <SocialLinks settings={settings} />
 
             {!phone && !email ? (
               <p className="rounded-lg border border-dashed border-border bg-surface-sunken p-4 text-sm text-foreground-muted">

@@ -11,6 +11,7 @@ import { Prose } from "@/components/site/prose";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { Button } from "@/components/ui/button";
 import { breadcrumbJsonLd, personJsonLd } from "@/lib/seo/jsonld";
+import { SocialLinks } from "@/components/site/social-links";
 import { getSiteSettings } from "@/lib/queries/settings";
 import { EMPTY_SETTINGS, safeQuery } from "@/lib/queries/safe";
 import { buildMetadata } from "@/lib/seo/metadata";
@@ -313,6 +314,22 @@ export default async function AboutPage() {
                 </a>
               </p>
             ) : null}
+
+            {/*
+              The profiles, on the page that exists to establish who she is.
+
+              docs/08 § 8: a claim on your own site is worth more when it can be
+              checked somewhere you do not control. This is the page a search
+              engine and an assistant read to decide that, so the links belong
+              here as much as in the footer.
+            */}
+            <div className="mt-8">
+              <SocialLinks
+                settings={settings}
+                heading="Elsewhere"
+                description="The same work, day to day — and the accounts that confirm this is the same person."
+              />
+            </div>
           </div>
           <div className="lg:col-span-7">
             <LeadForm compact />

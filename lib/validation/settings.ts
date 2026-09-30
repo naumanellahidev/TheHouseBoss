@@ -54,6 +54,7 @@ export const PROFILE_FIELDS = [
   { key: "zillow", label: "Zillow" },
   { key: "facebook", label: "Facebook" },
   { key: "instagram", label: "Instagram" },
+  { key: "tiktok", label: "TikTok" },
   { key: "linkedin", label: "LinkedIn" },
   { key: "youtube", label: "YouTube" },
 ] as const;

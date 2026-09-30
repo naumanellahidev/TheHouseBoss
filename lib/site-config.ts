@@ -169,9 +169,20 @@ export const siteConfig = {
     realtorDotCom:
       "https://www.realtor.com/realestateagents/Krasimira-Kakarova_Winter-Springs_FL_2169787",
     zillow: "https://www.zillow.com/profile/Krasimira%20Kakarova",
-    facebook: PENDING,
-    instagram: PENDING,
+    /*
+      Supplied by the client, 2026-09-30. These were PENDING from Phase 0.
+
+      Stored without query strings and without a trailing slash: the LinkedIn URL
+      arrived as `…/?isSelfProfile=true`, which is a parameter LinkedIn adds when
+      you are looking at your OWN profile and which means nothing to anybody else
+      — and `sameAs` is a claim of identity, so it has to be the canonical public
+      address of the profile rather than one person's view of it.
+    */
+    facebook: "https://www.facebook.com/KrasimiraTheHouseBoss",
+    instagram: "https://www.instagram.com/thehousebossfl",
+    tiktok: "https://www.tiktok.com/@thehousebossfl",
     linkedin: "https://www.linkedin.com/in/krisikakarovahomes",
+    youtube: "https://www.youtube.com/@TheHouseBossFL",
   } as Record<string, string>,
 
   /** Cities that appear in the search city filter (client-specified five). */

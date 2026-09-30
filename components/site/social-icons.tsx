@@ -51,6 +51,22 @@ export function LinkedinIcon(props: IconProps) {
   );
 }
 
+export function TiktokIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M16.6 2h-3.1v13.2a2.5 2.5 0 1 1-2.5-2.5c.26 0 .5.04.74.11V9.6a5.7 5.7 0 0 0-.74-.05 5.7 5.7 0 1 0 5.7 5.7V8.6a6.4 6.4 0 0 0 3.8 1.24V6.68A3.7 3.7 0 0 1 16.6 3v-1Z" />
+    </svg>
+  );
+}
+
+export function YoutubeIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M21.6 7.2a2.5 2.5 0 0 0-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.83.43A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.83-.43a2.5 2.5 0 0 0 1.77-1.77C22 15.2 22 12 22 12s0-3.2-.4-4.8ZM10 15.5v-7l6 3.5-6 3.5Z" />
+    </svg>
+  );
+}
+
 /** Google Business Profile — the "G" mark, single colour. */
 export function GoogleIcon(props: IconProps) {
   return (

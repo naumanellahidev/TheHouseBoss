@@ -1,6 +1,9 @@
+import { ANSWERS, ANSWER_CATEGORIES, answersInCategory } from "@/lib/content/answers";
 import { getArticles } from "@/lib/queries/articles";
 import { getCities, getCommunities } from "@/lib/queries/cities";
 import { countPublishedListings, getListingsForLlms } from "@/lib/queries/listings";
+import { getSiteSettings } from "@/lib/queries/settings";
+import { liveProfiles } from "@/components/site/social-links";
 import { firstSentences } from "@/lib/seo/auto/generate";
 import { articleHref } from "@/lib/utils/routes";
 import { formatPrice } from "@/lib/utils";
@@ -30,12 +33,16 @@ export const revalidate = 3600;
 const base = siteConfig.url.replace(/\/+$/, "");
 
 export async function GET() {
-  const [cities, communities, articles, listingCount, listings] = await Promise.all([
+  const [cities, communities, articles, listingCount, listings, settings] = await Promise.all([
     getCities().catch(() => []),
     getCommunities().catch(() => []),
     getArticles({ limit: 30 }).catch(() => []),
     countPublishedListings().catch(() => 0),
     getListingsForLlms().catch(() => []),
+    // The profiles list below has to match the footer and the JSON-LD graph, and
+    // those read the admin's values. Falling back to the compile-time set keeps
+    // this file serving if the settings row cannot be read.
+    getSiteSettings().catch(() => null),
   ]);
 
   const searchCities = cities.filter((city) => city.inSearch);
@@ -73,6 +80,30 @@ export async function GET() {
     `- [Assumable Mortgage Homes](${base}/assumable-mortgage-homes): which loans can be assumed, the equity gap, VA entitlement substitution, servicer timelines.`,
     `- [New-Construction Representation](${base}/hire-contractor): why the sales office works for the builder, registration before the first visit, contract terms, upgrades that hold value.`,
     `- [Selling Your Home](${base}/sell-your-central-florida-home): valuation, which pre-listing repairs return money, pricing, offers, inspection and appraisal, Florida disclosure.`,
+    "",
+    /*
+      The answer hub (docs/18). HR14 requires this file to be regenerated
+      whenever the structure changes, and 62 question pages is the largest
+      structural change the site has had. Listed by category with the count,
+      then every question, because an assistant answering a specific question
+      needs the URL that answers it rather than the hub.
+    */
+    "## Questions answered on this site",
+    "",
+    ...ANSWER_CATEGORIES.flatMap((category) => {
+      const answers = answersInCategory(category.slug);
+      if (answers.length === 0) return [];
+      return [
+        `### ${category.title} (${answers.length})`,
+        "",
+        ...answers.map(
+          (answer) =>
+            `- [${answer.question}](${base}/answers/${answer.category}/${answer.slug}): ${answer.body.shortAnswer}`,
+        ),
+        "",
+      ];
+    }),
+    `All ${ANSWERS.length} answers: ${base}/answers`,
     "",
     "## Property search",
     "",
@@ -170,6 +201,20 @@ export async function GET() {
     `- [Reviews](${base}/reviews) — individual reviews with their source. No aggregate rating is published, deliberately.`,
     `- [Contact](${base}/contact)`,
     `- [Google Business Profile](${siteConfig.google.mapsUrl}) — listed on Google as "${siteConfig.google.businessName}"`,
+    "",
+    /*
+      The profiles, listed so an assistant can confirm who wrote this.
+
+      Same set as the `sameAs` array in the JSON-LD graph and the icons in the
+      footer, from the same resolver — three descriptions of one identity that
+      disagreed would be worse than none. A profile the client has not opened is
+      filtered out upstream: a dead link here is a false claim about who she is.
+    */
+    "## Profiles",
+    "",
+    "The same person, verifiable off this site:",
+    "",
+    ...liveProfiles(settings).map(({ label, url }) => `- [${label}](${url})`),
     "",
     "## Business details",
     "",

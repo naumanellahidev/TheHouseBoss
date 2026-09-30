@@ -4,37 +4,13 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { ComplianceFooter } from "@/components/site/compliance-footer";
 import type { SiteSettings } from "@/types/domain";
 import { Logo } from "@/components/site/logo";
-import {
-  FacebookIcon,
-  GoogleIcon,
-  InstagramIcon,
-  LinkedinIcon,
-  ListingSiteIcon,
-} from "@/components/site/social-icons";
+import { liveProfiles } from "@/components/site/social-links";
 import { footerNav, legalNav } from "@/lib/nav";
 import { isPending, siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 
-const socialIcons = {
-  googleBusiness: GoogleIcon,
-  realtorDotCom: ListingSiteIcon,
-  zillow: ListingSiteIcon,
-  facebook: FacebookIcon,
-  instagram: InstagramIcon,
-  linkedin: LinkedinIcon,
-} as const;
-
-const profileLabels: Record<string, string> = {
-  googleBusiness: "Google Business Profile",
-  realtorDotCom: "Realtor.com",
-  zillow: "Zillow",
-  facebook: "Facebook",
-  instagram: "Instagram",
-  linkedin: "LinkedIn",
-};
-
 export function Footer({ settings }: { settings?: SiteSettings | null }) {
-  const { contact, profiles } = siteConfig;
+  const { contact } = siteConfig;
 
   /*
     The admin's values win; site-config is the fallback.
@@ -48,13 +24,15 @@ export function Footer({ settings }: { settings?: SiteSettings | null }) {
   const hasPhone = Boolean(phone);
   const hasEmail = Boolean(email);
 
-  const mergedProfiles = {
-    ...Object.fromEntries(
-      Object.entries(profiles).filter(([, url]) => !isPending(url)),
-    ),
-    ...(settings?.profiles ?? {}),
-  };
-  const liveProfiles = Object.entries(mergedProfiles).filter(([, url]) => url);
+  /*
+    One resolver, shared with the contact page and the JSON-LD graph.
+
+    The footer used to merge site-config with the admin's values itself, and so
+    did two other places, each slightly differently. `liveProfiles()` is now the
+    only thing that decides which profiles are live and what order they appear
+    in.
+  */
+  const profileLinks = liveProfiles(settings);
 
   return (
     <footer className="mt-auto bg-surface-invert text-foreground-invert-muted">
@@ -67,38 +45,26 @@ export function Footer({ settings }: { settings?: SiteSettings | null }) {
             {siteConfig.positioning}
           </p>
 
-          {liveProfiles.length > 0 && (
+          {profileLinks.length > 0 && (
             <ul className="flex flex-wrap items-center gap-2">
-              {liveProfiles.map(([key, url]) => {
-                const Icon = socialIcons[key as keyof typeof socialIcons];
-                return (
-                  <li key={key}>
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer me"
-                      aria-label={profileLabels[key] ?? key}
-                      className={cn(
-                        "inline-flex size-11 items-center justify-center rounded-md",
-                        "text-foreground-invert-muted transition-colors duration-(--dur-fast)",
-                        "hover:bg-royal-800 hover:text-accent-invert",
-                        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
-                      )}
-                    >
-                      {Icon ? (
-                        <Icon className="size-5" aria-hidden="true" />
-                      ) : (
-                        <span
-                          aria-hidden="true"
-                          className="text-xs font-semibold"
-                        >
-                          {profileLabels[key]?.slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                    </a>
-                  </li>
-                );
-              })}
+              {profileLinks.map(({ key, url, label, Icon }) => (
+                <li key={key}>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer me"
+                    aria-label={label}
+                    className={cn(
+                      "inline-flex size-11 items-center justify-center rounded-md",
+                      "text-foreground-invert-muted transition-colors duration-(--dur-fast)",
+                      "hover:bg-royal-800 hover:text-accent-invert",
+                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring-invert",
+                    )}
+                  >
+                    <Icon className="size-5" aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
             </ul>
           )}
         </div>
