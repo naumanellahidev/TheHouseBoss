@@ -1,4 +1,12 @@
-import "server-only";
+/*
+  No `server-only` marker.
+
+  There was one, and nothing in this file needs it: no key, no client, no
+  network — it walks a Tiptap document and pairs question headings with the
+  prose under them. The marker made the module impossible to exercise outside a
+  request, which for the one piece of logic that decides what the FAQ markup
+  claims is the wrong trade. Same reasoning as `lib/seo/auto/review.ts`.
+*/
 
 /**
  * FAQ suggestions from an article's own headings (brief §21).

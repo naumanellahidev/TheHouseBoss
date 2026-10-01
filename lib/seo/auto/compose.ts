@@ -229,17 +229,25 @@ export function composeDescription(opts: {
 
   let best = "";
 
-  for (const opening of openings) {
+  for (const raw of openings) {
     /*
-      An opening over the ceiling is not discarded — on an article the opening is
-      the author's own answer-first paragraph, and a trimmed version of her
-      sentence beats anything composed here.
+      An opening over the ceiling is cut to WHOLE SENTENCES, never to a word.
+
+      This is where the broken description came from. The answer-first paragraph
+      was 199 characters, so it was trimmed at a word boundary to 158 and ended
+      "...and the three markets behave" — in band, scored as fine, and displayed
+      in a search result exactly like that.
+
+      Taking the sentences that fit instead usually lands UNDER the floor, which
+      is correct: the clause loop below then pads it with real information, and
+      the brand ladder closes whatever gap is left. A shorter complete thought
+      beats a longer broken one every time.
     */
+    let opening = raw;
     if (opening.length > DESC_MAX) {
-      const trimmed = trimToWord(opening, DESC_MAX);
-      if (trimmed.length >= DESC_MIN) return trimmed;
-      if (trimmed.length > best.length) best = trimmed;
-      continue;
+      const whole = firstSentences(opening, DESC_MAX);
+      opening = whole.length >= 40 ? whole : sentenceSafe(trimToWord(opening, DESC_MAX));
+      if (opening.length >= DESC_MIN && opening.length <= DESC_MAX) return opening;
     }
 
     let out = opening;

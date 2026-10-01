@@ -9,10 +9,8 @@ import {
   saveArticle,
   suggestArticleSlug,
 } from "@/app/(admin)/admin/(shell)/content-actions";
-import {
-  suggestArticleFaq,
-  suggestArticleSeo,
-} from "@/app/(admin)/admin/(shell)/seo-suggest";
+import { suggestArticleFaq } from "@/app/(admin)/admin/(shell)/seo-suggest";
+import { autofixArticleSeo } from "@/app/(admin)/admin/(shell)/seo-autofix";
 import { ArticleEditor } from "@/components/admin/articles/editor";
 import { FaqRepeater } from "@/components/admin/faq-repeater";
 import { RecordSeoPanel } from "@/components/admin/seo/record-seo-panel";
@@ -98,6 +96,17 @@ export function ArticleForm({
   const saveChain = React.useRef<Promise<unknown>>(Promise.resolve());
 
   const [writingSeo, setWritingSeo] = React.useState(false);
+  /*
+    What the last pass did, kept so the author can read it.
+
+    A toast says how many fixes happened and disappears. The body of a published
+    article has just been restructured, and the list of what changed has to stay
+    on screen until she has looked at it.
+  */
+  const [fixReport, setFixReport] = React.useState<{
+    applied: string[];
+    skipped: { label: string; why: string }[];
+  } | null>(null);
   const [findingFaq, setFindingFaq] = React.useState(false);
 
   /*
@@ -211,9 +220,32 @@ export function ArticleForm({
     Publishing writes the generated metadata regardless; this shows what it will
     say while there is still time to disagree with it.
   */
+  /*
+    One button, and it does the work rather than describing it.
+
+    It was "Write it for me" and it filled two fields. The panel beside it was
+    listing four things wrong with the article, three of which the system could
+    resolve from the author own words — marking the opening paragraph as the
+    answer-first block, linking the cities and services she already named, and
+    pairing her question headings with the prose underneath them.
+
+    So it now runs the whole pass and reports what it could not reach. What it
+    could not reach is always something only she can supply: more words, a
+    photograph, a source for a figure. It never writes a sentence into the body.
+  */
   async function writeSeo() {
     setWritingSeo(true);
-    const result = await suggestArticleSeo(articleFacts);
+    const result = await autofixArticleSeo({
+      ...articleFacts,
+      slug: values.slug ?? "",
+      bodyJson: values.bodyJson,
+      metaTitle: values.metaTitle ?? null,
+      metaDesc: values.metaDesc ?? null,
+      coverKey: values.coverKey ?? null,
+      coverAlt: values.coverAlt ?? null,
+      tags: values.tags ?? [],
+      faq: values.faq ?? [],
+    });
     setWritingSeo(false);
 
     if (!result.ok) {
@@ -221,13 +253,34 @@ export function ArticleForm({
       return;
     }
 
-    set("metaTitle", result.title);
-    set("metaDesc", result.description);
+    /*
+      One state update for every field.
+
+      Calling `set` per field would re-render between each, and the editor would
+      see a document change while the excerpt it is about to receive is still the
+      old one. The merge is what keeps the body and its flattened text in step.
+    */
+    const { bodyJson: fixedDoc, ...rest } = result.values;
+    setValues((current) => ({
+      ...current,
+      ...rest,
+      // The action works on a plain document and the form holds the zod-inferred
+      // shape; the editor casts the same way on every keystroke.
+      ...(fixedDoc !== undefined
+        ? { bodyJson: fixedDoc as ArticleInput["bodyJson"] }
+        : {}),
+    }));
+    setDirty(true);
+
+    if (result.applied.length === 0) {
+      toast.success(`Nothing left that I can fix for you. Score ${result.score}.`);
+      return;
+    }
+
     toast.success(
-      result.usedModel
-        ? "Written and polished from your own words."
-        : "Written from the title and opening paragraphs.",
+      `${result.applied.length} ${result.applied.length === 1 ? "fix" : "fixes"} applied — score ${result.score}. Review the body before you save.`,
     );
+    setFixReport({ applied: result.applied, skipped: result.skipped });
   }
 
   function set<K extends keyof ArticleInput>(key: K, value: ArticleInput[K]) {
@@ -592,12 +645,63 @@ export function ArticleForm({
           </p>
         </div>
 
+        {/*
+          What the last pass did, left on screen.
+
+          The toast is gone in four seconds and the body of a published article
+          has just been restructured. Both halves matter: what changed, so she
+          can check it, and what could not be reached, so a failing check is
+          never a mystery.
+        */}
+        {fixReport ? (
+          <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-sunken p-4">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-sm font-semibold text-foreground">What just changed</h3>
+              <button
+                type="button"
+                onClick={() => setFixReport(null)}
+                className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-foreground-muted hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+              >
+                Dismiss
+              </button>
+            </div>
+
+            {fixReport.applied.length > 0 ? (
+              <ul className="flex flex-col gap-1.5">
+                {fixReport.applied.map((line) => (
+                  <li key={line} className="flex gap-2 text-sm text-foreground">
+                    <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {fixReport.skipped.length > 0 ? (
+              <div className="flex flex-col gap-1.5 border-t border-border pt-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Left for you — these need words or a photograph only you have
+                </p>
+                <ul className="flex flex-col gap-1.5">
+                  {fixReport.skipped.map((item) => (
+                    <li key={item.label} className="text-sm text-foreground-muted">
+                      <span className="font-medium text-foreground">{item.label}:</span>{" "}
+                      {item.why}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         <RecordSeoPanel
           audit={audit}
           generate={{
             onClick: writeSeo,
             busy: writingSeo,
-            note: "Written from your title and opening paragraphs.",
+            label: "Fix what it can",
+            note: "Only your own words — it never writes a sentence into the body.",
           }}
           preview={{
             crumb: `thehousebossfl.com › ${previewPath}`,

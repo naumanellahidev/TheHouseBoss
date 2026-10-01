@@ -71,6 +71,43 @@ export function flattenNode(node: unknown): string {
   return (n.content ?? []).map(flattenNode).join("");
 }
 
+/**
+ * The document as readable text, with the blocks kept apart.
+ *
+ * ── Why `flattenNode` is not enough ──────────────────────────────────────
+ *
+ * It joins children with an empty string, which is right inside a paragraph —
+ * bold and links are marks on text, and "a **bold** word" must come out as "a
+ * bold word" with no extra spaces. Across blocks it is wrong: two paragraphs
+ * become "...good schools.A VA loan lets..." and the join runs the last word of
+ * one into the first word of the next.
+ *
+ * That cost a word on every block boundary in the word count, and it meant the
+ * `body_text` this module produced did not match the one the editor produces,
+ * which uses a blank line. Postgres full-text search reads that column.
+ */
+export function documentText(node: unknown): string {
+  if (!node || typeof node !== "object") return "";
+  const n = node as { type?: string; text?: string; content?: unknown[] };
+  if (typeof n.text === "string") return n.text;
+
+  const parts = (n.content ?? []).map(documentText);
+
+  // Inline containers join tight; block containers keep their blocks apart.
+  return INLINE_CONTAINERS.has(n.type ?? "")
+    ? parts.join("")
+    : parts.join("\n\n");
+}
+
+/** Nodes whose children are inline and must not be spaced apart. */
+const INLINE_CONTAINERS = new Set([
+  "paragraph",
+  "heading",
+  "answerFirst",
+  "text",
+  "listItem",
+]);
+
 export function countWords(value: string): number {
   const clean = value.replace(/\s+/g, " ").trim();
   return clean === "" ? 0 : clean.split(" ").length;
@@ -157,7 +194,7 @@ export function analyzeDocument(doc: unknown): DocumentStats {
     return EMPTY;
   }
 
-  stats.words = countWords(flattenNode(doc));
+  stats.words = countWords(documentText(doc));
   stats.internalLinks = [...internal];
   stats.externalLinks = [...external];
   return stats;

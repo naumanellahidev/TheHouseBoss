@@ -191,7 +191,13 @@ export function RecordSeoPanel({
   preview: RecordPreview;
   currentTab?: string;
   onGoToTab?: (tab: string) => void;
-  generate?: { onClick: () => void; busy: boolean; note?: string };
+  generate?: {
+    onClick: () => void;
+    busy: boolean;
+    note?: string;
+    /** Defaults to "Write it for me" — the listing editor keeps that wording. */
+    label?: string;
+  };
   /** The form's own meta title and description fields. */
   children: React.ReactNode;
 }) {
@@ -263,7 +269,7 @@ export function RecordSeoPanel({
               onClick={generate.onClick}
             >
               <Sparkles aria-hidden="true" />
-              Write it for me
+              {generate.label ?? "Write it for me"}
             </Button>
             {generate.note ? (
               <p className="max-w-[30ch] text-xs text-foreground-subtle sm:text-right">
