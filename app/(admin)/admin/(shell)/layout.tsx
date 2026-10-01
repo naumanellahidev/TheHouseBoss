@@ -11,6 +11,7 @@ import { storageLevel } from "@/lib/storage/budget";
 import { Button } from "@/components/ui/button";
 import { countNewLeads } from "@/lib/queries/leads";
 import { countPendingReviews } from "@/lib/queries/admin";
+import { getNotifications } from "@/lib/queries/notifications";
 import { getStorageUsage } from "@/lib/queries/media";
 import { getAdminProfile, getCurrentUser } from "@/lib/supabase/server";
 
@@ -46,14 +47,25 @@ export default async function AdminShellLayout({
 
   // Both are admin-only reads and both are cheap; running them in parallel
   // keeps the shell off the critical path of the page inside it.
-  const [newLeads, pendingReviews, usage, identity, settings] = await Promise.all([
-    countNewLeads(),
-    countPendingReviews(),
-    getStorageUsage(),
-    getAdminIdentity(),
-    // The uploaded logo, so the dashboard shows the same brand as the site.
-    getSiteSettings().catch(() => null),
-  ]);
+  const [newLeads, pendingReviews, notifications, usage, identity, settings] =
+    await Promise.all([
+      countNewLeads(),
+      countPendingReviews(),
+      /*
+        The bell is rendered with its list already in it.
+
+        Fetching it on the client after mount would mean the first thing she
+        sees on opening the app is a bell with no badge, which then changes —
+        and on a phone that half-second is the whole impression of whether
+        anything is waiting. It degrades to an empty list rather than failing
+        the shell.
+      */
+      getNotifications().catch(() => []),
+      getStorageUsage(),
+      getAdminIdentity(),
+      // The uploaded logo, so the dashboard shows the same brand as the site.
+      getSiteSettings().catch(() => null),
+    ]);
 
   const percent = Math.min(
     100,
@@ -65,6 +77,7 @@ export default async function AdminShellLayout({
       settings={settings}
       newLeads={newLeads}
       pendingReviews={pendingReviews}
+      notifications={notifications}
       userEmail={admin.user.email ?? ""}
       userName={(admin.profile as { full_name?: string | null }).full_name ?? null}
       // "panel": the full meter now lives in the light mobile sheet, not a navy sidebar.

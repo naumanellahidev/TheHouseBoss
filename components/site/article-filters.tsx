@@ -55,8 +55,17 @@ export function ArticleFilters({
   const facets = articleFacets(all);
   const filtered = isFiltered(params);
 
+  /*
+    `text-body`, not `text-sm`.
+
+    Sixteen pixels is the threshold below which iOS Safari zooms the page when a
+    form control takes focus, and it does it for a <select> as readily as an
+    input. The zoom does not undo itself: the visitor is left on a page scrolled
+    sideways, which on the filter bar means the results they were filtering are
+    off screen. docs/04 § 5.
+  */
   const selectClass = cn(
-    "min-h-11 rounded-full border border-border bg-surface px-4 text-sm font-medium text-foreground",
+    "min-h-11 rounded-full border border-border bg-surface px-4 text-body font-medium text-foreground",
     "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
   );
 

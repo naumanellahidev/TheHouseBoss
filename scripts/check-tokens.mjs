@@ -30,6 +30,10 @@ const ALLOWLIST = new Map([
     "viewport.themeColor is browser metadata and cannot read a CSS variable",
   ],
   [
+    "app/manifest.ts",
+    "the web app manifest is JSON served to the OS; it cannot read a CSS variable, and each colour names the @theme token it mirrors",
+  ],
+  [
     "app/dev/styleguide/page.tsx",
     "documents the token hex values in prose — that is the page's job",
   ],

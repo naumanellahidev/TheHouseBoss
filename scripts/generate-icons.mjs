@@ -2,8 +2,11 @@
 /**
  * Rasterises app/icon.svg into the binary icon formats browsers still ask for.
  *
- *   app/apple-icon.png   180x180  iOS home screen
- *   public/favicon.ico    32x32   the request every browser makes anyway
+ *   app/apple-icon.png        180x180  iOS home screen
+ *   public/favicon.ico         32x32   the request every browser makes anyway
+ *   public/icon-192.png       192x192  the PWA manifest
+ *   public/icon-512.png       512x512  the PWA manifest and the splash screen
+ *   public/icon-maskable.png  512x512  Android, which crops icons to its own shape
  *
  * Uses the Chromium that Playwright already installed, so there is no image
  * dependency in the runtime bundle. Re-run this when the client supplies the
@@ -15,6 +18,36 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 
 const SVG = await readFile("app/icon.svg", "utf8");
+
+/**
+ * A maskable icon needs its own render, not a resize.
+ *
+ * Android crops a maskable icon to whatever shape the launcher uses — a circle,
+ * a squircle, a rounded square — and guarantees only the middle 80% survives.
+ * Feeding it the normal icon clips the edges of the mark. So the maskable
+ * version is drawn at 80% inside a full-bleed brand square, which is the
+ * "safe zone" the spec describes.
+ */
+async function renderMaskable(size) {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({
+    viewport: { width: size, height: size },
+    deviceScaleFactor: 1,
+  });
+  const inner = Math.round(size * 0.8);
+  const pad = Math.round((size - inner) / 2);
+  await page.setContent(
+    `<!doctype html><style>
+       html,body{margin:0;padding:0;width:${size}px;height:${size}px;background:#0c1b3a}
+       .wrap{width:${inner}px;height:${inner}px;margin:${pad}px}
+       svg{display:block;width:${inner}px;height:${inner}px}
+     </style><div class="wrap">${SVG}</div>`,
+    { waitUntil: "load" },
+  );
+  const png = await page.screenshot({ omitBackground: false });
+  await browser.close();
+  return png;
+}
 
 async function render(size) {
   const browser = await chromium.launch();
@@ -59,6 +92,16 @@ await mkdir("public", { recursive: true });
 const apple = await render(180);
 await writeFile("app/apple-icon.png", apple);
 console.log(`✓ app/apple-icon.png      180x180  ${apple.length} bytes`);
+
+for (const size of [192, 512]) {
+  const png = await render(size);
+  await writeFile(`public/icon-${size}.png`, png);
+  console.log(`✓ public/icon-${size}.png      ${size}x${size}  ${png.length} bytes`);
+}
+
+const maskable = await renderMaskable(512);
+await writeFile("public/icon-maskable.png", maskable);
+console.log(`✓ public/icon-maskable.png  512x512  ${maskable.length} bytes`);
 
 const small = await render(32);
 const ico = pngToIco(small, 32);

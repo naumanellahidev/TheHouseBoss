@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import {
-  Bell,
   ChevronDown,
   ExternalLink,
   LayoutGrid,
@@ -23,6 +22,8 @@ import {
 import type { Permission } from "@/lib/auth/permissions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Logo } from "@/components/site/logo";
+import { NotificationBell } from "@/components/admin/notification-bell";
+import type { AdminNotification } from "@/lib/queries/notifications";
 import { cn } from "@/lib/utils";
 import type { SiteSettings } from "@/types/domain";
 
@@ -56,6 +57,11 @@ export type AdminShellProps = {
   newLeads: number;
   /** Reviews a visitor submitted that nobody has published or discarded. */
   pendingReviews: number;
+  /**
+   * The ranked feed behind the bell, rendered on the server so the first paint
+   * is already right. The bell owns it from then on and refreshes it itself.
+   */
+  notifications: AdminNotification[];
   userEmail: string;
   userName: string | null;
   /** The full storage meter, rendered in the mobile sheet; the server builds it. */
@@ -102,6 +108,7 @@ export function AdminShell({
   settings,
   newLeads,
   pendingReviews,
+  notifications,
   userEmail,
   userName,
   storage,
@@ -208,7 +215,7 @@ export function AdminShell({
               </div>
             ) : null}
 
-            <Alerts newLeads={newLeads} pendingReviews={pendingReviews} />
+            <NotificationBell initial={notifications} floating={floating} menuPanel={menuPanel} />
             <Account email={userEmail} name={userName} />
 
             <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
@@ -397,59 +404,6 @@ function StorageChip({ percent, bar }: { percent: number; bar: string }) {
       </span>
       <span className="text-xs font-semibold tabular">{percent}%</span>
     </Link>
-  );
-}
-
-function Alerts({ newLeads, pendingReviews }: { newLeads: number; pendingReviews: number }) {
-  const total = newLeads + pendingReviews;
-
-  return (
-    <Menu.Root modal={false}>
-      <Menu.Trigger
-        className={cn(
-          floating,
-          "relative inline-flex size-11 items-center justify-center text-foreground",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        )}
-        aria-label={total > 0 ? `Notifications, ${total} waiting` : "Notifications"}
-      >
-        <Bell className="size-5" aria-hidden="true" />
-        {total > 0 ? (
-          <span
-            aria-hidden="true"
-            className="absolute -top-1 -right-1 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1 text-overline font-semibold text-accent-fg tabular"
-          >
-            {total}
-          </span>
-        ) : null}
-      </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Content align="end" sideOffset={10} className={cn(menuPanel, "w-72")}>
-          <Menu.Label className="px-3 pt-1.5 pb-1 text-overline font-semibold tracking-[0.12em] text-foreground-subtle uppercase">
-            Waiting on you
-          </Menu.Label>
-          {total === 0 ? (
-            <p className="px-3 py-3 text-sm text-foreground-muted">Nothing waiting. New enquiries and reviews show up here.</p>
-          ) : null}
-          {newLeads > 0 ? (
-            <Menu.Item asChild className={menuItem}>
-              <Link href="/admin/leads?status=new">
-                <CountBadge count={newLeads} />
-                {newLeads === 1 ? "new enquiry" : "new enquiries"}
-              </Link>
-            </Menu.Item>
-          ) : null}
-          {pendingReviews > 0 ? (
-            <Menu.Item asChild className={menuItem}>
-              <Link href="/admin/reviews">
-                <CountBadge count={pendingReviews} />
-                {pendingReviews === 1 ? "review to approve" : "reviews to approve"}
-              </Link>
-            </Menu.Item>
-          ) : null}
-        </Menu.Content>
-      </Menu.Portal>
-    </Menu.Root>
   );
 }
 

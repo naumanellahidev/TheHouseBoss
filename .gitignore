@@ -62,3 +62,5 @@ lighthouse-results.json
 
 .vercel
 .env*
+# Playwright run logs written while auditing a change locally
+.responsive-wide.log

@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+
+import { ServiceWorker } from "@/components/site/service-worker";
 import { preconnect } from "react-dom";
 
 import { fontVariables } from "@/app/fonts";
@@ -30,12 +32,39 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-icon.png" }],
   },
   /*
+    iOS reads almost nothing from the web app manifest.
+
+    What makes Add to Home Screen open without Safari chrome on an iPhone is
+    this block — the apple-mobile-web-app-capable meta and the status bar
+    style — plus the apple-touch-icon above. Android and desktop Chrome read
+    app/manifest.ts instead, which is why both exist.
+
+    black-translucent lets the navy chrome run under the status bar rather
+    than leaving a white strip above it. The admin shell already carries
+    safe-area padding, so nothing ends up under the notch.
+  */
+  appleWebApp: {
+    capable: true,
+    title: "House Boss",
+    statusBarStyle: "black-translucent",
+  },
+  /*
     Geo meta tags. Google ignores these — it takes location from the Business
     Profile and the JSON-LD — but Bing and a number of local directories still
     read them, and they cost nothing. The position is Lake Mary city centre,
     not her address: this is a service-area business (lib/site-config.ts).
   */
   other: {
+    /*
+      The legacy iOS name, added by hand.
+
+      Next emits the standardised mobile-web-app-capable for appleWebApp.capable,
+      and Safari has honoured that only since iOS 15.4. An iPhone on anything
+      older reads the apple- prefixed one or opens the app in a Safari window
+      with the address bar — which is the whole thing installing it was meant
+      to avoid. Both are harmless together.
+    */
+    "apple-mobile-web-app-capable": "yes",
     "geo.region": "US-FL",
     "geo.placename": siteConfig.contact.address.locality,
     "geo.position": `${siteConfig.geo.latitude};${siteConfig.geo.longitude}`,
@@ -82,7 +111,16 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={`${fontVariables} h-full`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        {/*
+          Registers the service worker, which is what makes the site
+          installable and gives an offline tap a page that explains itself.
+          It renders nothing and waits for load, so it costs the first paint
+          nothing.
+        */}
+        <ServiceWorker />
+      </body>
     </html>
   );
 }

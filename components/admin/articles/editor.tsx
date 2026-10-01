@@ -188,7 +188,20 @@ export function ArticleEditor({ value, onChange, articleId }: ArticleEditorProps
         visible on a laptop. `field-sizing` is not used — the point is a FIXED
         viewport, not one that grows with the text.
       */}
-      <div className="max-h-[min(62vh,40rem)] overflow-y-auto overscroll-contain">
+      {/*
+        The cap starts at 768px, not at 360.
+
+        A nested scroller on a phone fights the browser: you flick to move the
+        page, the editor takes the gesture, and the page does not move. On a
+        phone the page scrolling IS the normal behaviour and there is no sidebar
+        running alongside to be pushed off screen — the thing this cap exists to
+        prevent only happens on a wider layout.
+
+        `min(62vh, 40rem)` rather than a plain `vh`: tall enough that a
+        paragraph is not read through a letterbox, and bounded so a 27-inch
+        monitor does not make the toolbar a scroll away from the text.
+      */}
+      <div className="md:max-h-[min(62vh,40rem)] md:overflow-y-auto md:overscroll-contain">
         <EditorContent editor={editor} />
       </div>
 
