@@ -78,16 +78,66 @@ export function stripBrandSuffix(title: string): string {
  * page's identity; the rest is elaboration and is what the trim was already
  * discarding, just untidily.
  */
+/**
+ * Words a title must never end on.
+ *
+ * "Living in Lake Mary, FL: What You Need to" is what the old trimmer produced
+ * from "…What You Need to Know", and it is worse than a shorter title: it reads
+ * as a page that is broken rather than a page that is brief, and that is the
+ * line somebody decides whether to click on.
+ */
+const DANGLING = new Set([
+  "a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "into", "is",
+  "it", "its", "of", "on", "or", "our", "over", "per", "so", "than", "that",
+  "the", "their", "this", "to", "under", "up", "via", "vs", "was", "were",
+  "what", "when", "which", "while", "who", "why", "will", "with", "without",
+  "you", "your",
+]);
+
+function dropDanglingWords(value: string): string {
+  const words = value.split(" ");
+  while (words.length > 2) {
+    const last = words[words.length - 1].toLowerCase().replace(/[^a-z]/g, "");
+    if (!DANGLING.has(last)) break;
+    words.pop();
+  }
+  return words.join(" ").replace(/[\s,;:|—–-]+$/, "");
+}
+
 export function trimTitle(value: string, max = TITLE_MAX): string {
   const clean = stripBrandSuffix(value);
   if (clean.length <= max) return clean;
 
-  const trimmed = trimToWord(clean, max);
-  const lastSeparator = trimmed.search(/\s*[|·—–]\s*[^|·—–]*$/);
+  /*
+    Cut at a clause boundary before cutting at a word.
 
-  // Only if a real head survives — never trim a title down to nothing.
-  if (lastSeparator > 12) return trimmed.slice(0, lastSeparator).trim();
-  return trimmed;
+    An author's headline is usually two parts — "Living in Lake Mary, FL: What
+    You Need to Know" — and the first part is the one that carries the subject.
+    Dropping the second part whole gives "Living in Lake Mary, FL": complete,
+    inside the budget, and still the phrase somebody searches. Cutting by word
+    gave a fragment of the second part and kept none of it.
+
+    Colons, dashes, pipes and commas all count. The comma is last because it is
+    the weakest break — "Lake Mary, FL" must not become "Lake Mary" while a
+    stronger boundary is available.
+  */
+  for (const separator of [/\s*[|·—–:;]\s*/, /\s*,\s*/]) {
+    const parts = clean.split(separator).filter(Boolean);
+    if (parts.length < 2) continue;
+
+    let head = "";
+    for (const part of parts) {
+      const candidate = head === "" ? part : `${head}${separator.source.includes(",") ? ", " : " — "}${part}`;
+      if (candidate.length > max) break;
+      head = candidate;
+    }
+
+    // 16 characters: below that the head is a word or two and says less than a
+    // trimmed version of the whole thing would.
+    if (head.length >= 16) return head;
+  }
+
+  return dropDanglingWords(trimToWord(clean, max));
 }
 
 /**

@@ -479,7 +479,20 @@ export function articleDescriptionFrom(f: ArticleFacts, bodyJson?: unknown): str
     paragraph is what a marked-up document buys.
   */
   const answer = answerFirstText(bodyJson);
-  if (answer && answer.length >= DESC_MIN) return trimToWord(answer, DESC_MAX);
+
+  /*
+    Whole sentences, not a word-boundary cut.
+
+    `trimToWord` on a 200-character answer produced "…including local
+    neighborhoods, home prices, schools, lifestyle" — in band, and ending
+    mid-list with no full stop, which is what a search result then displays.
+    `firstSentences` takes as many complete sentences as fit; only if that leaves
+    too little does the composer take over and build one from the parts below.
+  */
+  if (answer) {
+    const whole = firstSentences(answer, DESC_MAX);
+    if (whole.length >= DESC_MIN) return whole;
+  }
 
   const excerpt = f.excerpt ? tidy(f.excerpt) : "";
   const month = WANTS_FRESHNESS[f.kind ?? ""] ? monthLabel(f.publishedAt) : "";

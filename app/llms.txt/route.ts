@@ -172,6 +172,23 @@ export async function GET() {
     }
   }
 
+  /*
+    The writing hub, listed whether or not anything is published yet.
+
+    An assistant asked "what has she written about Sanford" should be able to
+    reach one page that answers it, and that page exists for every city in the
+    service area — the per-city lists are prerendered from the compile-time city
+    list, not from whatever happens to be published today.
+  */
+  lines.push(
+    "",
+    "## Articles by city",
+    "",
+    `All writing: ${base}/articles`,
+    "",
+    ...allCities.map((city) => `- ${city.name}: ${base}/articles/${city.slug}`),
+  );
+
   if (articles.length > 0) {
     lines.push("", "## Recent writing", "");
     for (const article of articles.slice(0, 20)) {

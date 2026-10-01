@@ -1,6 +1,7 @@
 import "server-only";
 
-import { DESC_MAX, DESC_MIN, trimToWord } from "@/lib/seo/auto/generate";
+import { DESC_MAX, trimToWord } from "@/lib/seo/auto/generate";
+import { review, type Rejection } from "@/lib/seo/auto/review";
 
 /**
  * Optional LLM polish for generated SEO copy.
@@ -66,74 +67,6 @@ const TIMEOUT_MS = 15_000;
  * generation, and the `finish_reason` guard below catches it if it does.
  */
 const MAX_TOKENS = 900;
-
-/**
- * Why a rejected response was rejected.
- *
- * Returned rather than logged-and-forgotten so the caller can say something
- * true. "The model's answer was rejected because it contained a number that is
- * not in this listing" is a sentence an operator can act on; silence looks like
- * the feature not working.
- */
-export type Rejection =
-  | "unconfigured"
-  | "unreachable"
-  | "rate-limited"
-  | "timeout"
-  | "truncated"
-  | "empty"
-  | "length"
-  | "formatting"
-  | "invented-number";
-
-type Config = { key: string; baseUrl: string; model: string };
-
-function config(): Config | null {
-  const key = process.env.OLLAMA_API_KEY?.trim();
-  const baseUrl = process.env.OLLAMA_BASE_URL?.trim().replace(/\/+$/, "");
-  const model = process.env.OLLAMA_MODEL?.trim();
-  if (!key || !baseUrl || !model) return null;
-  return { key, baseUrl, model };
-}
-
-export function isModelConfigured(): boolean {
-  return config() !== null;
-}
-
-/**
- * Every numeral in `text` must appear in `source`.
- *
- * Digits are compared after stripping separators, so "1,850" in the source
- * satisfies "1850" in the output. Years, prices, bed and bath counts are all
- * numerals, which is precisely the class of fact a model is most likely to
- * smooth into something plausible and wrong.
- */
-function containsOnlyKnownNumbers(text: string, source: string): boolean {
-  const normalise = (s: string) => s.replace(/[,\s]/g, "");
-  const known = new Set(normalise(source).match(/\d+/g) ?? []);
-  const used = normalise(text).match(/\d+/g) ?? [];
-  return used.every((n) => known.has(n));
-}
-
-/**
- * Reject anything that would look wrong in a `<meta>` tag, and say why.
- *
- * The reason is returned rather than collapsed to a boolean so a rejection is
- * diagnosable. "It quietly used the written version again" is not a report
- * anyone can act on; "the model put in a number this listing does not contain"
- * is — and on a property listing that particular rejection is the one that
- * matters most.
- */
-function review(text: string, source: string): "ok" | Rejection {
-  const value = text.trim();
-  if (value.length < DESC_MIN || value.length > DESC_MAX) return "length";
-  // Markdown, quotes and newlines all render literally in a meta description.
-  if (/[*_#`\n\r]|^["']|["']$/.test(value)) return "formatting";
-  // A model that starts explaining itself has not answered the prompt.
-  if (/^(here|sure|certainly|of course)\b/i.test(value)) return "formatting";
-  if (!containsOnlyKnownNumbers(value, source)) return "invented-number";
-  return "ok";
-}
 
 type Completion =
   | { text: string }
@@ -217,6 +150,20 @@ async function complete(prompt: string, cfg: Config, temperature: number): Promi
   } finally {
     clearTimeout(timer);
   }
+}
+
+type Config = { key: string; baseUrl: string; model: string };
+
+function config(): Config | null {
+  const key = process.env.OLLAMA_API_KEY?.trim();
+  const baseUrl = process.env.OLLAMA_BASE_URL?.trim().replace(/\/+$/, "");
+  const model = process.env.OLLAMA_MODEL?.trim();
+  if (!key || !baseUrl || !model) return null;
+  return { key, baseUrl, model };
+}
+
+export function isModelConfigured(): boolean {
+  return config() !== null;
 }
 
 /**

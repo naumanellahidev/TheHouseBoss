@@ -109,8 +109,22 @@ export function ImageField({
       </Field>
 
       {imageKey ? (
-        <div className="flex flex-col gap-3 admin-card p-3 sm:flex-row">
-          <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md bg-surface-sunken sm:w-56">
+        /*
+          A container query, not a viewport one.
+
+          `sm:flex-row` asked the wrong question. This field is used in the wide
+          column of the settings screen AND in the article editor's sidebar,
+          which is about a third of the width — so on a laptop the viewport was
+          "large" and the sidebar copy got the side-by-side layout in 110px:
+          the alt-text input scrolled its own value out of view and the Replace
+          and Remove buttons were squeezed into each other.
+
+          `@container` measures the space this field actually has. Below 28rem it
+          stacks, above it the image sits beside the field, and the screen it is
+          on has nothing to do with it.
+        */
+        <div className="@container flex flex-col gap-3 admin-card p-3 @md:flex-row">
+          <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-md bg-surface-sunken @md:w-56">
             <Image
               src={keyUrl(imageKey, 800)}
               alt=""
@@ -143,7 +157,9 @@ export function ImageField({
               </label>
             )}
 
-            <div className="mt-auto flex gap-2">
+            {/* Wraps: at the narrow end these two sit on separate lines rather
+                than compressing to their icons. */}
+            <div className="mt-auto flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="outline"

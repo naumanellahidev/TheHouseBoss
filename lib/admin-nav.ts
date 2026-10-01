@@ -7,7 +7,6 @@ import {
   Inbox,
   LayoutDashboard,
   MapPin,
-  MapPinned,
   ScrollText,
   LayoutTemplate,
   Settings,
@@ -63,7 +62,18 @@ export const adminNav: AdminNavItem[] = [
 
   { href: "/admin/articles", label: "Articles", icon: FileText, section: "content" },
   { href: "/admin/cities", label: "Cities", icon: MapPin, section: "content" },
-  { href: "/admin/communities", label: "Communities", icon: MapPinned, section: "content" },
+  /*
+    Communities is not in the navigation (client, 2026-09-30).
+
+    Articles is the one content section now, and a menu entry for a screen she
+    does not use is a choice she has to make every time she opens the menu.
+
+    The SCREEN is untouched: `/admin/communities` still works, still lists, still
+    edits, and a community is still attached to a listing from the listing form.
+    Removing the route would take the public `/communities/{slug}` pages with it,
+    and a published URL is permanent (CLAUDE.md § 3 rule 11). It is reached from
+    Cities, where a community belongs.
+  */
   {
     href: "/admin/pages",
     label: "Pages",

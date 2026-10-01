@@ -44,6 +44,10 @@ export const PAGES: TestPage[] = [
   { path: "/communities/heathrow", name: "heathrow" },
   { path: "/longwood", name: "longwood" },
   { path: "/market-updates", name: "market-updates" },
+  // The writing hub and one city page: the hub carries the search form and the
+  // city page carries the locked-city variant of it, which are different trees.
+  { path: "/articles", name: "articles-hub" },
+  { path: "/articles/lake-mary", name: "articles-city" },
 
   // Phase 5
   { path: "/about", name: "about" },

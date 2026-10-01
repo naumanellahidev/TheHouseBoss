@@ -8,7 +8,7 @@ import {
 import { getArticles } from "@/lib/queries/articles";
 import { getCities, getCommunities } from "@/lib/queries/cities";
 import { getListingSlugsForStaticParams, getSoldListings } from "@/lib/queries/listings";
-import { siteConfig } from "@/lib/site-config";
+import { allCities, siteConfig } from "@/lib/site-config";
 
 /**
  * The sitemap — docs/08 § 5, database-driven.
@@ -80,6 +80,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
       lastModified: now,
     },
+    /*
+      The writing hub and one page per city.
+
+      From `allCities` rather than from the database, which is what the routes
+      themselves do: the pages are prerendered for every city in the service area
+      whether or not anything has been written about it yet, so a sitemap built
+      from published articles would omit pages that exist and answer a real query
+      ("has she written about Oviedo?").
+    */
+    { url: url("/articles"), changeFrequency: "weekly", priority: 0.8, lastModified: now },
+    ...allCities.map((city) => ({
+      url: url(`/articles/${city.slug}`),
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+      lastModified: now,
+    })),
   ];
 
   // Every dynamic section degrades to nothing rather than failing the whole

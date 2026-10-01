@@ -565,15 +565,19 @@ export function ArticleForm({
         headings, the internal links — belong next to the body, not beside the
         cover image.
       */}
-      <section aria-labelledby="article-seo-heading" className="flex flex-col gap-4 admin-card p-5">
-        <div className="flex flex-col gap-1">
+      <section aria-labelledby="article-seo-heading" className="flex flex-col gap-5 admin-card p-5 md:p-6">
+        <div className="flex flex-col gap-1 border-b border-border pb-4">
+          <p className="text-overline font-semibold tracking-[0.12em] text-accent-quiet uppercase">
+            Written for you
+          </p>
           <h2 id="article-seo-heading" className="text-h3">
             Search and AI visibility
           </h2>
           <p className="max-w-[72ch] text-sm text-foreground-muted">
             Everything here is checked against this article as you write it. The
             title and description are optional — leave them blank and they are
-            written from your own words when you publish.
+            written from your own words when you publish, from the answer-first
+            block if there is one.
           </p>
         </div>
 

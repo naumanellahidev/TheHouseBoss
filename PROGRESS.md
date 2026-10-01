@@ -117,6 +117,81 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-10-01 — answer hub, one metadata generator, admin SEO rebuilt, Articles section
+
+**Shipped**
+
+- **The answer hub.** 62 question pages under `/answers` in nine categories,
+  each with a short answer, QAPage and BreadcrumbList markup, and links out to
+  the city, the service and its siblings. Inbound links from the header, the
+  footer, the city hubs, `/hire-contractor` and the VA, assumable and seller
+  guides. `scripts/check-answers.mjs` holds the 400-word floor and resolves
+  every internal link; `scripts/check-internal-links.mjs` crawls the built site
+  and proves there are no orphans and no broken links (110 pages).
+- **Auto-SEO generation rebuilt from scratch.** It was one pattern per record
+  type plus a padder, so a four-bedroom pool home with a contractor's report
+  could reach the 140-character floor on brand text that said nothing about the
+  house. Now `vocab.ts` (the words a record may be described with), `compose.ts`
+  (budgets, candidate fitting, clause groups), `document.ts` (what a Tiptap body
+  contains), `score.ts` (the on-page audit) and a rewritten `generate.ts` on top.
+  A generator offers candidates richest-first and gets back the richest that
+  fits. Listing descriptions open with the phrase somebody searches rather than
+  the street address; titles are a matrix of heads and tails, so a long address
+  loses "Boulevard" and then loses "FL" but never loses the city.
+- **One generator, three routes.** The listing route and both article routes each
+  had their own inline fallback copy, so the same record was described three
+  different ways depending on which produced the text. They all call the one
+  generator now, and `articleMetaDescription()` applies the same precedence
+  everywhere: her text when it is publishable, generated otherwise.
+- **`npm run check:seo-copy`** (in `guards`) — 1,050 listing and 108 article
+  column combinations, plus seven model-review rules. Asserts every title fits,
+  every description lands in band and ends on a full stop, and no sold or pending
+  record is ever described as for sale.
+- **The model gate hardened**, in a new pure `lib/seo/auto/review.ts` so it can be
+  tested at all — `ollama.ts` carries `server-only`. Two rules exist because bad
+  copy reached a page: one that stopped mid-list with no full stop, one that
+  named the city three times in a sentence and a half.
+- **Admin → SEO is five tabs** rather than one scroll of five stacked panels.
+  Each record's SEO tab is now a score, the failing checks with a sentence each
+  and a button to the tab that fixes them, the real generated copy as the field
+  placeholders, and two previews — the search result, and what an assistant would
+  quote.
+- **Articles section** (client, 2026-09-30). `/articles` is the hub with every
+  city's writing combined, searchable and filterable; `/articles/{city}` is one
+  page per city. Filters are query parameters applied on the server, so a
+  filtered view is a link somebody can send and the page works without
+  JavaScript; the bare URL is canonical and indexed, every filtered permutation
+  is `noindex, follow`. Communities is out of both menus — the public header and
+  footer and the admin navigation — with every community page still live and
+  still linked from the city hubs.
+- **Social profiles** (client, 2026-09-30): Instagram, Facebook, TikTok, LinkedIn
+  and YouTube in the footer, on `/contact`, on `/about`, in `/llms.txt` and in
+  the `sameAs` array. One resolver (`components/site/social-links.tsx`) for all
+  of them; TikTok added to Settings → Profiles.
+- **Editor fixes**: the article body scrolls in its own viewport with a sticky
+  toolbar instead of moving the whole page, and the cover-image field is now a
+  container query so it stops collapsing in the sidebar.
+
+**Verified**
+
+- `npm run guards` clean, production build clean, 401 Playwright tests pass
+  (36 skipped), `check:links` finds no orphans or broken links across 110 pages,
+  `check:seo` reports 114 sitemap URLs / 22 indexable / 5 noindex.
+- Local Lighthouse after the work: mobile home 83, search 88, city 92,
+  contractor 85, answer 93, guide 90; accessibility 100 and SEO 100 everywhere.
+
+**Open**
+
+- The eight seed-dependent tests in `tests/search.spec.ts` skip with a reason:
+  the demo listings were deleted before handover, and they assert on specific
+  seeded slugs. `npm run db:seed` brings them back.
+- Blog posts for cities other than Lake Mary still publish under
+  `/market-updates/{slug}` (`lib/utils/routes.ts`). Nothing is published yet, so
+  this is the moment to generalise it if the client wants per-city blog URLs —
+  after the first article it is permanent (HR11).
+
+---
+
 ### 2026-09-06 (final) — dashboard SEO snapshot, Vercel handover
 
 **Shipped**

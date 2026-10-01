@@ -30,6 +30,7 @@ import {
   listingTitleFrom,
   TITLE_MAX,
 } from "../lib/seo/auto/generate";
+import { review } from "../lib/seo/auto/review";
 import type { ListingType, PropertyType } from "../types/domain";
 
 const PROPERTY_TYPES: PropertyType[] = [
@@ -203,6 +204,84 @@ for (const kind of ARTICLE_KINDS) {
   }
 }
 
+/* ── What the model is allowed to return ──────────────────────────────────── */
+
+/*
+  The review gate in `lib/seo/auto/ollama.ts`, asserted rule by rule.
+
+  Every case below is a real failure mode, and two of them reached a page before
+  the rule existed: a description that stopped mid-list with no full stop, and
+  one that named the city three times in a sentence and a half. The deterministic
+  writer cannot produce either, so nothing else in this file would ever catch a
+  regression in the gate.
+*/
+const SOURCE =
+  "1428 Bridgewater Drive, Lake Mary, Florida. 4 bedrooms. 3 bathrooms. 2480 square feet. built 2019.";
+
+const REVIEW_CASES: [string, string, string][] = [
+  [
+    "accepts a clean one",
+    "4 bed, 3 bath pool home for sale in Lake Mary, Florida. 2,480 sq ft, built 2019. Photographs, key facts and a read on the condition of it all.",
+    "ok",
+  ],
+  [
+    "rejects a sentence that never finished",
+    "Thinking about moving to Lake Mary? Discover what it is really like to live here, including local neighborhoods, home prices, schools, lifestyle",
+    "unfinished",
+  ],
+  [
+    "rejects a trailing conjunction",
+    "A four bedroom house in the middle of Seminole County with a screened lanai, a fenced yard, a two car garage, a brand new roof and a study and.",
+    "unfinished",
+  ],
+  [
+    "rejects keyword stuffing",
+    "Lake Mary homes with Lake Mary schools and Lake Mary parks, right in the heart of the county and close to everything that matters to a family.",
+    "repetitive",
+  ],
+  [
+    "rejects a number the record does not contain",
+    "4 bed, 3 bath home for sale in Lake Mary, Florida, built 1998. Photographs, key facts and a licensed contractor read on the condition of it.",
+    "invented-number",
+  ],
+  [
+    "rejects markdown",
+    "**4 bed, 3 bath pool home** for sale in Lake Mary, Florida. 2,480 sq ft, built 2019. Photographs, key facts and a read on the condition of it.",
+    "formatting",
+  ],
+  [
+    "rejects a preamble",
+    "Here is a meta description for the listing: a 4 bed, 3 bath pool home in Lake Mary, Florida, with 2,480 sq ft and a contractor read on it now.",
+    "formatting",
+  ],
+];
+
+for (const [label, text, expected] of REVIEW_CASES) {
+  /*
+    The length rule runs first, so a case written outside the band tests the
+    length rule and nothing else — which is how the first version of this block
+    "passed" the markdown case for the wrong reason. Assert the fixture before
+    asserting the behaviour.
+  */
+  if (text.length < DESC_MIN || text.length > DESC_MAX) {
+    failures.push({
+      what: `model review: ${label}`,
+      detail: `the test string is ${text.length} chars, so it would be rejected for length before the rule under test runs`,
+      value: text,
+    });
+    continue;
+  }
+
+  const verdict = review(text, SOURCE);
+  if (verdict !== expected) {
+    failures.push({
+      what: `model review: ${label}`,
+      detail: `expected ${expected}, got ${verdict}`,
+      value: text,
+    });
+  }
+}
+
 /* ── Report ───────────────────────────────────────────────────────────────── */
 
 if (failures.length > 0) {
@@ -225,5 +304,6 @@ if (failures.length > 0) {
 
 console.log(
   `SEO copy guard passed — ${listingCases} listing and ${articleCases} article combinations, ` +
-    `every title within ${TITLE_MAX} and every description inside ${DESC_MIN}-${DESC_MAX}.`,
+    `every title within ${TITLE_MAX} and every description inside ${DESC_MIN}-${DESC_MAX}; ` +
+    `${REVIEW_CASES.length} model-review rules each reject what they are meant to.`,
 );

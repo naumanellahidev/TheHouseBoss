@@ -332,18 +332,32 @@ export function auditArticle(input: ArticleAuditInput): SeoAudit {
   // for a form that has not loaded the editor yet.
   const words = doc.words > 0 ? doc.words : countWords(input.bodyText ?? "");
 
-  const title = (input.metaTitle?.trim() || articleTitleFrom(input)).trim();
+  const generatedTitle = articleTitleFrom(input);
+  const title = (input.metaTitle?.trim() || generatedTitle).trim();
+
+  /*
+    The generated title is always inside the budget — it is trimmed to get there.
+    So "is it short enough" is the wrong question on an article: the answer is
+    always yes, and it hides the thing worth knowing, which is that the headline
+    was CUT to make it so.
+  */
+  const headline = input.title.trim();
+  const wasCut = !input.metaTitle?.trim() && generatedTitle.length < headline.length;
 
   checks.push({
     id: "title-length",
     label: "Title fits a search result",
     weight: 10,
     tab: "seo",
-    status: verdict(title.length > 0 && title.length <= TITLE_MAX, title.length <= 55),
+    status: title.length === 0 ? "fail" : title.length > TITLE_MAX ? "warn" : wasCut ? "warn" : "pass",
     detail:
-      title.length <= TITLE_MAX
-        ? `${title.length} characters, plus the site name.`
-        : `${title.length} characters, so the end is replaced with an ellipsis in results. Write a shorter meta title — the headline on the page can stay as it is.`,
+      title.length === 0
+        ? "There is no title yet."
+        : title.length > TITLE_MAX
+          ? `${title.length} characters, so the end is replaced with an ellipsis in results. Shorten it — the headline on the page can stay as it is.`
+          : wasCut
+            ? `Your headline is too long for a result, so it is shortened to "${generatedTitle}". Write a meta title if you would rather choose the short version yourself.`
+            : `${title.length} characters, plus the site name.`,
   });
 
   const description = input.metaDesc?.trim() ?? "";

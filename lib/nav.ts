@@ -60,20 +60,35 @@ export const primaryNav: NavEntry[] = [
       },
     ],
   },
+  /*
+    "Articles", where "Communities" used to be (client, 2026-09-30).
+
+    The old group was a list of PLACES under a label about places, and the
+    writing was reachable only through two items named after their format —
+    "Insights" for market updates and a Lake Mary blog nobody else's city had.
+    Somebody wondering what she has written about Sanford had nowhere to go.
+
+    So the slot now leads to `/articles` and the menu is one entry per city,
+    each landing on that city's own writing. The city GUIDES did not lose their
+    route in: every `/articles/{city}` page links to `/{city}` and to its
+    homes-for-sale page, the footer still carries them, and the internal-link
+    audit (`npm run check:links`) fails if any of them becomes an orphan.
+  */
   {
-    label: "Communities",
-    href: "/lake-mary",
+    label: "Articles",
+    href: "/articles",
+    hrefLabel: "All articles",
     items: [
+      ...allCities.map((c) => ({
+        href: `/articles/${c.slug}`,
+        label: c.name,
+        description: `${c.county} County`,
+      })),
       {
-        href: "/lake-mary",
-        label: "Lake Mary",
-        description: "The flagship market",
+        href: "/market-updates",
+        label: "Market Updates",
+        description: "What the numbers actually did",
       },
-      { href: "/lake-mary/homes-for-sale", label: "Lake Mary Homes for Sale" },
-      { href: "/lake-mary/communities", label: "Lake Mary Communities" },
-      ...allCities
-        .filter((c) => c.slug !== "lake-mary")
-        .map((c) => ({ href: `/${c.slug}`, label: c.name })),
     ],
   },
   {
@@ -156,7 +171,17 @@ export const footerNav: { heading: string; items: NavLink[] }[] = [
     items: [
       { href: "/about", label: "About Krisi" },
       { href: "/lake-mary", label: "Lake Mary" },
-      { href: "/lake-mary/communities", label: "Communities" },
+      /*
+        Communities is out of the chrome entirely (client, 2026-09-30): Articles
+        is the one content entry, in the header and here.
+
+        The pages stay — `/lake-mary/communities` and every `/communities/{slug}`
+        still resolve, are still in the sitemap, and are still linked from the
+        city hubs and from the listings that sit in them, which is where somebody
+        looking for a community actually is. HR11 makes those URLs permanent, so
+        the choice here is only about what the menu offers.
+      */
+      { href: "/articles", label: "Articles" },
       { href: "/reviews", label: "Reviews" },
       { href: "/contact", label: "Contact" },
     ],

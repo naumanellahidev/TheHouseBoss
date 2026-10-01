@@ -170,7 +170,27 @@ export function ArticleEditor({ value, onChange, articleId }: ArticleEditorProps
         onPickImage={() => fileRef.current?.click()}
       />
 
-      <EditorContent editor={editor} />
+      {/*
+        The body scrolls inside its own box, not by moving the page.
+
+        A long article pushed the toolbar, the word count and everything in the
+        sidebar off the screen: to reach the bold button you scrolled back to the
+        top, and to reach the SEO panel you scrolled past the whole piece. With a
+        fixed viewport the toolbar stays put and the page keeps its own scroll for
+        the sections either side of the editor.
+
+        `overscroll-contain` is what stops the page scrolling on when the body
+        reaches its end — without it a trackpad flick inside the editor throws the
+        whole form down, which is the behaviour this is replacing.
+
+        The height is `min(62vh, 40rem)`: tall enough that a paragraph is not read
+        through a letterbox, short enough that the word count below it stays
+        visible on a laptop. `field-sizing` is not used — the point is a FIXED
+        viewport, not one that grows with the text.
+      */}
+      <div className="max-h-[min(62vh,40rem)] overflow-y-auto overscroll-contain">
+        <EditorContent editor={editor} />
+      </div>
 
       <input
         ref={fileRef}
@@ -237,7 +257,12 @@ function Toolbar({
     <div
       role="toolbar"
       aria-label="Formatting"
-      className="scroll-row items-center gap-0.5 border-b border-border px-2 py-1.5"
+      /*
+        Sticky, because the body below it now scrolls: a formatting toolbar that
+        leaves the screen when you scroll to the paragraph you want to format is
+        a toolbar you have to scroll away from the text to use.
+      */
+      className="scroll-row sticky top-0 z-10 items-center gap-0.5 border-b border-border bg-surface px-2 py-1.5"
     >
       <Tool
         label="Heading 2"

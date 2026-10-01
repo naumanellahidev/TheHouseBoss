@@ -81,7 +81,7 @@ function ScoreDial({ score }: { score: number }) {
   const tone = score >= 90 ? "text-success" : score >= 55 ? "text-warning" : "text-danger";
 
   return (
-    <svg viewBox="0 0 80 80" className="size-20 shrink-0" aria-hidden="true">
+    <svg viewBox="0 0 80 80" className="size-24 shrink-0" aria-hidden="true">
       <circle
         cx="40"
         cy="40"
@@ -200,17 +200,47 @@ export function RecordSeoPanel({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* ── Score and the one button ───────────────────────────────────── */}
+      {/*
+        ── Score and the one button ─────────────────────────────────────
+
+        The masthead of the panel, and deliberately the largest thing in it. The
+        number is what somebody looks at first and the status word is what they
+        remember, so the word is a pill rather than part of a sentence — at a
+        glance across the screen "Needs work" in amber reads before any digit
+        does.
+
+        The wash is the accent one, not a flat sunken grey: this section is the
+        one on the page that is about the work rather than the article, and it
+        should be findable by shape when the editor is scrolled.
+      */}
       <section
         aria-labelledby="seo-score-heading"
-        className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-sunken p-4 sm:flex-row sm:items-center"
+        className={cn(
+          "flex flex-col gap-4 rounded-2xl border border-border p-5 sm:flex-row sm:items-center",
+          "bg-linear-to-br from-accent-wash to-surface",
+        )}
       >
         <ScoreDial score={audit.score} />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h3 id="seo-score-heading" className="text-h4">
-            {scoreLabel(audit.score)} — {audit.score} out of 100
-          </h3>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 id="seo-score-heading" className="text-h4">
+              Search and AI readiness
+            </h3>
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold",
+                audit.score >= 90
+                  ? "bg-success-bg text-success"
+                  : audit.score >= 55
+                    ? "bg-warning-bg text-warning"
+                    : "bg-danger-bg text-danger",
+              )}
+            >
+              {scoreLabel(audit.score)}
+            </span>
+          </div>
+
           <p className="text-sm text-foreground-muted">
             {audit.failed === 0 && audit.warned === 0
               ? "Every check passes. Nothing here is holding the page back."
@@ -224,10 +254,10 @@ export function RecordSeoPanel({
         </div>
 
         {generate ? (
-          <div className="flex flex-col items-start gap-1 sm:items-end">
+          <div className="flex flex-col items-start gap-1.5 sm:items-end">
             <Button
               type="button"
-              variant="outline"
+              variant="accent"
               className="rounded-full"
               loading={generate.busy}
               onClick={generate.onClick}
@@ -236,7 +266,7 @@ export function RecordSeoPanel({
               Write it for me
             </Button>
             {generate.note ? (
-              <p className="max-w-[28ch] text-xs text-foreground-subtle sm:text-right">
+              <p className="max-w-[30ch] text-xs text-foreground-subtle sm:text-right">
                 {generate.note}
               </p>
             ) : null}
