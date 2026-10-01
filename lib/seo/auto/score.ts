@@ -1,5 +1,6 @@
 import { DESC_MAX, DESC_MIN, inBand, TITLE_MAX } from "@/lib/seo/auto/compose";
 import { analyzeDocument, countWords, headingOutlineIssue } from "@/lib/seo/auto/document";
+import { descriptionProblem } from "@/lib/seo/auto/review";
 import {
   articleTitleFrom,
   listingTitleFrom,
@@ -82,6 +83,32 @@ function verdict(pass: boolean, warn: boolean): CheckStatus {
   return pass ? "pass" : warn ? "warn" : "fail";
 }
 
+
+/**
+ * The description reads like a finished sentence.
+ *
+ * Only asked once there IS one, because the band check above already covers the
+ * empty case and two findings about one blank field is noise.
+ *
+ * This exists because length was the only thing being checked. A stored
+ * description reading "...local neighborhoods, home prices, schools, lifestyle"
+ * was 153 characters, so the panel called it good and scored it accordingly —
+ * while the sentence stops dead and a result displays it exactly that way.
+ */
+function qualityCheck(description: string): SeoCheck | null {
+  const problem = descriptionProblem(description);
+  if (!problem) return null;
+
+  return {
+    id: "description-quality",
+    label: problem.code === "unfinished" ? "Description finishes its sentence" : "Description does not repeat itself",
+    weight: 8,
+    tab: "seo",
+    status: "fail",
+    detail: problem.detail + " Press “Write it for me” to replace it, or edit it here.",
+  };
+}
+
 /* ── Listings ─────────────────────────────────────────────────────────────── */
 
 export type ListingAuditInput = ListingFacts & {
@@ -149,6 +176,9 @@ export function auditListing(input: ListingAuditInput): SeoAudit {
           ? `${description.length} characters — inside the ${DESC_MIN}–${DESC_MAX} a result displays in full.`
           : `${description.length} characters. Under ${DESC_MIN} wastes the line; over ${DESC_MAX} is cut off mid-sentence.`,
   });
+
+  const listingQuality = description === "" ? null : qualityCheck(description);
+  if (listingQuality) checks.push(listingQuality);
 
   if (description !== "") {
     const early = description.toLowerCase().slice(0, 90).includes(input.cityName.toLowerCase());
@@ -377,6 +407,9 @@ export function auditArticle(input: ArticleAuditInput): SeoAudit {
           ? `${description.length} characters — inside the ${DESC_MIN}–${DESC_MAX} a result displays in full.`
           : `${description.length} characters, outside the ${DESC_MIN}–${DESC_MAX} a result displays in full.`,
   });
+
+  const articleQuality = description === "" ? null : qualityCheck(description);
+  if (articleQuality) checks.push(articleQuality);
 
   checks.push({
     id: "excerpt",

@@ -103,6 +103,57 @@ function isRepetitive(text: string): boolean {
  * is — and on a property listing that particular rejection is the one that
  * matters most.
  */
+/**
+ * What is wrong with a description, regardless of where it came from.
+ *
+ * ── Why the audit needs this and not just `review` ────────────────────────
+ *
+ * `review` is the gate for MODEL output: it also checks the length band and
+ * whether a numeral was invented, both of which need the source record. The
+ * admin's audit has a different job — it is looking at a description that is
+ * already saved, which may have been typed, generated, or accepted from a model
+ * before this gate existed.
+ *
+ * That last case is the one that prompted this. A stored description reading
+ * "...including local neighborhoods, home prices, schools, lifestyle" was 153
+ * characters, so the only check the panel ran said "inside 140-158" and scored
+ * it as good — while the sentence it describes stops dead and a search result
+ * displays exactly that.
+ *
+ * Returns null when there is nothing to say.
+ */
+export function descriptionProblem(
+  text: string,
+): { code: "unfinished" | "repetitive"; detail: string } | null {
+  const value = text.trim();
+  if (value === "") return null;
+
+  if (!/[.!?]["')\]]?$/.test(value)) {
+    return {
+      code: "unfinished",
+      detail:
+        "It does not end on a full stop, so it reads as a sentence that was cut off — which is how a search result will display it.",
+    };
+  }
+
+  if (/\b(and|or|with|including|such as|plus|from|for|to)\s*[.!?]$/i.test(value)) {
+    return {
+      code: "unfinished",
+      detail: "It ends on a joining word, so the sentence was going somewhere it never got to.",
+    };
+  }
+
+  if (isRepetitive(value)) {
+    return {
+      code: "repetitive",
+      detail:
+        "A word is repeated three or more times in a sentence and a half, which reads as padding and is the pattern search engines treat as keyword stuffing.",
+    };
+  }
+
+  return null;
+}
+
 export function review(text: string, source: string): "ok" | Rejection {
   const value = text.trim();
   if (value.length < DESC_MIN || value.length > DESC_MAX) return "length";

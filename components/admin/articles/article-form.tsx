@@ -391,6 +391,50 @@ export function ArticleForm({
               ) : null}
             </FieldDescription>
           </Field>
+
+        {/*
+          The questions sit under the writing, not beside it.
+
+          Two reasons, and the second is the one that was visible. They are about
+          the BODY — the button reads headings the author wrote as questions and
+          pairs each with the prose underneath — so they belong next to the body.
+          And now that the editor scrolls inside a fixed viewport, the left column
+          ends halfway up the page while the sidebar runs on, which left a column
+          of empty space under the editor and a cramped repeater in a third of the
+          width. Moving this down fills one and fixes the other.
+        */}
+        {/* ── §21. Questions this article answers ───────────────────── */}
+        <div className="flex flex-col gap-4 admin-card p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-h4 font-semibold">
+                Questions this article answers
+              </h3>
+              <p className="max-w-[68ch] text-sm text-foreground-muted">
+                These appear at the end of the article and are what an AI
+                assistant quotes when somebody asks one of them. Nothing is
+                invented — the button finds headings you wrote as questions and
+                pairs each with what you wrote underneath.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              loading={findingFaq}
+              onClick={findFaq}
+            >
+              <Sparkles aria-hidden="true" />
+              Find them in my article
+            </Button>
+          </div>
+
+          <FaqRepeater
+            value={values.faq ?? []}
+            onChange={(next) => set("faq", next)}
+            description="Only include a question the article genuinely answers. The markup search engines read is built from this list, so a question here that the page does not answer is a policy problem, not just a bad answer."
+          />
+        </div>
         </div>
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
@@ -485,39 +529,6 @@ export function ArticleForm({
               </FieldDescription>
             </Field>
 
-          </div>
-
-          {/* ── §21. Questions this article answers ───────────────────── */}
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-h4 font-semibold">
-                  Questions this article answers
-                </h3>
-                <p className="max-w-[68ch] text-sm text-foreground-muted">
-                  These appear at the end of the article and are what an AI
-                  assistant quotes when somebody asks one of them. Nothing is
-                  invented — the button finds headings you wrote as questions and
-                  pairs each with what you wrote underneath.
-                </p>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                loading={findingFaq}
-                onClick={findFaq}
-              >
-                <Sparkles aria-hidden="true" />
-                Find them in my article
-              </Button>
-            </div>
-
-            <FaqRepeater
-              value={values.faq ?? []}
-              onChange={(next) => set("faq", next)}
-              description="Only include a question the article genuinely answers. The markup search engines read is built from this list, so a question here that the page does not answer is a policy problem, not just a bad answer."
-            />
           </div>
 
           {/* ── Pre-publish checklist ─────────────────────────────────── */}

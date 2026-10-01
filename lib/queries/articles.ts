@@ -60,6 +60,50 @@ export async function getArticleSlugsForStaticParams(
   return (data ?? []).map((r: { slug: string }) => r.slug);
 }
 
+/**
+ * Slug, kind and city for every published article.
+ *
+ * `getArticleSlugsForStaticParams` returns slugs alone, which is enough for a
+ * route whose city is in the path already (`/lake-mary/blog/[slug]`) and not
+ * enough for `/[city]/blog/[slug]`: a slug cannot say which city segment it
+ * belongs under, and prerendering the cross product of cities and slugs would
+ * generate a 404 for every pair that is not real.
+ *
+ * Reads through the anon client, so an unpublished article is invisible by RLS
+ * rather than by a `where` clause somebody has to remember.
+ */
+export async function getArticlesForStaticParams(): Promise<
+  { slug: string; kind: ArticleKind; citySlug: string | null }[]
+> {
+  const db = createSupabasePublicClient();
+  const { data, error } = await db
+    .from("articles")
+    .select("slug, kind, city_id, cities(id, slug)")
+    .limit(1000);
+
+  if (error) throw new Error(`getArticlesForStaticParams: ${error.message}`);
+
+  /*
+    Cast once, like the mappers do.
+
+    The generated types model an embedded to-one relation as a union that
+    includes a `SelectQueryError`, so reading `row.cities.slug` off it does not
+    compile even though the query is correct — `lib/queries/mappers.ts` takes the
+    same loose row shape for the same reason.
+  */
+  const rows = (data ?? []) as unknown as {
+    slug: string;
+    kind: ArticleKind;
+    cities: { slug: string } | null;
+  }[];
+
+  return rows.map((row) => ({
+    slug: row.slug,
+    kind: row.kind,
+    citySlug: row.cities?.slug ?? null,
+  }));
+}
+
 export async function getReviews(limit = 24): Promise<Review[]> {
   const db = createSupabasePublicClient();
   const { data, error } = await db

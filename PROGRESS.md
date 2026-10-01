@@ -1141,9 +1141,9 @@ source and archive, uncompressed size matching byte-for-byte
 **Still outstanding — needs an elevated shell:**
 
 ```
-takeown /f C:dobeTemp /r /d y
-icacls C:dobeTemp /grant "%USERNAME%":F /t
-rmdir /s /q C:dobeTemp
+takeown /f C:\AdobeTemp /r /d y
+icacls C:\AdobeTemp /grant "%USERNAME%":F /t
+rmdir /s /q C:\AdobeTemp
 ```
 
 7.15 GB of Adobe installer leftovers from September 2025 (they contain an

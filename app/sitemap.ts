@@ -9,6 +9,7 @@ import { getArticles } from "@/lib/queries/articles";
 import { getCities, getCommunities } from "@/lib/queries/cities";
 import { getListingSlugsForStaticParams, getSoldListings } from "@/lib/queries/listings";
 import { allCities, siteConfig } from "@/lib/site-config";
+import { articleHref } from "@/lib/utils/routes";
 
 /**
  * The sitemap — docs/08 § 5, database-driven.
@@ -146,14 +147,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
   }));
 
+  /*
+    One definition of where an article lives.
+
+    This was a copy of the rule in `lib/utils/routes.ts`, which is how a sitemap
+    ends up listing an address no link on the site points at: when that rule
+    gained per-city blog URLs, this branch would still have been sending every
+    non-Lake-Mary piece to /market-updates.
+  */
   const articleEntries: MetadataRoute.Sitemap = articles.map((article) => ({
-    url: url(
-      article.kind === "market_update"
-        ? `/market-updates/${article.slug}`
-        : article.city?.slug === "lake-mary"
-          ? `/lake-mary/blog/${article.slug}`
-          : `/market-updates/${article.slug}`,
-    ),
+    url: url(articleHref(article)),
     changeFrequency: "yearly",
     priority: 0.6,
     lastModified: article.publishedAt ? new Date(article.publishedAt) : now,
