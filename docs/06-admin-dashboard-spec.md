@@ -112,11 +112,15 @@ to revoke devices.
 
 ### Sign-in
 
-Email and password, with the magic link kept as the recovery path. The link was
-the only mechanism and it breaks in the one place the client works from: a link
-tapped in Mail opens in **Safari**, not in the installed app, so the session
-landed in a browser tab while the app still showed the sign-in form. A password
-completes the sign-in inside whichever window asked for it.
+Username and password (`UsernameLoginForm` → `/api/admin/login`), with the magic
+link kept behind a disclosure as the recovery path. That split already existed;
+what the PWA changes is which one matters.
+
+iOS gives an installed web app its own window and nothing outside it can
+navigate into that window, so a link tapped in Mail opens in **Safari** and the
+session lands in a browser tab while the installed app still shows the form. The
+password form is the one that signs you in where you are standing, and the
+magic-link panel now says so.
 
 Sessions last 400 days (`@supabase/ssr` default) and the cookies are written by
 the server at `/admin/auth/callback`, so iOS's seven-day cap on script-written

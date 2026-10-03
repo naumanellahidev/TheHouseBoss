@@ -1,93 +1,38 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel, Input } from "@/components/ui/field";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { cn } from "@/lib/utils";
 
 /**
- * Admin sign-in — docs/06 § 1.
+ * Magic-link sign-in — docs/06 § 1. No passwords, no signup route.
  *
- * ── Why there is a password now ───────────────────────────────────────────
+ * Two behaviours the spec calls out explicitly:
  *
- * There was only a magic link, and in a browser that is the better mechanism:
- * nothing to remember, nothing to leak, and the email is the second factor.
+ *   1. after submit the form is REPLACED by "Check your email". Clearing the
+ *      field and leaving the user staring at an empty form is the failure mode
+ *      this replaces.
+ *   2. the response is identical whether or not the address has an account.
+ *      Telling a stranger which email addresses can sign in is an enumeration
+ *      oracle, and there is exactly one admin.
  *
- * It breaks in the one place the client actually works from. The dashboard is
- * installed to her home screen, and a link tapped in Mail opens in **Safari**,
- * not in the installed app — iOS gives a standalone web app its own window and
- * nothing outside it can navigate into that window. So the session landed in a
- * browser tab and the app she had just opened was still showing this form. Every
- * time.
- *
- * A password completes the sign-in inside whichever window asked for it. The
- * magic link stays, because it is the recovery path when the password is
- * forgotten and the only way in before one has been set.
- *
- * ── What is unchanged ─────────────────────────────────────────────────────
- *
- * No signup route and no account enumeration. A wrong password and an unknown
- * address produce the same sentence, and requesting a link produces the same
- * "check your email" whether or not the address has an account — there is
- * exactly one admin, and confirming which addresses exist is the whole attack.
- *
- * Rate limiting is Supabase's own, per address and per project.
+ * Rate limiting is Supabase's own (per email, per project) plus the client-side
+ * cooldown below. The server-side limiter in lib/rate-limit.ts guards routes we
+ * own; this request goes straight to Supabase Auth.
  */
 export function LoginForm({ next, linkError }: { next?: string; linkError?: boolean }) {
-  const router = useRouter();
-
-  const [mode, setMode] = React.useState<"password" | "link">("password");
   const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [state, setState] = React.useState<"idle" | "working" | "sent" | "error">("idle");
+  const [state, setState] = React.useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
   const [message, setMessage] = React.useState<string | null>(null);
 
-  const destination = next && next.startsWith("/admin") ? next : "/admin";
-
-  async function signInWithPassword(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setState("working");
-    setMessage(null);
-
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
-
-    if (error) {
-      setState("error");
-      setMessage(
-        /rate|limit|seconds/i.test(error.message)
-          ? "Too many attempts. Wait a few minutes and try again."
-          : // One sentence for a wrong password, an unknown address and an
-            // account with no password set. Each of the three alternatives
-            // tells a stranger something about the account.
-            "That email and password did not match. If you have never set a password, use the emailed link instead.",
-      );
-      return;
-    }
-
-    /*
-      A full navigation, not `router.push`.
-
-      The session was just written to cookies by the browser client. The server
-      components that decide whether this person may see the dashboard read
-      those cookies on the REQUEST, and a client-side transition reuses the RSC
-      payload fetched before they existed. `refresh()` then `replace()` is the
-      pair that makes the next render see the new session.
-    */
-    router.refresh();
-    router.replace(destination);
-  }
-
-  async function sendLink(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setState("working");
+    setState("sending");
     setMessage(null);
 
     const supabase = createSupabaseBrowserClient();
@@ -141,15 +86,15 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
         {/*
           Said plainly, because it is the thing that confuses people.
 
-          Tapping the link opens Safari. If she is in the installed app, the app
-          will still be on this screen afterwards — the session is in the
-          browser, not in the app window.
+          iOS gives an installed web app its own window, and nothing outside
+          it can navigate into that window — so a link tapped in Mail opens in
+          Safari and the app stays on this screen. The password form above is
+          the one that signs you in where you are standing.
         */}
         <p className="rounded-md bg-surface-sunken p-3 text-sm text-foreground-muted">
-          The link opens in Safari. If you are using the installed app, sign in
-          with your password here instead — set one in{" "}
-          <span className="font-medium text-foreground">Settings → Account</span>{" "}
-          once you are in.
+          The link opens in Safari. If you are in the installed app, close this
+          and sign in with your username and password instead — that signs you
+          in here rather than in the browser.
         </p>
         <Button
           variant="ghost"
@@ -159,7 +104,7 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
             setMessage(null);
           }}
         >
-          Back to sign in
+          Use a different address
         </Button>
       </div>
     );
@@ -167,7 +112,7 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
 
   return (
     <form
-      onSubmit={mode === "password" ? signInWithPassword : sendLink}
+      onSubmit={onSubmit}
       className="flex flex-col gap-5 rounded-lg border border-border bg-surface p-6 shadow-sm"
     >
       {linkError ? (
@@ -175,8 +120,8 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
           role="alert"
           className="rounded-md border border-danger/30 bg-danger-bg p-3 text-sm text-foreground"
         >
-          That sign-in link has expired or has already been used. Sign in with
-          your password, or request a new link.
+          That sign-in link has expired or has already been used. Request a new
+          one below.
         </p>
       ) : null}
 
@@ -191,65 +136,22 @@ export function LoginForm({ next, linkError }: { next?: string; linkError?: bool
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
-      </Field>
-
-      {mode === "password" ? (
-        <Field>
-          <FieldLabel required>Password</FieldLabel>
-          <Input
-            name="password"
-            type="password"
-            /*
-              `current-password`, so the phone's password manager offers the
-              saved one and Face ID fills it. Without it iOS treats the field as
-              a new password and offers to generate one instead, which on a
-              sign-in form is the wrong half of the keychain.
-            */
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          <FieldDescription>
-            Stays signed in on this device until you sign out.
-          </FieldDescription>
-        </Field>
-      ) : (
         <FieldDescription>
-          We will email a link that signs you in once. It opens in Safari, not in
-          the installed app.
+          Sign-in is by emailed link. There is no password to remember or lose.
         </FieldDescription>
-      )}
+      </Field>
 
       <Button
         type="submit"
         variant="primary"
         size="lg"
         block
-        loading={state === "working"}
-        loadingLabel={mode === "password" ? "Signing in" : "Sending your sign-in link"}
-        disabled={
-          email.trim().length < 3 || (mode === "password" && password.length < 1)
-        }
+        loading={state === "sending"}
+        loadingLabel="Sending your sign-in link"
+        disabled={email.trim().length < 3}
       >
-        {mode === "password" ? "Sign in" : "Send magic link"}
+        Send magic link
       </Button>
-
-      <button
-        type="button"
-        onClick={() => {
-          setMode(mode === "password" ? "link" : "password");
-          setState("idle");
-          setMessage(null);
-        }}
-        className={cn(
-          "mx-auto inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold",
-          "text-accent-quiet hover:bg-accent-wash",
-          "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-        )}
-      >
-        {mode === "password" ? "Email me a link instead" : "Use my password instead"}
-      </button>
     </form>
   );
 }
