@@ -162,11 +162,18 @@ biggest risk to the timeline.
 **Open**
 
 - `tests/admin.spec.ts` still skips all 15 tests: `ADMIN_TEST_EMAIL` is not set,
-  so the admin screens have no runtime responsive or accessibility coverage. A
+  so the admin screens have no runtime responsive or accessibility coverage.
+  Code-level audit was done; it is not a substitute for a real browser run. A
   test admin account would unlock it permanently.
-- Hosting is Vercel (`CLAUDE.md` § 2). A request to deploy to a VPS was raised
-  on 2026-10-03 and not acted on — it contradicts the locked stack and needs a
-  decision first.
+- **Hosting plan.** `CLAUDE.md` § 2 and `docs/12` § 2 both record Vercel **Pro**
+  as a locked decision, on the grounds that the Hobby tier prohibits commercial
+  use. The client says the site is on the free tier and wants it left there for
+  now (2026-10-03) — their call, but the documents and the reality disagree,
+  and Hobby licensing on a commercial real-estate site is a launch item rather
+  than a preference. Before launch: upgrade, or amend both documents to say
+  free tier and accept the terms.
+- A VPS move was floated the same day and withdrawn. Deployment stays on the
+  existing Vercel project, which every push to `main` deploys.
 
 ---
 
