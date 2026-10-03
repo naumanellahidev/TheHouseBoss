@@ -117,6 +117,60 @@ biggest risk to the timeline.
 
 ## Session log
 
+### 2026-10-03 — notification bell, PWA, push notifications
+
+**Shipped**
+
+- **The bell** is a real feed, not two counts. Who sent it, what they said, how
+  long ago, ranked: a showing request or anything unanswered for four hours is
+  urgent; VA, assumable, new-construction, seller and a review rated 3 or under
+  come next. The badge turns red only for urgent. Derived from `leads.status`
+  and the review state rather than a notifications table, so it cannot disagree
+  with the screens it links to — and there is no dismiss button, because an item
+  leaves when the work is done.
+- **PWA**: `app/manifest.ts`, `public/sw.js`, `/offline`, iOS metadata and
+  192/512/maskable icons. Installs to a home screen, opens on `/admin` without
+  browser chrome, with shortcuts to new enquiries and reviews. The service
+  worker never caches `/admin`, `/api` or `/auth`.
+- **Push notifications** (migrations 026 + 027). Per-device switch in
+  Settings → Notifications with a test button. Sent when a lead or a review
+  arrives, beside the Resend email rather than instead of it. Dead
+  subscriptions are deleted on 404/410. 027 revokes anon's table grant: RLS
+  returned zero rows but as an empty result rather than a refusal, and a push
+  endpoint is a capability.
+- **Articles** replaced Communities in the menus; `/articles` and
+  `/articles/[city]` with server-side search and filters; per-city article URLs.
+- **Auto-SEO**: one "Fix what it can" button — promotes the answer-first block,
+  splits over-long paragraphs, links phrases already in the body, pairs question
+  headings into the FAQ, writes the metadata. 50 to 98 on a realistic article,
+  without writing a sentence into the body.
+
+**Verified**
+
+- `npm run guards` clean, build clean, `npm run test:rls` 41/41.
+- Responsive: 63 passed at 360/390/414 across every public page; 38 passed
+  across all nine widths on the pages this session touched.
+- Live: manifest, `sw.js`, the offline page, the icons and both iOS meta tags.
+
+**Corrected mid-session**
+
+- I added password sign-in to `LoginForm` without reading the page it renders
+  on. `UsernameLoginForm` has been the primary sign-in all along, so the result
+  was two password fields on one page. Reverted, keeping only the note that a
+  magic link opens in Safari rather than in the installed app.
+
+**Open**
+
+- `tests/admin.spec.ts` still skips all 15 tests: `ADMIN_TEST_EMAIL` is not set,
+  so the admin screens have no runtime responsive or accessibility coverage. A
+  test admin account would unlock it permanently.
+- Hosting is Vercel (`CLAUDE.md` § 2). A request to deploy to a VPS was raised
+  on 2026-10-03 and not acted on — it contradicts the locked stack and needs a
+  decision first.
+
+---
+
+
 ### 2026-10-01 — answer hub, one metadata generator, admin SEO rebuilt, Articles section
 
 **Shipped**
