@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { REVIEW_LIMIT, clientIp, rateLimit } from "@/lib/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { sendAdminPush } from "@/lib/push/send";
 import { isSpam, publicReviewSchema } from "@/lib/validation/review";
 
 /**
@@ -100,6 +101,28 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+
+  /*
+    Tell her a review is waiting, without waiting on the telling.
+
+    A submitted review is invisible until somebody approves it, and the person
+    who wrote it is watching for it to appear. That makes the delay between
+    submission and approval the thing worth shortening, which is exactly what a
+    notification on a phone does.
+
+    A low rating is marked urgent. Not because it is bad news to be buried —
+    the opposite: it is the one where the reply matters most, and leaving it
+    unapproved does not make it go away.
+  */
+  void sendAdminPush({
+    title: "Review to approve",
+    body: `${input.authorName}${
+      typeof input.rating === "number" ? ` — ${input.rating} out of 5` : ""
+    }: ${input.body.replace(/\s+/g, " ").trim().slice(0, 90)}`,
+    url: "/admin/reviews",
+    tag: "review",
+    priority: typeof input.rating === "number" && input.rating <= 3 ? "urgent" : "normal",
+  });
 
   return NextResponse.json({ ok: true });
 }

@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { leadAutoresponder, leadNotification } from "@/lib/email/templates";
 import { sendEmail } from "@/lib/email/send";
+import { sendAdminPush } from "@/lib/push/send";
 import { LEAD_LIMIT, clientIp, rateLimit } from "@/lib/rate-limit";
 import { getAdminSettings } from "@/lib/queries/settings";
 import { siteConfig } from "@/lib/site-config";
@@ -119,6 +120,23 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
+/**
+ * What the notification says before she opens it.
+ *
+ * The lead type is the single most useful word on a lock screen: it is the
+ * difference between glancing and reaching for the phone. A generic "New
+ * enquiry" for all seven types throws that away.
+ */
+const LEAD_PUSH_TITLE: Record<string, string> = {
+  showing_request: "Showing request",
+  va: "VA enquiry",
+  assumable: "Assumable enquiry",
+  new_construction: "New-construction enquiry",
+  seller: "Seller enquiry",
+  listing_inquiry: "Listing enquiry",
+  general: "New enquiry",
+};
+
 async function notify(lead: Lead) {
   try {
     const settings = await getAdminSettings().catch(() => null);
@@ -134,6 +152,29 @@ async function notify(lead: Lead) {
       null;
 
     const adminUrl = `${siteConfig.url}/admin/leads?lead=${lead.id}`;
+
+    /*
+      The push goes first, and does not wait on Resend.
+
+      It is the one that arrives in seconds on a phone that is face-down on a
+      table, and the email behind it can take a provider's own sweet time. Its
+      own try/catch inside `sendAdminPush`, so a push service being unreachable
+      never costs the email — these are two independent ways of being told, and
+      losing both because one failed is the outcome worth designing against.
+
+      A showing request is marked urgent, which is what keeps the notification
+      on the lock screen until it is dealt with: it has a date attached and
+      stops being useful once the date passes.
+    */
+    void sendAdminPush({
+      title: LEAD_PUSH_TITLE[lead.leadType] ?? "New enquiry",
+      body: `${lead.name}${lead.message ? ` — ${lead.message.replace(/\s+/g, " ").trim().slice(0, 100)}` : ""}`,
+      url: `/admin/leads?lead=${lead.id}`,
+      // One tag for enquiries, so three in a minute collapse into one line on
+      // the lock screen rather than three she has to dismiss separately.
+      tag: "lead",
+      priority: lead.leadType === "showing_request" ? "urgent" : "normal",
+    });
 
     if (to) {
       const message = leadNotification(lead, adminUrl);

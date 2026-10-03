@@ -63,6 +63,67 @@ the “House Boss Redesign Plan” artifact.
 
 ---
 
+## 2a. Notifications
+
+### The bell
+
+`components/admin/notification-bell.tsx`, fed by `lib/queries/notifications.ts`.
+It shows the work that is waiting — who, what they said, how long ago — ranked,
+not two counts.
+
+| Priority | What |
+|---|---|
+| **Urgent** | A showing request; anything unanswered for four hours |
+| **Soon** | VA, assumable, new-construction and seller enquiries; a review rated 3 or under |
+| **Normal** | General and listing enquiries; other pending reviews |
+
+The badge turns red only when something is urgent, so the colour says what the
+number cannot.
+
+**There is no notifications table and no dismiss button.** A notification here
+is not a record of something that happened, it is work still waiting —
+`leads.status = 'new'`, a review with `submitted_at` and `published = false`.
+Deriving it means the bell cannot disagree with the screens it links to, and an
+item leaves when the work is done. One that can be hidden without doing
+anything is one that stops being true.
+
+It refreshes on open and every ninety seconds while the tab is visible — never
+while the app is backgrounded, which is what keeps it off a phone's battery.
+
+### Push (migration 026)
+
+Settings → Notifications carries a per-device switch
+(`components/admin/push-settings.tsx`). A subscription belongs to a browser,
+not to an account, so each device is asked separately and the panel reports the
+state of the one it is rendered in.
+
+**iOS:** Safari delivers web push only to a web app added to the home screen,
+and only from 16.4. In a Safari tab the panel shows the install instruction
+instead of a switch that would silently do nothing.
+
+A push is sent when a lead or a review arrives — beside the Resend email, not
+instead of it. Email is the record and survives a lost phone; the push is the
+one that arrives in seconds. Each failure path is independent, so a push
+service being unreachable never costs the email.
+
+Keys: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
+Rotating the private key invalidates every existing subscription, so do it only
+to revoke devices.
+
+### Sign-in
+
+Email and password, with the magic link kept as the recovery path. The link was
+the only mechanism and it breaks in the one place the client works from: a link
+tapped in Mail opens in **Safari**, not in the installed app, so the session
+landed in a browser tab while the app still showed the sign-in form. A password
+completes the sign-in inside whichever window asked for it.
+
+Sessions last 400 days (`@supabase/ssr` default) and the cookies are written by
+the server at `/admin/auth/callback`, so iOS's seven-day cap on script-written
+storage does not apply to them.
+
+---
+
 ## 3. Dashboard (`/admin`)
 
 Redesigned 2026-09-13 on the reference dashboard's layout. Every element of

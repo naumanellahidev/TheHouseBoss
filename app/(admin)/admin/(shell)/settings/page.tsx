@@ -51,6 +51,12 @@ export default async function AdminSettingsPage() {
         description="Contact details, branding, your account and where enquiries are sent."
       />
       <SettingsForm
+        /*
+          Read on the server and handed down. It is a NEXT_PUBLIC value either
+          way; passing it makes "not configured" a state the panel can show
+          instead of a switch that quietly does nothing.
+        */
+        vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
         settings={settings}
         account={
           /*

@@ -41,6 +41,17 @@ export type AuditAction =
   | "username_changed"
   | "email_changed"
   | "session_revoked"
+  /*
+    Which devices can be pushed to, and when that changed.
+
+    A push subscription is a capability — whoever holds the endpoint can make
+    that phone buzz. Registering one is therefore a security event in the same
+    family as a session, and the entity id is the tail of the endpoint rather
+    than the whole thing, so the log identifies the device without recording
+    something that could be replayed.
+  */
+  | "push_device_registered"
+  | "push_device_removed"
   | "property_created"
   | "property_updated"
   | "property_deleted"

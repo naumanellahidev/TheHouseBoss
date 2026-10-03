@@ -18,6 +18,7 @@ import {
   Input,
   Textarea,
 } from "@/components/ui/field";
+import { PushSettings } from "@/components/admin/push-settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { SITE_ENTITY_ID } from "@/lib/images/site-entity";
@@ -43,6 +44,7 @@ import type { AdminSettings } from "@/types/domain";
 export function SettingsForm({
   settings,
   account,
+  vapidPublicKey,
 }: {
   settings: AdminSettings;
   /**
@@ -55,6 +57,16 @@ export function SettingsForm({
     email: string;
     role: string;
   } | null;
+  /**
+   * The VAPID public key, passed down rather than read in the component.
+   *
+   * It is a NEXT_PUBLIC value, so the client could read it from the
+   * environment itself — but then the component silently does nothing when it
+   * is unset, and nobody can tell whether push is off because the device said
+   * no or because the server was never configured. As a prop, null is a state
+   * the panel can explain.
+   */
+  vapidPublicKey: string | null;
 }) {
   const toast = useToast();
   const [saving, setSaving] = React.useState(false);
@@ -550,6 +562,14 @@ export function SettingsForm({
         {/* ── Notifications ────────────────────────────────────────────── */}
         <TabsContent value="notifications">
           <div className="flex max-w-3xl flex-col gap-5">
+            {/*
+              The device switch sits above the email address, because it is the
+              one that reaches her in seconds and the one that has to be turned
+              on per device. The email below is the record and arrives wherever
+              she reads mail.
+            */}
+            <PushSettings publicKey={vapidPublicKey} />
+
             <Field error={errorOf("leadNotifyEmail")}>
               <FieldLabel>Send new enquiries to</FieldLabel>
               <Input

@@ -36,6 +36,9 @@ Never edit an applied migration — add a new one.
 | 022 | `022_page_sections.sql` | per-section CMS rows for /hire-contractor |
 | 023 | `023_portrait.sql` | site_settings.portrait_key + view rebuild |
 | 024 | `024_reviews_intake.sql` | media duplicate check dropped; reviews accept a public submission |
+| 025 | `025_city_home_visibility.sql` | which cities appear on the home page |
+| 026 | `026_push_subscriptions.sql` | devices that receive admin push notifications |
+| 027 | `027_push_revoke_anon.sql` | anon loses its table grant on `push_subscriptions` |
 
 **011 was added in Phase 2.** `docs/06-admin-dashboard-spec.md` § 10 required a
 single-row `site_settings` table that this document had never defined. It is
@@ -574,6 +577,39 @@ Decisions recorded here so they are not relitigated:
 
 RLS: the table is **admin-only**. Public pages read `site_settings_public`
 instead — see below.
+
+---
+
+### push_subscriptions
+
+Added in **026**. One row per device that has agreed to receive notifications.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid pk | |
+| `user_id` | uuid → `auth.users` | cascades on delete |
+| `endpoint` | text, **unique** | the push service URL; re-subscribing returns the same one, so this is the upsert target |
+| `p256dh` | text | half the ECDH keypair the browser supplies |
+| `auth` | text | the other half; without both, a payload cannot be encrypted |
+| `user_agent` | text null | so a stale device is identifiable in the UI |
+| `created_at` | timestamptz | |
+| `last_used_at` | timestamptz null | touched on a successful send; never used to decide whether to send |
+
+**One row per device, not per person.** A phone, an iPad and a laptop each get
+their own subscription from their own browser; a column on `profiles` would
+hold the last one to ask and silently stop notifying the rest.
+
+RLS: **admin-only, and scoped to the owner** —
+`is_admin() and user_id = auth.uid()`. Anon has no policy AND, since **027**,
+no table grant: an endpoint is a capability, and anyone holding one can push a
+notification to that device signed by our VAPID key. RLS alone returned zero
+rows without erroring; revoking the grant means two independent things would
+have to be wrong before a row could be read, not one.
+
+`lib/push/send.ts` reads every row through the service client when an enquiry
+or a review arrives, and deletes any subscription a push service answers 404
+or 410 for — that is the device having been wiped or the app uninstalled, and
+keeping the row means sending into the void forever.
 
 ---
 

@@ -164,3 +164,83 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data === "skip-waiting") self.skipWaiting();
 });
+
+/* ── Push ──────────────────────────────────────────────────────────────────
+
+  A notification that arrives with the app closed.
+
+  ── Why the payload is read defensively ──────────────────────────────────
+
+  The browser delivers whatever the sender encrypted. A malformed body, an
+  empty push (some services send one to test a subscription) and a payload
+  from an older version of the app all have to produce something sensible
+  rather than an unhandled rejection inside the worker — a worker that throws
+  here is one the browser may stop waking.
+
+  ── iOS ──────────────────────────────────────────────────────────────────
+
+  Safari delivers web push only to a web app that has been added to the home
+  screen, and only from 16.4. In a browser tab on iOS this handler never runs,
+  which is why the UI that asks for permission says so rather than offering a
+  switch that does nothing.
+*/
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { title: "The House Boss", body: event.data ? event.data.text() : "" };
+  }
+
+  const title = payload.title || "The House Boss";
+
+  const options = {
+    body: payload.body || "Something is waiting in the dashboard.",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    /*
+      `tag` collapses repeats.
+
+      Three enquiries in a minute should not stack three notifications on a
+      lock screen. Each kind replaces its own previous one, and `renotify`
+      makes the replacement buzz rather than arrive silently.
+    */
+    tag: payload.tag || "house-boss",
+    renotify: true,
+    // The urgent ones stay on screen until she deals with them; the rest
+    // behave normally and clear themselves.
+    requireInteraction: payload.priority === "urgent",
+    data: { url: payload.url || "/admin" },
+  };
+
+  // `waitUntil` keeps the worker alive until the notification is shown. Without
+  // it the browser may kill it first and nothing appears.
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "/admin";
+
+  /*
+    Focus the app if it is already open, rather than opening a second window.
+
+    `includeUncontrolled` matters: a window loaded before this worker took
+    control is still the app, and opening another copy next to it is the
+    behaviour that makes a PWA feel broken.
+  */
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((windows) => {
+        for (const client of windows) {
+          if (client.url.includes("/admin") && "focus" in client) {
+            client.navigate(target);
+            return client.focus();
+          }
+        }
+        return self.clients.openWindow(target);
+      }),
+  );
+});

@@ -5,8 +5,8 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-09-13T01:38:16.495Z
- * Tables: 32 · Views: 3
+ * Generated: 2026-10-02T19:08:11.083Z
+ * Tables: 33 · Views: 3
  */
 
 export type Json =
@@ -869,6 +869,39 @@ export type Database = {
           status?: "active" | "suspended";
           last_login_at?: string | null;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          user_agent: string | null;
+          created_at: string;
+          last_used_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          user_agent?: string | null;
+          created_at?: string;
+          last_used_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          endpoint?: string;
+          p256dh?: string;
+          auth?: string;
+          user_agent?: string | null;
+          created_at?: string;
+          last_used_at?: string | null;
         };
         Relationships: [];
       };
