@@ -32,7 +32,7 @@ Original client message, unedited: `docs/client-brief-original.md`.
 | Layer | Choice |
 |---|---|
 | Framework | Next.js 16 (16.3.3), App Router, TypeScript strict |
-| Hosting | Vercel **Pro** (Hobby forbids commercial use) |
+| Hosting | Vercel — currently the **free (Hobby)** tier, by the client's decision; upgrade to Pro before launch traffic. See `docs/12` § 2 |
 | Database + Auth | Supabase **free tier** (Postgres 500 MB) |
 | File storage | Supabase Storage (1 GB) behind a storage adapter |
 | Styling | Tailwind CSS v4 + shadcn/ui |

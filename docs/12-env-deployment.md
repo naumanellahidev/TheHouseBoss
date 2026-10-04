@@ -77,9 +77,35 @@ export const env = schema.parse(process.env)
 
 ### Plan
 
-**Pro, $20/month.** Not negotiable: Vercel's Hobby tier prohibits commercial
-use, and this is a commercial site for a paying client. Deploying it on Hobby
-risks the project being taken down without warning.
+**Currently the free (Hobby) tier — a deliberate, recorded decision.**
+
+This document originally said Pro was not negotiable, and the reason still
+stands: Vercel's Hobby terms prohibit commercial use, and this is a commercial
+site for a paying business. On 2026-10-04 the client chose to stay on the free
+tier for now, with the risk explained to them. The deployment is the existing
+project (`altrix/the-house-boss`), and every push to `main` deploys to it.
+
+What that decision accepts:
+
+- **Terms.** Vercel can suspend a Hobby project used commercially without
+  notice. Nothing in the code depends on the plan, so moving to Pro is a billing
+  change, not a migration — no redeploy, no DNS change.
+- **Limits.** Hobby caps function duration, bandwidth and build minutes. The
+  site is mostly static (ISR, one-hour revalidate) and the image pipeline never
+  touches Vercel's image quota (`CLAUDE.md` § 3 rule 5), so current traffic is
+  well inside them.
+- **Cron.** Hobby allows a cron job to run at most once a day, and a schedule
+  more frequent than that fails the deployment outright. Every job in
+  `vercel.json` already fits: keepalive, the sold-photo purge and the orphan
+  sweep run daily, and the SEO queue runs every second day (`15 8 */2 * *`).
+  **Do not add a cron more frequent than daily** while the project is on Hobby —
+  the next push will fail to deploy. The SEO queue can still be worked on demand
+  from Admin → SEO → Engine.
+
+**Upgrade to Pro when any one of these happens:** paid advertising starts
+driving traffic to the site; Vercel sends a usage or terms warning; a build or
+function starts hitting a Hobby limit; or the site is announced publicly at
+launch. Each of those turns "a risk we accepted" into "a takedown we caused".
 
 ### Project settings
 

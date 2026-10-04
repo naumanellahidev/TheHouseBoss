@@ -205,11 +205,23 @@ export function ArticleEditor({ value, onChange, articleId }: ArticleEditorProps
         <EditorContent editor={editor} />
       </div>
 
+      {/*
+        Out of the tab order, and named.
+
+        The toolbar's image button is the control a person uses; this input is
+        what it opens. `sr-only` hid it visually but left it focusable and
+        unnamed, so a keyboard user tabbed onto a nameless file picker sitting
+        between the toolbar and the text. `tabIndex={-1}` takes it out of the
+        order and the label covers any assistive technology that still reaches
+        it.
+      */}
       <input
         ref={fileRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/avif"
         className="sr-only"
+        tabIndex={-1}
+        aria-label="Choose an image to insert into the article"
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (file) void insertImage(file);

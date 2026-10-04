@@ -205,11 +205,22 @@ export function ImageField({
         </div>
       )}
 
+      {/*
+        Out of the tab order, and named.
+
+        The Choose / Replace buttons are the controls a person uses; this input
+        is only what they open. Visually hidden but still focusable, it put a
+        nameless file picker in the keyboard order after the buttons — the admin
+        axe suite flagged it as a critical violation on every screen with a
+        cover image. Same fix as the article editor and the media picker.
+      */}
       <input
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/avif"
         className="sr-only"
+        tabIndex={-1}
+        aria-label={`Choose a file for ${label.toLowerCase()}`}
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (file) void upload(file);

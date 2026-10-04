@@ -19,9 +19,20 @@ import * as React from "react";
  * worker from weeks ago. When one is found waiting, it is told to take over and
  * the page reloads once.
  *
- * The reload is guarded by a ref: `controllerchange` also fires the first time
- * a worker ever takes control, and reloading then would turn every first visit
- * into two.
+ * ── Why the guard is read BEFORE registering ──────────────────────────────
+ *
+ * `controllerchange` also fires the first time a worker ever takes control —
+ * `clients.claim()` in the activate handler causes it. The first version guarded
+ * on `navigator.serviceWorker.controller` inside the handler, but by the time
+ * the event fires that property already holds the NEW worker, so the guard
+ * always passed and every first visit reloaded itself about a second after load.
+ *
+ * That shipped. It was a visible flash on a phone, it could swallow a form the
+ * visitor had started filling in, and it was found only when the admin suite
+ * finally ran signed in and every test died with "execution context destroyed
+ * by a navigation". The only reliable signal is whether a worker was in control
+ * BEFORE this page registered one: if not, this is a first install and there is
+ * nothing stale to replace.
  */
 export function ServiceWorker() {
   React.useEffect(() => {
@@ -38,6 +49,10 @@ export function ServiceWorker() {
     if (process.env.NODE_ENV !== "production") return;
 
     let reloading = false;
+
+    // Captured now, before anything registers. See the note above: reading it
+    // inside the event handler sees the new worker and is always true.
+    const hadController = Boolean(navigator.serviceWorker.controller);
 
     const onLoad = () => {
       void navigator.serviceWorker
@@ -61,8 +76,8 @@ export function ServiceWorker() {
     };
 
     const onControllerChange = () => {
-      // Only when one was already in control: the first install is not an update.
-      if (reloading || !navigator.serviceWorker.controller) return;
+      // Only an UPDATE reloads. A first install has no stale page to replace.
+      if (reloading || !hadController) return;
       reloading = true;
       window.location.reload();
     };

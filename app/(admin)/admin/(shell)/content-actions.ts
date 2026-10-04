@@ -17,8 +17,11 @@ import {
  *
  * Enqueued rather than run inline. A publish should return as soon as the row
  * is written — the operator is waiting on it — and the keyword work is not
- * something they need to watch. The worker picks it up within fifteen minutes,
- * or immediately if somebody presses the button in Admin → SEO.
+ * something they need to watch. The cron worker picks it up every second day
+ * (vercel.json — the free tier allows nothing more frequent than daily), or
+ * immediately when somebody presses "Work the queue now" in Admin → SEO → Engine.
+ * The title and description are written at publish regardless; only the
+ * keyword set waits for the queue.
  *
  * Its own try/catch, and deliberately silent on failure: an engine that is not
  * configured must never be the reason an article fails to publish.

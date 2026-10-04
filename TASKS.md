@@ -20,7 +20,7 @@ where it stopped.
 | Last commit | `d2909cc` p7(seo): an article published with no internal links gets them automatically |
 | Branch | `main`, clean, pushed |
 | Live | https://www.thehousebossfl.com — deployed from `main` on every push |
-| Hosting | The existing Vercel project (`altrix/the-house-boss`), free tier, left as it is by the client's decision |
+| Hosting | The existing Vercel project (`altrix/the-house-boss`), **free tier** — recorded decision, upgrade triggers in `docs/12` § 2 |
 | Database | Supabase, migrations applied through **027** |
 | Phase | 7 (QA, compliance, launch) |
 
@@ -31,25 +31,13 @@ Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`,
 
 ## Now
 
-Nothing in flight. Everything below is waiting on a decision from the client —
-start there, or pick up whatever new request arrives.
+Nothing in flight.
 
 ---
 
-## Next — waiting on the client
+## Next
 
-- [ ] **Admin test account** so `tests/admin.spec.ts` stops skipping all 15
-      tests. Needs `ADMIN_TEST_EMAIL` in `.env.local` and an account from
-      `scripts/create-admin.mjs`. Until then the admin screens have **no**
-      runtime responsive or accessibility coverage — the code-level audit that
-      was done is not a substitute. **Ask the client before creating it:** it
-      adds a real admin user to the production Supabase project.
-
-- [ ] **Hosting plan decision.** `CLAUDE.md` § 2 and `docs/12` § 2 both record
-      Vercel **Pro** as locked, because the Hobby tier prohibits commercial use.
-      The site is on the free tier and the client wants it left there
-      (2026-10-03). Their call — but the documents and the reality disagree.
-      Before launch: upgrade, or amend both documents and accept the terms.
+Nothing queued. Take the next request from the client.
 
 ---
 
@@ -106,6 +94,24 @@ Each of these is deployed and checked on the live site. Do not redo them.
   to `/market-updates/{slug}`. Permanent once an article is published (HR11).
 
 ---
+
+- **Admin test account** (2026-10-04, client approved) —
+  `qa-admin@thehousebossfl.com`, `ADMIN_TEST_EMAIL` in `.env.local`. The admin
+  suite now runs signed in, over **all 16 admin screens**: one h1 each, no
+  critical or serious axe violations, no overflow at 360px, the drawer, the
+  editor accordion, the leads inbox, the CSV export. **15/15 passing.**
+  Run it with the env loaded:
+  `node --env-file=.env.local node_modules/@playwright/test/cli.js test tests/admin.spec.ts`
+  - Its first real run found a shipped bug: the service worker reloaded every
+    first visit about a second after load (the controller guard was read inside
+    the event, where it already holds the new worker). Fixed in
+    `components/site/service-worker.tsx`.
+  - And four unlabelled inputs: the article slug field and three hidden file
+    pickers (editor, cover image, listing photos). All fixed.
+- **Hosting decision recorded** — free tier, by the client's choice, in
+  `CLAUDE.md` § 2 and `docs/12` § 2 with the upgrade triggers. Every cron in
+  `vercel.json` is daily or less, which Hobby requires — **do not add a more
+  frequent one** or the next push fails to deploy.
 
 ## How to work here
 

@@ -566,11 +566,25 @@ export function ArticleForm({
           </div>
 
           <div className="flex flex-col gap-5 admin-card p-5">
-            <Field error={errorOf("slug")}>
+            {/*
+              An explicit id, shared by the Field and the raw input.
+
+              This is a bare <input> rather than <Input>, because it sits inside
+              the prefix box with the "/…/" in front of it. <Input> reads its id
+              from the Field context; a bare input does not, so the visible
+              "Web address" label pointed at nothing and a screen reader
+              announced an unnamed text box. Found by the admin axe suite the
+              first time it ran over this screen.
+            */}
+            <Field error={errorOf("slug")} id="article-slug">
               <FieldLabel>Web address</FieldLabel>
               <div className="flex items-center gap-1 rounded-md border border-border-strong bg-surface px-3">
-                <span className="shrink-0 text-sm text-foreground-subtle">/…/</span>
+                <span className="shrink-0 text-sm text-foreground-subtle" aria-hidden="true">
+                  /…/
+                </span>
                 <input
+                  id="article-slug"
+                  aria-describedby="article-slug-description"
                   value={values.slug}
                   onChange={(event) => set("slug", slugify(event.target.value))}
                   className="h-11 min-w-0 flex-1 bg-transparent text-body text-foreground focus-visible:outline-none"

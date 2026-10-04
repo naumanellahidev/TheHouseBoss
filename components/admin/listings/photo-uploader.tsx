@@ -302,12 +302,20 @@ export function PhotoUploader({
           </>
         )}
 
+        {/*
+          Out of the tab order, and named — the drop zone and its button are
+          the controls; this is only what they open. A focusable, nameless file
+          input is a critical accessibility violation, and it was the same
+          defect the cover-image field and the article editor had.
+        */}
         <input
           ref={inputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp,image/avif"
           multiple
           className="sr-only"
+          tabIndex={-1}
+          aria-label="Choose listing photographs to upload"
           onChange={(event) => {
             accept(event.target.files);
             event.target.value = "";

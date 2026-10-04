@@ -33,11 +33,30 @@ const MOBILE_CRITICAL = [
   { path: "/admin/leads", name: "leads" },
 ];
 
+/*
+  Every screen in the dashboard.
+
+  This list was six entries for a long time while the dashboard grew to
+  fifteen, so the SEO workspace, the article editor, reviews, cities, users and
+  the rest had no runtime coverage at all — their h1, their accessibility and
+  their phone layout were never checked by anything. Add a screen here when you
+  add a route; `scripts` cannot infer it because several routes need an id.
+*/
 const ADMIN_PAGES = [
   ...MOBILE_CRITICAL,
-  { path: "/admin/media", name: "media" },
-  { path: "/admin/settings", name: "settings" },
   { path: "/admin/listings/new", name: "new listing" },
+  { path: "/admin/articles", name: "articles" },
+  { path: "/admin/articles/new", name: "new article" },
+  { path: "/admin/reviews", name: "reviews" },
+  { path: "/admin/cities", name: "cities" },
+  { path: "/admin/communities", name: "communities" },
+  { path: "/admin/pages", name: "pages" },
+  { path: "/admin/media", name: "media" },
+  { path: "/admin/seo", name: "seo" },
+  { path: "/admin/settings", name: "settings" },
+  { path: "/admin/users", name: "users" },
+  { path: "/admin/audit-logs", name: "audit logs" },
+  { path: "/admin/mls", name: "mls" },
 ];
 
 test.describe("admin", () => {
@@ -140,14 +159,20 @@ test.describe("admin", () => {
       }
     });
 
-    /* ── 360px: the client reads leads on her phone (docs/06 § 11 rule 8) ── */
+    /*
+      ── 360px, on every screen ────────────────────────────────────────────
 
-    test("no horizontal overflow at 360px on the mobile-critical screens", async ({
-      page,
-    }) => {
+      This was three screens — dashboard, listings, leads — on the reasoning
+      that those were the ones she used on a phone. The dashboard is now
+      installed to her home screen as an app, so every screen is a phone screen.
+      docs/04 § 1: 360px is the hard floor.
+    */
+
+    test("no horizontal overflow at 360px on any admin screen", async ({ page }) => {
+      test.setTimeout(180_000);
       await page.setViewportSize({ width: 360, height: 780 });
 
-      for (const target of MOBILE_CRITICAL) {
+      for (const target of ADMIN_PAGES) {
         await page.goto(target.path, { waitUntil: "load" });
         const overflow = await page.evaluate(
           () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
