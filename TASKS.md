@@ -17,7 +17,7 @@ where it stopped.
 
 | | |
 |---|---|
-| Last work commit | `2e4c8c9` p7(admin): the admin suite runs for real, and the service worker stops reloading every first visit |
+| Last work commit | `8647141` p7(seo): the AI chooses which of the author's phrases to link, and to which page |
 | Branch | `main`, clean, pushed |
 | Live | https://www.thehousebossfl.com — deployed from `main` on every push |
 | Hosting | The existing Vercel project (`altrix/the-house-boss`), **free tier** — recorded decision, upgrade triggers in `docs/12` § 2 |
