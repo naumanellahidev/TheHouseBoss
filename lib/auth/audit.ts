@@ -61,6 +61,14 @@ export type AuditAction =
   | "article_updated"
   | "article_published"
   | "article_deleted"
+  /*
+    The publish-time linker touched a published body.
+
+    An edit to a live article that nobody typed has to be readable afterwards,
+    even though it only adds marks to the author's own words. The entry names
+    every anchor and its destination.
+  */
+  | "article_links_added"
   /* Home page visibility, migration 025 — toggled from the cities list. */
   | "city_shown_on_home"
   | "city_hidden_from_home"

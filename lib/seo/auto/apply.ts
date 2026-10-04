@@ -251,6 +251,23 @@ export async function syncArticleSeo(slug: string): Promise<void> {
   await ensureSeoQuietly(async () => {
     const article = await getArticleBySlug(slug);
     if (!article) throw new Error(`no published article at ${slug}`);
+
+    /*
+      Links before metadata, and before the caller revalidates.
+
+      An article published with none gets them from phrases it already contains
+      — see `ensure-links.ts` for the three rules that keep that inside Google's
+      guidelines. Its own try/catch: a link pass that fails must cost the links
+      and never the title and description, which are the thing a page cannot be
+      published without.
+    */
+    try {
+      const { ensureArticleLinks } = await import("@/lib/seo/auto/ensure-links");
+      await ensureArticleLinks(article);
+    } catch (error) {
+      console.error(`[seo] link pass failed for ${slug}:`, error);
+    }
+
     return ensureArticleSeo(article, articleHref(article));
   }, `article:${slug}`);
 }

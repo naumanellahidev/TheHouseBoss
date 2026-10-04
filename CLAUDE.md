@@ -194,6 +194,10 @@ docs/
 
 ## 6. Working method
 
+- **`TASKS.md` is read first, every session, before this file is acted on.**
+  It holds the current state, what is in flight and where the last session
+  stopped. It is updated as work happens, not at the end — so a new session
+  starts from one file instead of from a chat history.
 - **One phase per session.** Phases are defined in `docs/10-roadmap.md`. Do not
   start phase N+1 in the session that finished phase N.
 - Load the `design-system` skill before writing UI.

@@ -201,6 +201,51 @@ check(
   "a second pass altered the document",
 );
 
+/* ── The publish-time floor ───────────────────────────────────────────────── */
+
+/*
+  `ensureArticleLinks` runs on every publish, so the rule that stops it being an
+  editor rather than a floor is worth asserting on its own: an article that
+  already has links is left completely alone.
+
+  The function itself writes to the database, so what is checked here is the
+  decision it makes — `autolinkDocument` seeded with an existing link must add
+  nothing to that destination, and a document that is already linked must come
+  back with the same number it went in with.
+*/
+{
+  const linked = {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [
+          { type: "text", text: "Buying in " },
+          {
+            type: "text",
+            text: "Lake Mary",
+            marks: [{ type: "link", attrs: { href: "/lake-mary" } }],
+          },
+          { type: "text", text: " means a short commute and good schools." },
+        ],
+      },
+    ],
+  };
+
+  const again = autolinkDocument(linked, linkTargets());
+  check(
+    "a destination that is already linked is not linked twice",
+    again.added.every((link) => link.href !== "/lake-mary"),
+    `linked /lake-mary a second time: ${again.added.map((l) => l.href).join(", ")}`,
+  );
+
+  check(
+    "text inside an existing link is never re-marked",
+    !JSON.stringify(again.doc).includes('"href":"/lake-mary"},{"type":"link"'),
+    "a link mark was nested inside another",
+  );
+}
+
 /* ── Report ───────────────────────────────────────────────────────────────── */
 
 if (failures.length > 0) {
