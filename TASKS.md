@@ -17,39 +17,26 @@ where it stopped.
 
 | | |
 |---|---|
-| Last commit | `5ebba45` p7(docs): hosting stays on the existing Vercel project |
+| Last commit | `d2909cc` p7(seo): an article published with no internal links gets them automatically |
 | Branch | `main`, clean, pushed |
 | Live | https://www.thehousebossfl.com — deployed from `main` on every push |
 | Hosting | The existing Vercel project (`altrix/the-house-boss`), free tier, left as it is by the client's decision |
 | Database | Supabase, migrations applied through **027** |
 | Phase | 7 (QA, compliance, launch) |
 
-Last verified live: `/`, `/articles`, `/admin/login`, `/manifest.webmanifest`,
-`/sw.js`, `/offline`, `/sitemap.xml`, `/llms.txt` — all 200.
+Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`,
+`/lake-mary/blog/living-in-lake-mary-fl` — all 200.
 
 ---
 
 ## Now
 
-- [ ] **Auto internal linking at publish.**
-      An article published with no internal links should get them automatically,
-      from phrases already in its own body, before it goes live. The engine
-      exists (`lib/seo/auto/autolink.ts`) and currently runs only when somebody
-      presses "Fix what it can" in the editor. Wire it into the publish path so
-      it is not optional.
-      - Only when the body has **zero** internal links. An article the author
-        linked herself is never touched.
-      - Only phrases already written. It never adds a sentence — that is the
-        line the whole feature rests on (`scripts/check-autofix.mts` asserts the
-        text is unchanged word for word).
-      - Record it in the audit log; a silent edit to a published body is not
-        acceptable even when it is correct.
-      - Files: `app/(admin)/admin/(shell)/content-actions.ts` (publish),
-        `lib/seo/auto/apply.ts` (`syncArticleSeo`), `lib/seo/auto/autolink.ts`.
+Nothing in flight. Everything below is waiting on a decision from the client —
+start there, or pick up whatever new request arrives.
 
 ---
 
-## Next
+## Next — waiting on the client
 
 - [ ] **Admin test account** so `tests/admin.spec.ts` stops skipping all 15
       tests. Needs `ADMIN_TEST_EMAIL` in `.env.local` and an account from
@@ -63,12 +50,6 @@ Last verified live: `/`, `/articles`, `/admin/login`, `/manifest.webmanifest`,
       The site is on the free tier and the client wants it left there
       (2026-10-03). Their call — but the documents and the reality disagree.
       Before launch: upgrade, or amend both documents and accept the terms.
-
-- [ ] **Per-city blog URLs for the first non-Lake-Mary article.** `articleHref`
-      already routes a city article to `/{city}/blog/{slug}`; an article with no
-      city still falls back to `/market-updates/{slug}`. Nothing is published
-      yet, so the scheme can still change. After the first publish it is
-      permanent (HR11).
 
 ---
 
@@ -112,6 +93,17 @@ Each of these is deployed and checked on the live site. Do not redo them.
 - **Push notifications** — migrations 026 + 027, per-device switch in Settings →
   Notifications, sent on a new lead or review beside the Resend email.
 - **Search Console** verification tag; demo listings removed with 301s.
+- **Publish-time internal linking** — `lib/seo/auto/ensure-links.ts`, called from
+  `syncArticleSeo` on every publish and every save of a published article. Runs
+  only when the body has zero internal links, links only phrases already
+  written, checks the text is identical before writing, and records every
+  anchor in the audit log.
+  - The one article live today (`living-in-lake-mary-fl`) was published before
+    this existed. It gets its links the next time it is saved — deliberately
+    not written to behind the author's back.
+- **Per-city article URLs** — a city article lives at `/{city}/blog/{slug}`,
+  Lake Mary keeps `/lake-mary/blog/{slug}`, an article with no city falls back
+  to `/market-updates/{slug}`. Permanent once an article is published (HR11).
 
 ---
 
