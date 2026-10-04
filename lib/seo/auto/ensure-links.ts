@@ -1,13 +1,13 @@
 import "server-only";
 
 import { recordAudit } from "@/lib/auth/audit";
-import { autolinkDocument, linkTargets } from "@/lib/seo/auto/autolink";
 import { analyzeDocument, documentText } from "@/lib/seo/auto/document";
+import { LINK_FLOOR, planArticleLinks } from "@/lib/seo/auto/link-matcher";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { Article } from "@/types/domain";
 
 /**
- * Give a published article internal links if it has none.
+ * Give a published article internal links if it has fewer than three.
  *
  * ── Why this runs at publish and not only on a button ─────────────────────
  *
@@ -27,8 +27,14 @@ import type { Article } from "@/types/domain";
  * 1. **Only phrases the author already wrote.** Nothing is inserted. If the body
  *    does not say "Sanford", no link to Sanford appears — and the article goes
  *    on having no links, which is the honest outcome.
- * 2. **Only when there are none.** An article the author linked herself is never
- *    touched, at all. This is a floor, not an editor.
+ * 2. **Only adds, and only below three.** A link the author placed is never
+ *    touched, moved or re-pointed; it counts toward the floor of three and the
+ *    ceiling of six. This is a floor, not an editor.
+ *
+ * Which phrases, and to which pages, is decided by `planArticleLinks`: the AI
+ * matcher reads the article against the catalogue of real pages, and the exact-
+ * phrase list fills whatever it leaves. Every AI proposal is validated against
+ * the article text and the catalogue before it is applied (`link-plan.ts`).
  * 3. **The text must come out identical.** Checked here at runtime, on the
  *    actual document, immediately before the write. `scripts/check-autofix.mts`
  *    asserts the same thing in the guard suite; this is the belt to its braces,
@@ -49,11 +55,23 @@ import type { Article } from "@/types/domain";
 export async function ensureArticleLinks(article: Article): Promise<number> {
   const before = analyzeDocument(article.bodyJson);
 
-  // Rule 2. Also covers the re-publish case: once links exist, this never runs
-  // again on that article.
-  if (before.internalLinks.length > 0) return 0;
+  /*
+    Rule 2, revised (client, 2026-10-04): top up below THREE, not only at zero.
 
-  const result = autolinkDocument(article.bodyJson, linkTargets());
+    An article with one link is barely better connected than one with none, and
+    three is the audit's own bar. Existing links are still never touched — they
+    count toward the floor and the ceiling, and the planner only ever adds. Once
+    an article has three, this never runs on it again.
+  */
+  if (before.internalLinks.length >= LINK_FLOOR) return 0;
+
+  const { articleHref } = await import("@/lib/utils/routes");
+  const result = await planArticleLinks({
+    doc: article.bodyJson,
+    title: article.title,
+    selfHref: articleHref(article),
+    selfSlug: article.slug,
+  });
   if (result.added.length === 0) return 0;
 
   /*
@@ -98,6 +116,10 @@ export async function ensureArticleLinks(article: Article): Promise<number> {
     entityId: article.id,
     metadata: {
       slug: article.slug,
+      // Which pass chose them: the AI matcher, the phrase list, or both. When a
+      // link looks wrong, this is the first thing worth knowing.
+      source: result.source,
+      note: result.note,
       links: result.added.map((link) => ({ text: link.text, href: link.href })),
     },
   });

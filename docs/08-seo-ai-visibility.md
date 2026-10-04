@@ -313,6 +313,53 @@ derivatives are deleted after seven days (CLAUDE.md § 3 rule 10).
 
 ---
 
+## 5c. Internal linking (`lib/seo/auto/link-*.ts`)
+
+Every article that reaches publish with **fewer than three** internal links is
+topped up to at most **six**, automatically. Links the author placed herself are
+never touched and count toward both numbers. The same pass runs behind "Fix what
+it can" in the editor.
+
+### Two passes
+
+1. **The AI matcher** (`link-matcher.ts`). The configured model reads the
+   article and a catalogue of every real page on the site — cities, communities,
+   services, guides, answers and **other published articles** — and proposes
+   which of the author's phrases refer to which page. It understands meaning:
+   "using your VA benefit" is about the VA guide, a paragraph about Heathrow
+   belongs to the Heathrow community page. Article-to-article and community
+   links did not exist before this pass.
+2. **The phrase list** (`autolink.ts`) fills whatever budget the model leaves,
+   and is the whole pass when the model is unconfigured, slow, rate-limited or
+   answers with something that does not validate. Publishing never waits on the
+   model and never fails because of it.
+
+Measured on a realistic article: the model pass found six links in 3.2 seconds;
+the phrase list alone found four, and missed both "VA benefit" and the
+community.
+
+### What a model proposal must survive (`link-plan.ts`)
+
+| Rule | Why |
+|---|---|
+| Anchor appears in the article **word for word** | The model chooses which of her phrases to link; it never supplies words. This is the line between internal linking and link injection. |
+| Destination is in the catalogue | A model invents plausible URLs. A link can never 404. |
+| Not the article itself, not a page already linked | One link per destination. |
+| Anchor is not generic | "Click here", "read more", "this article" — the anchors Google's link guidance names as unhelpful. |
+| No anchor used twice | Repeating keyword anchor text is the over-optimisation pattern. |
+| 1–6 words | A proper noun can be one word; seven is a clause. |
+
+Then the linker's own rules apply on top: never inside a heading, two per
+paragraph, never inside an existing link, and the article's text must come out
+**identical** — checked at runtime immediately before a published body is
+written. Every pass is recorded in the audit log with each anchor, its
+destination and which pass chose it.
+
+`npm run check:autofix` asserts each validator rule against a proposal built to
+break exactly that rule.
+
+---
+
 ## 6. JSON-LD
 
 `lib/seo/jsonld.ts`, one builder per type. Rendered as a `<script

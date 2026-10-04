@@ -91,11 +91,68 @@ export async function autofixArticleSeo(input: AutofixInput): Promise<AutofixRes
   const applied: string[] = [];
   const skipped: { label: string; why: string }[] = [];
 
-  /* ── 1. The body: answer-first, internal links, excerpt ───────────────── */
+  /* ── 1. The body: answer-first, paragraphs, excerpt ───────────────────── */
 
-  const body = autofix.fixArticleBody({ doc: input.bodyJson, excerpt: input.excerpt });
-  applied.push(...body.report.applied);
-  skipped.push(...body.report.skipped);
+  // Structure first, links second: a link whose anchor straddled a paragraph
+  // split would have to be rebuilt, so the cuts are made before anything is
+  // marked.
+  const structured = autofix.fixArticleBody({
+    doc: input.bodyJson,
+    excerpt: input.excerpt,
+    link: false,
+  });
+  applied.push(...structured.report.applied);
+  skipped.push(...structured.report.skipped);
+
+  /* ── 1b. Internal links: the AI matcher, then the phrase list ─────────── */
+
+  const { LINK_FLOOR, planArticleLinks } = await import("@/lib/seo/auto/link-matcher");
+  const { analyzeDocument, documentText } = await import("@/lib/seo/auto/document");
+
+  /*
+    Excluded by slug, not by URL.
+
+    This action has the city's NAME and not its slug, and an article's URL
+    depends on the slug of its city. Computing the href here would get it wrong
+    for every city article and leave the article in its own catalogue, free to be
+    linked to itself. The slug needs no city to be correct.
+  */
+  const plan = await planArticleLinks({
+    doc: structured.doc,
+    title: input.title,
+    selfHref: null,
+    selfSlug: input.slug || null,
+  });
+
+  if (plan.added.length > 0) {
+    applied.push(
+      `Linked ${plan.added.length} ${plan.added.length === 1 ? "phrase" : "phrases"} you already wrote${
+        plan.source === "model" || plan.source === "model+phrases"
+          ? ", matched to the pages they are about"
+          : ""
+      }: ${plan.added.map((link) => `“${link.text}” → ${link.label}`).join(", ")}.`,
+    );
+  } else if (analyzeDocument(structured.doc).internalLinks.length >= LINK_FLOOR) {
+    // Already well linked; nothing to say.
+  } else {
+    skipped.push({
+      label: "Links to your own pages",
+      why:
+        plan.note ??
+        "Nothing in the body refers to another page on this site. Name a city, a community, a service or a topic another article covers and it becomes a link.",
+    });
+  }
+  if (plan.note && plan.added.length > 0) applied.push(plan.note);
+
+  const body = {
+    doc: plan.doc,
+    // Recomputed from the linked document. Links add marks, not words, so this
+    // equals the structured text — computed again anyway so the value saved is
+    // derived from the value saved.
+    bodyText: documentText(plan.doc).replace(/\s+/g, " ").trim(),
+    excerpt: structured.excerpt,
+    links: plan.added,
+  };
 
   values.bodyJson = body.doc;
   values.bodyText = body.bodyText;
@@ -210,3 +267,4 @@ export async function autofixArticleSeo(input: AutofixInput): Promise<AutofixRes
 
   return { ok: true, values, applied, skipped, score: audit.score, usedModel };
 }
+

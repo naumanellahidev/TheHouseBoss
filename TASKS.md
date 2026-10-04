@@ -29,38 +29,9 @@ Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`, `/sw.js`,
 
 ---
 
-## Now — AI internal linking (client approved 2026-10-04)
+## Now
 
-The AI reads the article and a list of every real page on the site, and links
-the article's own phrases to the pages that are genuinely about them. Replaces
-exact-phrase matching as the first pass; the exact-phrase linker stays as the
-fallback.
-
-- [ ] **Catalogue of real pages** — `lib/seo/auto/link-catalogue.ts` (server-only).
-      Cities, communities, services, answers, guides, AND other published
-      articles (article-to-article linking did not exist before). Each entry:
-      href, title, a one-line topic.
-- [ ] **AI matcher** — `lib/seo/auto/link-matcher.ts`. Sends article text +
-      catalogue to the configured model (Ollama, OpenAI-compatible), asks for
-      JSON `[{anchor, href}]`. Generic completion helper exported from
-      `lib/seo/auto/ollama.ts` so timeout/429 handling is not duplicated.
-- [ ] **Validator** (pure, testable) — anchor must exist verbatim in the body
-      text, href must be in the catalogue, not the article's own URL, 2-6 words,
-      not generic ("click here", "read more", "this article"), no two links with
-      the same anchor text, no anchor equal to the destination's exact keyword on
-      more than one link (stuffing), one link per destination.
-- [ ] **Apply** — link the validated anchors into the Tiptap doc via autolink's
-      machinery (per-block budget, headings skipped, text-unchanged invariant).
-- [ ] **Threshold** — top up when the body has FEWER THAN 3 internal links (was:
-      only when zero). Existing links are never touched and count toward the cap
-      of 6.
-- [ ] **Fallback** — model missing, slow, rate-limited or invalid output → the
-      exact-phrase linker runs instead. Publish never waits on or fails because
-      of the model.
-- [ ] **Wire** into `ensure-links.ts` (publish) and `seo-autofix.ts` ("Fix what
-      it can").
-- [ ] **Guard** — validator cases in `scripts/check-autofix.mts`.
-- [ ] Build, test what changed, push, verify the deploy, update this file.
+Nothing in flight.
 
 ---
 
@@ -141,6 +112,26 @@ Each of these is deployed and checked on the live site. Do not redo them.
   `CLAUDE.md` § 2 and `docs/12` § 2 with the upgrade triggers. Every cron in
   `vercel.json` is daily or less, which Hobby requires — **do not add a more
   frequent one** or the next push fails to deploy.
+
+- **AI internal linking** (2026-10-04, client approved) — the model reads the
+  article against a catalogue of every real page (cities, communities, services,
+  guides, answers and **other published articles**) and links the author's own
+  phrases to the pages they are about. The exact-phrase list fills whatever it
+  leaves and is the whole pass when the model is unavailable.
+  - Threshold changed: tops up any article with **fewer than 3** internal links,
+    to at most 6. Author-placed links are never touched.
+  - Files: `lib/seo/auto/link-plan.ts` (pure: prompt, parser, validator),
+    `link-catalogue.ts`, `link-matcher.ts` (`planArticleLinks`), wired into
+    `ensure-links.ts` (publish) and `seo-autofix.ts` ("Fix what it can").
+    `askModel` in `ollama.ts` is the generic model call.
+  - Measured live: 6 links in 3.2s with the model; 4 without. The model found
+    "VA benefit" → VA guide and "Heathrow" → the community, both of which the
+    phrase list cannot.
+  - `npm run check:autofix` asserts every validator rule. Documented in
+    `docs/08` § 5c.
+  - To exercise the real model from a script: `server-only` throws outside a
+    server, so run with the react-server condition —
+    `npx tsx --conditions=react-server --env-file=.env.local <script>`.
 
 ## How to work here
 

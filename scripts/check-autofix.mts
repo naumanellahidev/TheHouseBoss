@@ -24,6 +24,7 @@
 import { fixArticleBody, promoteAnswerFirst } from "../lib/seo/auto/article-autofix";
 import { autolinkDocument, linkTargets } from "../lib/seo/auto/autolink";
 import { analyzeDocument, documentText } from "../lib/seo/auto/document";
+import { parseProposals, validateProposals, type CatalogueEntry } from "../lib/seo/auto/link-plan";
 
 type Failure = { what: string; detail: string };
 const failures: Failure[] = [];
@@ -244,6 +245,134 @@ check(
     !JSON.stringify(again.doc).includes('"href":"/lake-mary"},{"type":"link"'),
     "a link mark was nested inside another",
   );
+}
+
+/* ── The AI matcher's proposals ───────────────────────────────────────────── */
+
+/*
+  Every rule a model proposal has to pass, asserted against fixtures.
+
+  The model itself cannot run here — it needs a key and a network. But it does
+  not need to: what keeps a published article safe is not what the model says,
+  it is what `validateProposals` lets through. A model that invents a URL, a
+  phrase or a generic anchor is the normal case these rules exist for, so each
+  one is fed a proposal that breaks exactly one rule and must reject it.
+*/
+{
+  const catalogue: CatalogueEntry[] = [
+    { href: "/lake-mary", title: "Lake Mary, FL", topic: "living in Lake Mary", kind: "city" },
+    { href: "/guides/va-home-buyer", title: "VA Home-Buyer Guide", topic: "VA loans", kind: "guide" },
+    { href: "/communities/heathrow", title: "Heathrow", topic: "gated golf community", kind: "community" },
+    { href: "/lake-mary/blog/this-one", title: "This article", topic: "itself", kind: "article" },
+    // Free destinations for the negative cases, so each one breaks exactly the
+    // rule it is testing and not "that page is already linked" first.
+    { href: "/sanford", title: "Sanford, FL", topic: "living in Sanford", kind: "city" },
+    { href: "/assumable-mortgage-homes", title: "Assumable Mortgage Homes", topic: "assumable loans", kind: "guide" },
+    { href: "/hire-contractor", title: "Hire a Contractor", topic: "a licensed contractor", kind: "service" },
+  ];
+
+  const bodyText =
+    "Buying in Lake Mary often starts with a VA loan. Heathrow is the gated community most buyers ask about. Click here for more.";
+
+  const proposals = [
+    { anchor: "Lake Mary", href: "/lake-mary" }, //                     valid
+    { anchor: "VA loan", href: "/guides/va-home-buyer" }, //              valid
+    { anchor: "Heathrow", href: "/communities/heathrow" }, //             valid
+    { anchor: "first-time buyers", href: "/guides/first-time" }, //       invented URL
+    { anchor: "veterans financing", href: "/assumable-mortgage-homes" }, //   not in the text
+    { anchor: "Click here", href: "/sanford" }, //                      generic
+    { anchor: "Lake Mary", href: "/communities/heathrow" }, //            anchor reused
+    { anchor: "gated community", href: "/lake-mary/blog/this-one" }, //   links to itself
+    { anchor: "buying in lake mary often starts with a", href: "/hire-contractor" }, // 8 words
+    "not an object", //                                                    malformed
+  ];
+
+  const result = validateProposals({
+    proposals,
+    bodyText,
+    catalogue,
+    selfHref: "/lake-mary/blog/this-one",
+    existingHrefs: [],
+    max: 6,
+  });
+
+  const kept = result.accepted.map((l) => l.href).sort().join(",");
+  check(
+    "the AI matcher keeps exactly the three valid proposals",
+    kept === "/communities/heathrow,/guides/va-home-buyer,/lake-mary",
+    `kept: ${kept || "(none)"}`,
+  );
+
+  const why = (anchor: string) =>
+    result.rejected.find((r) => r.anchor === anchor)?.why ?? "(not rejected)";
+
+  check("an invented URL is refused", why("first-time buyers").includes("not a page"), why("first-time buyers"));
+  check(
+    "a phrase the article does not contain is refused",
+    why("veterans financing").includes("word for word"),
+    why("veterans financing"),
+  );
+  check("a generic anchor is refused", why("Click here").includes("generic"), why("Click here"));
+  check(
+    "an article cannot be linked to itself",
+    why("gated community").includes("itself"),
+    why("gated community"),
+  );
+  check(
+    "an anchor longer than six words is refused",
+    why("buying in lake mary often starts with a").includes("1-6"),
+    why("buying in lake mary often starts with a"),
+  );
+
+  /*
+    "Lake Mary" is proposed twice. The first is accepted; the second must be
+    refused — either because the anchor is already used or because its
+    destination is, and both reasons are correct.
+  */
+  const reused = result.rejected.filter((r) => r.anchor === "Lake Mary");
+  check("a reused anchor is refused", reused.length === 1, `${reused.length} rejection(s) for the repeat`);
+
+  /* A page the article already links is never proposed again. */
+  const again = validateProposals({
+    proposals: [{ anchor: "Lake Mary", href: "/lake-mary" }],
+    bodyText,
+    catalogue,
+    selfHref: null,
+    existingHrefs: ["/lake-mary"],
+    max: 6,
+  });
+  check("an already-linked page is not linked twice", again.accepted.length === 0, "it was accepted");
+
+  /* The cap. */
+  const capped = validateProposals({
+    proposals: [
+      { anchor: "Lake Mary", href: "/lake-mary" },
+      { anchor: "VA loan", href: "/guides/va-home-buyer" },
+    ],
+    bodyText,
+    catalogue,
+    selfHref: null,
+    existingHrefs: [],
+    max: 1,
+  });
+  check("the link cap holds for AI proposals", capped.accepted.length === 1, `${capped.accepted.length} accepted`);
+
+  /*
+    Reading the answer. Models wrap JSON in fences and prose; both are fine.
+    Anything that is not an array of objects returns null, which is the
+    fallback-to-phrase-list signal.
+  */
+  check(
+    "a fenced JSON answer is read",
+    (parseProposals('Here you go:\n\u0060\u0060\u0060json\n[{"anchor":"x","href":"/y"}]\n\u0060\u0060\u0060') ?? []).length === 1,
+    "fenced JSON was not parsed",
+  );
+  check(
+    "an object-wrapped answer is read",
+    (parseProposals('{"links":[{"anchor":"x","href":"/y"}]}') ?? []).length === 1,
+    "wrapped JSON was not parsed",
+  );
+  check("prose with no JSON returns null", parseProposals("I could not find any links.") === null, "prose was accepted");
 }
 
 /* ── Report ───────────────────────────────────────────────────────────────── */

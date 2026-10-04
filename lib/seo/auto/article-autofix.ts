@@ -229,6 +229,15 @@ export type BodyFix = {
 export function fixArticleBody(input: {
   doc: unknown;
   excerpt: string | null;
+  /**
+   * False to leave linking to the caller.
+   *
+   * The server action passes false and runs `planArticleLinks` afterwards, which
+   * puts the AI matcher in front of the phrase list. This function stays pure
+   * and network-free — the guard suite runs it — so the phrase list is what it
+   * uses when it does the linking itself.
+   */
+  link?: boolean;
 }): BodyFix {
   const applied: string[] = [];
   const skipped: { label: string; why: string }[] = [];
@@ -267,8 +276,14 @@ export function fixArticleBody(input: {
     );
   }
 
-  const linkResult = autolinkDocument(paragraphs.doc, linkTargets());
-  if (linkResult.added.length > 0) {
+  const linkResult =
+    input.link === false
+      ? { doc: paragraphs.doc, added: [] as AddedLink[] }
+      : autolinkDocument(paragraphs.doc, linkTargets());
+
+  if (input.link === false) {
+    // The caller links and reports; nothing to say here.
+  } else if (linkResult.added.length > 0) {
     applied.push(
       `Linked ${linkResult.added.length} ${linkResult.added.length === 1 ? "phrase" : "phrases"} you already wrote: ${linkResult.added
         .map((link) => `“${link.text}”`)

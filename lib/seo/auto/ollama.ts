@@ -72,9 +72,32 @@ type Completion =
   | { text: string }
   | { error: Rejection; retryAfterMs?: number | null };
 
-async function complete(prompt: string, cfg: Config, temperature: number): Promise<Completion> {
+/** The instruction every meta-description request is sent with. */
+const DESCRIPTION_SYSTEM =
+  "You write meta descriptions for a Florida real-estate site. " +
+  "Reply with the description only — no preamble, no quotes, no markdown. " +
+  "Between 140 and 158 characters. " +
+  "Use ONLY facts present in the input. Never invent a number, a feature or a claim.";
+
+/**
+ * One request to the model.
+ *
+ * The system prompt is a parameter rather than a constant because two features
+ * now use this: meta descriptions and internal-link matching. They need
+ * different instructions and the link matcher needs a larger token budget for
+ * its JSON, but the timeout, the 429 handling and the truncation guard below are
+ * exactly the same — and were hard-won — so they live in one place.
+ */
+async function complete(
+  prompt: string,
+  cfg: Config,
+  temperature: number,
+  opts: { system: string; maxTokens?: number; timeoutMs?: number } = {
+    system: DESCRIPTION_SYSTEM,
+  },
+): Promise<Completion> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? TIMEOUT_MS);
 
   try {
     const response = await fetch(`${cfg.baseUrl}/chat/completions`, {
@@ -92,19 +115,12 @@ async function complete(prompt: string, cfg: Config, temperature: number): Promi
         // what made the old retry a wasted round trip rather than a second
         // chance.
         temperature,
-        max_tokens: MAX_TOKENS,
+        max_tokens: opts.maxTokens ?? MAX_TOKENS,
         // Explicit: a streamed body would arrive as SSE and `response.json()`
         // would throw, which the catch below would report as "unreachable".
         stream: false,
         messages: [
-          {
-            role: "system",
-            content:
-              "You write meta descriptions for a Florida real-estate site. " +
-              "Reply with the description only — no preamble, no quotes, no markdown. " +
-              "Between 140 and 158 characters. " +
-              "Use ONLY facts present in the input. Never invent a number, a feature or a claim.",
-          },
+          { role: "system", content: opts.system },
           { role: "user", content: prompt },
         ],
       }),
@@ -164,6 +180,48 @@ function config(): Config | null {
 
 export function isModelConfigured(): boolean {
   return config() !== null;
+}
+
+/**
+ * Ask the model something other than a meta description.
+ *
+ * Returns the raw text or the reason there is none. It deliberately does NOT
+ * validate — what counts as a good answer is the caller's business, and the
+ * link matcher's validation (an anchor must exist verbatim in the article, a
+ * destination must be a real page) is nothing like a description's.
+ *
+ * Rate limits are waited out twice; everything else is returned at once. A
+ * caller on a publish path must not sit through a slow provider, so a timeout is
+ * an answer, not a reason to try again.
+ */
+export async function askModel(opts: {
+  system: string;
+  prompt: string;
+  temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
+}): Promise<{ text: string } | { error: Rejection }> {
+  const cfg = config();
+  if (!cfg) return { error: "unconfigured" };
+
+  let last: Rejection = "unreachable";
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const result = await complete(opts.prompt, cfg, opts.temperature ?? 0.2, {
+      system: opts.system,
+      maxTokens: opts.maxTokens,
+      timeoutMs: opts.timeoutMs,
+    });
+
+    if ("text" in result) return { text: result.text };
+
+    last = result.error;
+    if (result.error !== "rate-limited") break;
+
+    const base = result.retryAfterMs ?? 1200 * 2 ** attempt;
+    await new Promise((r) => setTimeout(r, base + Math.random() * 400));
+  }
+
+  return { error: last };
 }
 
 /**
