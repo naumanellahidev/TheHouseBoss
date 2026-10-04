@@ -17,15 +17,15 @@ where it stopped.
 
 | | |
 |---|---|
-| Last commit | `d2909cc` p7(seo): an article published with no internal links gets them automatically |
+| Last work commit | `2e4c8c9` p7(admin): the admin suite runs for real, and the service worker stops reloading every first visit |
 | Branch | `main`, clean, pushed |
 | Live | https://www.thehousebossfl.com — deployed from `main` on every push |
 | Hosting | The existing Vercel project (`altrix/the-house-boss`), **free tier** — recorded decision, upgrade triggers in `docs/12` § 2 |
 | Database | Supabase, migrations applied through **027** |
 | Phase | 7 (QA, compliance, launch) |
 
-Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`,
-`/lake-mary/blog/living-in-lake-mary-fl` — all 200.
+Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`, `/sw.js`,
+`/manifest.webmanifest` — all 200, on the free Vercel tier.
 
 ---
 
