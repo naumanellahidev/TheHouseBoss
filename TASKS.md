@@ -29,9 +29,38 @@ Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`, `/sw.js`,
 
 ---
 
-## Now
+## Now — AI internal linking (client approved 2026-10-04)
 
-Nothing in flight.
+The AI reads the article and a list of every real page on the site, and links
+the article's own phrases to the pages that are genuinely about them. Replaces
+exact-phrase matching as the first pass; the exact-phrase linker stays as the
+fallback.
+
+- [ ] **Catalogue of real pages** — `lib/seo/auto/link-catalogue.ts` (server-only).
+      Cities, communities, services, answers, guides, AND other published
+      articles (article-to-article linking did not exist before). Each entry:
+      href, title, a one-line topic.
+- [ ] **AI matcher** — `lib/seo/auto/link-matcher.ts`. Sends article text +
+      catalogue to the configured model (Ollama, OpenAI-compatible), asks for
+      JSON `[{anchor, href}]`. Generic completion helper exported from
+      `lib/seo/auto/ollama.ts` so timeout/429 handling is not duplicated.
+- [ ] **Validator** (pure, testable) — anchor must exist verbatim in the body
+      text, href must be in the catalogue, not the article's own URL, 2-6 words,
+      not generic ("click here", "read more", "this article"), no two links with
+      the same anchor text, no anchor equal to the destination's exact keyword on
+      more than one link (stuffing), one link per destination.
+- [ ] **Apply** — link the validated anchors into the Tiptap doc via autolink's
+      machinery (per-block budget, headings skipped, text-unchanged invariant).
+- [ ] **Threshold** — top up when the body has FEWER THAN 3 internal links (was:
+      only when zero). Existing links are never touched and count toward the cap
+      of 6.
+- [ ] **Fallback** — model missing, slow, rate-limited or invalid output → the
+      exact-phrase linker runs instead. Publish never waits on or fails because
+      of the model.
+- [ ] **Wire** into `ensure-links.ts` (publish) and `seo-autofix.ts` ("Fix what
+      it can").
+- [ ] **Guard** — validator cases in `scripts/check-autofix.mts`.
+- [ ] Build, test what changed, push, verify the deploy, update this file.
 
 ---
 
