@@ -111,12 +111,13 @@ export default function PrivacyPage() {
             private dashboard. It is not set for ordinary visitors.
           </p>
           <p>
-            We use Google Tag Manager to manage the measurement tools on this
-            site. Tag Manager itself does not set cookies or collect personal
-            information; it loads the tools configured in it. Those tools — Google
-            Analytics, for example — may set cookies and record how you use the
-            site: the pages you visit, how you arrived, your approximate location,
-            and your device and browser. Google processes that information under
+            We use Google Analytics to understand how the site is used, loaded
+            through Google Tag Manager. Analytics sets cookies and assigns your
+            browser an identifier, which lets it tell a returning visitor from a
+            new one, and it records the pages you visit, how you arrived, your
+            approximate location, and your device and browser. Tag Manager itself
+            does not set cookies or collect personal information; it only loads
+            the tools configured in it. Google processes this information under
             its own{" "}
             <a href="https://policies.google.com/privacy" rel="noopener noreferrer">
               privacy policy

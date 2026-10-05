@@ -143,6 +143,10 @@ Each of these is deployed and checked on the live site. Do not redo them.
     trackers and set no visitor cookies, which stops being true the moment GA4
     or an ads tag is added in the container. **If a tag that does something new
     is added in GTM, that paragraph must change with it.**
+  - **Google Analytics 4 (`G-7578KKYRH9`) is configured inside the GTM
+    container**, by the client. **Never add the gtag.js snippet to the code** —
+    GA4 in both places counts every page view twice. The privacy page now
+    states that Analytics is in use and sets cookies.
 
 ## How to work here
 

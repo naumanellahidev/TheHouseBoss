@@ -61,6 +61,12 @@ export const siteConfig = {
    * container from the site without touching any page. Whatever tags are
    * configured inside it run on the public site; the privacy page
    * (`/legal/privacy`) has to stay true to what they do.
+   *
+   * **Google Analytics 4 (`G-7578KKYRH9`) is configured INSIDE this container**
+   * (client, 2026-10-06). Do not also add Google's gtag.js snippet to the code:
+   * both would send a page view on every load and every number in the report
+   * would be doubled. If GA ever moves out of GTM, add it in code at the same
+   * time as removing it from the container — never both at once.
    */
   googleTagManagerId: "GTM-M2BJ94GP" as string | null,
 
