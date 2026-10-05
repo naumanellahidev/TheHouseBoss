@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { CustomCursor } from "@/components/site/custom-cursor";
 import { Footer } from "@/components/site/footer";
+import { GoogleTagManager } from "@/components/site/google-tag-manager";
 import { Header } from "@/components/site/header";
 import { PageTransition } from "@/components/site/page-transition";
 import { ScrollToTopOnNavigate } from "@/components/site/scroll-to-top";
@@ -32,6 +33,13 @@ export default async function MarketingLayout({
 
   return (
     <>
+      {/*
+        First, so the noscript frame sits as close to the opening <body> as this
+        layout can put it — Google's instruction. Public pages only: the
+        dashboard deliberately never loads a tag manager (see the component).
+      */}
+      <GoogleTagManager />
+
       {/*
         RealEstateAgent + WebSite ride on every public page, so the entity graph
         is present wherever a crawler lands rather than only on /about.

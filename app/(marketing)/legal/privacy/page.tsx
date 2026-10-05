@@ -14,7 +14,7 @@ import { isPending, siteConfig } from "@/lib/site-config";
  * the site actually uses, and every category of data listed is one actually
  * collected. When a processor is added or removed, this page changes with it.
  */
-const LAST_UPDATED = "3 September 2026";
+const LAST_UPDATED = "6 October 2026";
 
 export const metadata: Metadata = legalMetadata(
   "Privacy Policy",
@@ -94,20 +94,50 @@ export default function PrivacyPage() {
           </p>
 
           <h2>Cookies and analytics</h2>
+          {/*
+            Rewritten 2026-10-06 when Google Tag Manager was added.
+
+            The previous text said the site ran no third-party trackers and set
+            no cookies for visitors, and gave that as the reason nobody is asked
+            to accept cookies. Tag Manager makes the first claim depend on what
+            is configured inside it — Google Analytics sets cookies and assigns
+            an identifier — so it is stated here as what it is, rather than left
+            as a promise the site may no longer keep. If a tag is added to the
+            container that does something this paragraph does not describe,
+            this paragraph has to change with it.
+          */}
           <p>
-            This site sets no advertising cookies and runs no third-party
-            advertising trackers. A single cookie is used to keep the site
-            administrator signed in to the private dashboard; it is not set for
-            ordinary visitors.
+            A cookie is used to keep the site administrator signed in to the
+            private dashboard. It is not set for ordinary visitors.
           </p>
           <p>
-            We measure how the site is used with Vercel Web Analytics and Vercel
-            Speed Insights. Neither sets a cookie and neither assigns you an
-            identifier, so you are not followed between visits or across other
-            websites. What is recorded is the page you viewed, the site that
+            We use Google Tag Manager to manage the measurement tools on this
+            site. Tag Manager itself does not set cookies or collect personal
+            information; it loads the tools configured in it. Those tools — Google
+            Analytics, for example — may set cookies and record how you use the
+            site: the pages you visit, how you arrived, your approximate location,
+            and your device and browser. Google processes that information under
+            its own{" "}
+            <a href="https://policies.google.com/privacy" rel="noopener noreferrer">
+              privacy policy
+            </a>
+            . You can opt out of Google Analytics with Google&rsquo;s{" "}
+            <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener noreferrer">
+              browser add-on
+            </a>
+            , and you can block or delete cookies in your browser&rsquo;s settings
+            at any time.
+          </p>
+          <p>
+            We also measure page speed and visits with Vercel Web Analytics and
+            Vercel Speed Insights. Neither sets a cookie or assigns you an
+            identifier. What they record is the page you viewed, the site that
             linked you to it, your country, your device type, and how quickly the
-            page loaded for you. That is why you are not asked to accept cookies
-            when you arrive.
+            page loaded for you.
+          </p>
+          <p>
+            None of this information is sold, and the dashboard that holds
+            enquiries does not load Google Tag Manager at all.
           </p>
 
           <h2>How long we keep it</h2>

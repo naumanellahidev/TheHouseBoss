@@ -133,6 +133,17 @@ Each of these is deployed and checked on the live site. Do not redo them.
     server, so run with the react-server condition —
     `npx tsx --conditions=react-server --env-file=.env.local <script>`.
 
+- **Google Tag Manager** (2026-10-06) — container `GTM-M2BJ94GP`, ID in
+  `lib/site-config.ts` (`googleTagManagerId`; set to null to remove it site-wide).
+  Loaded by `components/site/google-tag-manager.tsx` from the **marketing layout
+  only** — the dashboard never loads it, because any tag added in the GTM console
+  would otherwise run inside the admin session. Verified in a browser: `gtm.js`,
+  `gtm.dom` and `gtm.load` fire on public pages; zero GTM requests on `/admin`.
+  - `/legal/privacy` rewritten to match: it said the site ran no third-party
+    trackers and set no visitor cookies, which stops being true the moment GA4
+    or an ads tag is added in the container. **If a tag that does something new
+    is added in GTM, that paragraph must change with it.**
+
 ## How to work here
 
 ```bash

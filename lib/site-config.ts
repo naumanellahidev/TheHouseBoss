@@ -53,6 +53,17 @@ export const siteConfig = {
    */
   googleSiteVerification: "dJyyENEExIC4bNQoj5BLy6mTfndsOCd73gwopWNgmfw",
 
+  /**
+   * Google Tag Manager container, loaded on PUBLIC pages only by
+   * `components/site/google-tag-manager.tsx` (client, 2026-10-06).
+   *
+   * Public by design — the ID is in every page's HTML. Set to null to remove the
+   * container from the site without touching any page. Whatever tags are
+   * configured inside it run on the public site; the privacy page
+   * (`/legal/privacy`) has to stay true to what they do.
+   */
+  googleTagManagerId: "GTM-M2BJ94GP" as string | null,
+
   locale: "en_US",
   timezone: "America/New_York",
 
