@@ -17,7 +17,7 @@ where it stopped.
 
 | | |
 |---|---|
-| Last work commit | `0a56018` p7(site): Google Tag Manager on the public site, and a privacy policy that says so |
+| Last work commit | `c05c008` p7(seo): fix the four findings from the client's SEO audit |
 | Branch | `main`, clean, pushed |
 | Live | https://www.thehousebossfl.com — deployed from `main` on every push |
 | Hosting | The existing Vercel project (`altrix/the-house-boss`), **free tier** — recorded decision, upgrade triggers in `docs/12` § 2 |
