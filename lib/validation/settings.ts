@@ -106,6 +106,12 @@ export const settingsSchema = z.object({
    * so the only way to change the largest image on the site was to write SQL.
    */
   heroKey: optionalText(300),
+  /**
+   * What the hero photograph shows (migration 028). 300 characters is generous:
+   * a screen reader reads every word before the headline, so the field
+   * description asks for one sentence.
+   */
+  heroAlt: optionalText(300),
   licenseReLabel: optionalText(120),
   licenseReAuthority: optionalText(200),
   licenseContractorLabel: optionalText(120),

@@ -60,6 +60,7 @@ function toSiteSettings(row: Row | null): SiteSettings {
     announcementHref: str(row?.announcement_href),
     ogKey: str(row?.og_key),
     heroKey: str(row?.hero_key),
+    heroAlt: str(row?.hero_alt),
     brokerageName: str(row?.brokerage_name),
     whatsapp: str(row?.whatsapp),
     licenseRe: str(row?.license_re),

@@ -43,6 +43,15 @@ function resolveSiteUrl(): string {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  /*
+    No `X-Powered-By: Next.js` on responses.
+
+    It tells anyone scanning for a vulnerable framework version exactly what to
+    try, and gives a visitor nothing. An SEO audit flags it for that reason.
+    Removing it hides nothing that matters — it simply stops volunteering it.
+  */
+  poweredByHeader: false,
+
   /**
    * Re-exported so it is inlined into both the server and the client bundle.
    * `VERCEL_URL` and `VERCEL_PROJECT_PRODUCTION_URL` are not `NEXT_PUBLIC_`

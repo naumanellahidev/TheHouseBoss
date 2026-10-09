@@ -19,6 +19,7 @@ import { getSiteSettings } from "@/lib/queries/settings";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { cn } from "@/lib/utils";
+import { cardShell, stretchedLink } from "@/lib/utils/card-link";
 
 export const revalidate = 3600;
 
@@ -47,7 +48,7 @@ export default async function AnswersHubPage() {
     "getSiteSettings(answers)",
   );
 
-  const photo = heroPhoto(settings.heroKey, "", 1920, 1080);
+  const photo = heroPhoto(settings.heroKey, settings.heroAlt?.trim() || "Central Florida homes", 1920, 1080);
   const total = ANSWERS.length;
 
   return (
@@ -117,6 +118,15 @@ export default async function AnswersHubPage() {
                     className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-accent-quiet underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     {answers.length} {answers.length === 1 ? "question" : "questions"}
+                    {/*
+                      The category name, for anything reading the link out of
+                      context. "5 questions" appeared under several headings,
+                      each pointing somewhere different — the same anchor text
+                      for different destinations, which an SEO audit flags and
+                      which a screen reader's links list renders as five
+                      identical, useless entries (WCAG 2.4.4).
+                    */}
+                    <span className="sr-only"> about {category.title.toLowerCase()}</span>
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                 </div>
@@ -124,18 +134,25 @@ export default async function AnswersHubPage() {
                 <ul className="grid gap-3 md:grid-cols-2">
                   {answers.map((answer) => (
                     <li key={answer.slug}>
-                      <Link
-                        href={answerHref(answer)}
+                      {/*
+                        A stretched link (`lib/utils/card-link.ts`): the question
+                        is the anchor, the short answer is plain text. The whole
+                        card used to be the link, which made sixty-two anchors on
+                        this page each a question and an answer run together.
+                      */}
+                      <div
                         className={cn(
                           "group flex h-full items-start gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xs",
                           "transition-[box-shadow,transform] duration-(--dur-base) ease-(--ease-out)",
                           "hover:-translate-y-0.5 hover:shadow-md",
-                          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                          cardShell,
                         )}
                       >
                         <span className="flex min-w-0 flex-col gap-1">
                           <span className="text-body font-semibold text-foreground">
-                            {answer.question}
+                            <Link href={answerHref(answer)} className={stretchedLink}>
+                              {answer.question}
+                            </Link>
                           </span>
                           <span className="line-clamp-2 text-sm text-foreground-muted">
                             {answer.body.shortAnswer}
@@ -145,7 +162,7 @@ export default async function AnswersHubPage() {
                           className="mt-1 size-4 shrink-0 text-foreground-subtle transition-transform duration-(--dur-fast) group-hover:translate-x-0.5"
                           aria-hidden="true"
                         />
-                      </Link>
+                      </div>
                     </li>
                   ))}
                 </ul>

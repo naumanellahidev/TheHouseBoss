@@ -41,8 +41,17 @@ export function Footer({ settings }: { settings?: SiteSettings | null }) {
         <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-1">
           <Logo variant="full" settings={settings} invert eager={false} />
 
+          {/*
+            The short line, not the positioning line.
+
+            The positioning line belongs in metadata and hero copy (CLAUDE.md
+            § 1), and the home hero already carries it — so the footer, which is
+            on every page, repeated it word for word on the home page. An SEO
+            audit reported that as duplicate text. The short line says
+            something the hero does not: both licences and the service area.
+          */}
           <p className="max-w-[36ch] text-sm leading-relaxed">
-            {siteConfig.positioning}
+            {siteConfig.positioningShort}
           </p>
 
           {profileLinks.length > 0 && (

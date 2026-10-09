@@ -52,6 +52,7 @@ import { getSiteSettings } from "@/lib/queries/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { siteConfig } from "@/lib/site-config";
 import { cn, formatPrice } from "@/lib/utils";
+import { cardShell, stretchedLink } from "@/lib/utils/card-link";
 
 /**
  * The home page — all eleven sections of docs/05-page-specs.md § Home.
@@ -276,7 +277,21 @@ export default async function HomePage() {
     CSS and cropped with object-cover, so a portrait upload still fills the
     band — it is simply cropped harder.
   */
-  const heroBackground = heroPhoto(settings.heroKey, "", 1600, 1067);
+  /*
+    Described, not decorative (migration 028).
+
+    It had an empty alt and an aria-hidden wrapper, on the reasoning that the
+    headline over it is the content. But it is a specific house and the largest
+    image on the site, and an SEO audit read the empty alt as missing. The admin
+    describes it in Settings → Branding; until they do, the fallback is the
+    same generic description this file already uses for the photo elsewhere.
+  */
+  const heroBackground = heroPhoto(
+    settings.heroKey,
+    settings.heroAlt?.trim() || "Central Florida homes",
+    1600,
+    1067,
+  );
 
   const leadPhotoCaption = leadPhotoCity
     ? `${leadPhotoCity.name}, ${leadPhotoCity.county} County`
@@ -332,7 +347,9 @@ export default async function HomePage() {
         >
           {heroBackground ? (
             <>
-              <div aria-hidden="true" className="absolute inset-0 -z-20">
+              {/* No aria-hidden: the photo now carries a description, and
+                  hiding a described image from a screen reader would undo it. */}
+              <div className="absolute inset-0 -z-20">
                 <PropertyImage
                   photo={heroBackground}
                   size={1600}
@@ -591,9 +608,16 @@ export default async function HomePage() {
             <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
               {specialties.map(({ href, icon: Icon, title, hook }) => (
                 <li key={href}>
-                  <Link
-                    href={href}
-                    className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:p-6"
+                  {/*
+                    A stretched link (`lib/utils/card-link.ts`): the title is
+                    the anchor and the card stays clickable. It was one link of
+                    up to 169 characters — title, hook and "Read the guide".
+                  */}
+                  <div
+                    className={cn(
+                      "group flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md lg:p-6",
+                      cardShell,
+                    )}
                   >
                     <span
                       aria-hidden="true"
@@ -602,19 +626,21 @@ export default async function HomePage() {
                       <Icon className="size-6" />
                     </span>
                     <span className="text-h4 font-semibold text-foreground">
-                      {title}
+                      <Link href={href} className={stretchedLink}>
+                        {title}
+                      </Link>
                     </span>
                     <span className="text-sm text-foreground-muted">
                       {hook}
                     </span>
-                    <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-accent-quiet">
+                    <span
+                      aria-hidden="true"
+                      className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-accent-quiet"
+                    >
                       Read the guide
-                      <ArrowRight
-                        aria-hidden="true"
-                        className="size-4 transition-transform duration-(--dur-fast) ease-(--ease-out) group-hover:translate-x-0.5"
-                      />
+                      <ArrowRight className="size-4 transition-transform duration-(--dur-fast) ease-(--ease-out) group-hover:translate-x-0.5" />
                     </span>
-                  </Link>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -814,17 +840,22 @@ export default async function HomePage() {
             <ul className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6">
               {guides.map(({ href, title, lead }) => (
                 <li key={href}>
-                  <Link
-                    href={href}
-                    className="group flex h-full flex-col gap-2 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  {/* Stretched link: the title is the anchor (`lib/utils/card-link.ts`). */}
+                  <div
+                    className={cn(
+                      "group flex h-full flex-col gap-2 rounded-lg border border-border bg-surface p-5 shadow-sm transition-[transform,box-shadow] duration-(--dur-fast) ease-(--ease-out) hover:-translate-y-0.5 hover:shadow-md",
+                      cardShell,
+                    )}
                   >
                     <span className="text-h4 font-semibold text-foreground">
-                      {title}
+                      <Link href={href} className={stretchedLink}>
+                        {title}
+                      </Link>
                     </span>
                     <span className="text-sm text-foreground-muted">
                       {lead}
                     </span>
-                  </Link>
+                  </div>
                 </li>
               ))}
             </ul>

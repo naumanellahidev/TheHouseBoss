@@ -5,7 +5,7 @@
  * live schema through information_schema. Regenerate after every migration and
  * commit the result.
  *
- * Generated: 2026-10-02T19:08:11.083Z
+ * Generated: 2026-10-09T02:18:36.418Z
  * Tables: 33 · Views: 3
  */
 
@@ -1456,6 +1456,7 @@ export type Database = {
           years_experience: number | null;
           whatsapp: string | null;
           portrait_key: string | null;
+          hero_alt: string | null;
         };
         Insert: {
           id?: number;
@@ -1494,6 +1495,7 @@ export type Database = {
           years_experience?: number | null;
           whatsapp?: string | null;
           portrait_key?: string | null;
+          hero_alt?: string | null;
         };
         Update: {
           id?: number;
@@ -1532,6 +1534,7 @@ export type Database = {
           years_experience?: number | null;
           whatsapp?: string | null;
           portrait_key?: string | null;
+          hero_alt?: string | null;
         };
         Relationships: [];
       };
@@ -1657,6 +1660,7 @@ export type Database = {
           portrait_key: string | null;
           portrait_w: number | null;
           portrait_h: number | null;
+          hero_alt: string | null;
         };
         Relationships: [];
       };

@@ -222,12 +222,20 @@ export function LeadForm({
 
         <p className="text-xs leading-relaxed text-foreground-subtle">
           By submitting this form you agree to be contacted about your enquiry.
-          You can opt out at any time. See our{" "}
+          You can opt out at any time. See{" "}
+          {/*
+            Worded for this sentence, not as a second "Privacy Policy".
+
+            The footer's legal row already links "Privacy Policy" on every page,
+            so this was the same anchor twice on any page with a form — which an
+            SEO audit flags. It also reads better: at this point the visitor
+            wants to know what happens to the details they just typed.
+          */}
           <Link
             href="/legal/privacy"
             className="text-accent-quiet underline underline-offset-2"
           >
-            Privacy Policy
+            how we handle your details
           </Link>
           .
         </p>

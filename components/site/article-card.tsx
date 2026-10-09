@@ -7,6 +7,7 @@ import { PropertyImage } from "@/components/site/property-image";
 import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { formatDate } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";
+import { cardShell, stretchedLink } from "@/lib/utils/card-link";
 import type { ArticleCard as ArticleCardType } from "@/types/domain";
 
 /**
@@ -38,63 +39,71 @@ export function ArticleCard({
   className?: string;
 }) {
   return (
-    <article className={cn("h-full", className)}>
-      <Link
-        href={articleHref(article)}
-        className={cn(
-          "group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm",
-          "transition-[box-shadow,transform] duration-(--dur-base) ease-(--ease-out)",
-          "hover:-translate-y-0.5 hover:shadow-md",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        )}
-      >
-        {article.coverKey ? (
-          <PropertyImage
-            photo={{
-              kind: "stored",
-              key: article.coverKey,
-              w: 1200,
-              h: 675,
-              alt: article.coverAlt ?? "",
-            }}
-            size={800}
-            sizes={IMAGE_SIZES.cardGrid3}
-            priority={priority}
-            aspect="16/9"
-            className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:scale-[1.02]"
-          />
+    /*
+      A stretched link (`lib/utils/card-link.ts`): only the title is the
+      anchor, and its ::after covers the card so a tap anywhere still opens the
+      article. The whole card used to be the anchor, which made the link text
+      the title, excerpt, date and reading time run together.
+    */
+    <article
+      className={cn(
+        "group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm",
+        "transition-[box-shadow,transform] duration-(--dur-base) ease-(--ease-out)",
+        "hover:-translate-y-0.5 hover:shadow-md",
+        cardShell,
+        className,
+      )}
+    >
+      {article.coverKey ? (
+        <PropertyImage
+          photo={{
+            kind: "stored",
+            key: article.coverKey,
+            w: 1200,
+            h: 675,
+            alt: article.coverAlt ?? "",
+          }}
+          size={800}
+          sizes={IMAGE_SIZES.cardGrid3}
+          priority={priority}
+          aspect="16/9"
+          className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:scale-[1.02]"
+        />
+      ) : null}
+
+      <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
+        {article.city ? (
+          <p className="text-overline font-semibold tracking-[0.12em] text-accent-quiet uppercase">
+            {article.city.name}
+          </p>
         ) : null}
 
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
-          {article.city ? (
-            <p className="text-overline font-semibold tracking-[0.12em] text-accent-quiet uppercase">
-              {article.city.name}
-            </p>
+        <h3 className="text-h4 font-semibold text-foreground">
+          <Link href={articleHref(article)} className={stretchedLink}>
+            {article.title}
+          </Link>
+        </h3>
+
+        {article.excerpt ? (
+          <p className="line-clamp-3 text-sm leading-relaxed text-foreground-muted">
+            {article.excerpt}
+          </p>
+        ) : null}
+
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-3 text-xs text-foreground-subtle">
+          {article.publishedAt ? (
+            <time dateTime={article.publishedAt}>
+              {formatDate(article.publishedAt)}
+            </time>
           ) : null}
-
-          <h3 className="text-h4 font-semibold text-foreground">{article.title}</h3>
-
-          {article.excerpt ? (
-            <p className="line-clamp-3 text-sm leading-relaxed text-foreground-muted">
-              {article.excerpt}
-            </p>
+          {article.readingMin ? (
+            <span className="flex items-center gap-1.5">
+              <Clock className="size-3.5" aria-hidden="true" />
+              {article.readingMin} min
+            </span>
           ) : null}
-
-          <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-3 text-xs text-foreground-subtle">
-            {article.publishedAt ? (
-              <time dateTime={article.publishedAt}>
-                {formatDate(article.publishedAt)}
-              </time>
-            ) : null}
-            {article.readingMin ? (
-              <span className="flex items-center gap-1.5">
-                <Clock className="size-3.5" aria-hidden="true" />
-                {article.readingMin} min
-              </span>
-            ) : null}
-          </div>
         </div>
-      </Link>
+      </div>
     </article>
   );
 }

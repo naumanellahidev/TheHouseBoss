@@ -13,9 +13,9 @@ import type { Photo } from "@/types/domain";
  * Two grounds:
  *
  *   - `photo` given: the photograph edge to edge behind the copy, the way the
- *     home and city heroes are built. It is decorative here — the heading says
- *     what the page is — so it renders `aria-hidden` with empty alt, like the
- *     home hero.
+ *     home and city heroes are built. Rendered with the photo's own alt text
+ *     when it has one, and as decorative (`aria-hidden`, empty alt) only when
+ *     it has none.
  *   - no photo: the navy ground with a faint architectural grid, which is a
  *     finished design rather than a grey box waiting for an image.
  *
@@ -66,9 +66,22 @@ export function PageHero({
     >
       {photo ? (
         <>
-          <div aria-hidden="true" className="absolute inset-0 -z-20">
+          {/*
+            The photo's own description is kept when it has one.
+
+            This used to force `alt: ""` and hide the wrapper, so every hero on
+            every content page was decorative — including city photos whose
+            alt text the admin had written in Cities, which was thrown away
+            here. An SEO audit reported those as images with no alt. Now a
+            described photo is rendered as one; only a photo that genuinely has
+            no description falls back to decorative.
+          */}
+          <div
+            aria-hidden={photo.alt?.trim() ? undefined : "true"}
+            className="absolute inset-0 -z-20"
+          >
             <PropertyImage
-              photo={{ ...photo, alt: "" }}
+              photo={photo}
               size={1600}
               sizes={IMAGE_SIZES.fullBleed}
               priority

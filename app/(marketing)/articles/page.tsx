@@ -94,7 +94,7 @@ export default async function ArticlesHubPage({ searchParams }: Search) {
   ]);
 
   const articles = filterArticles(all, params);
-  const photo = heroPhoto(settings.heroKey, "", 1920, 1080);
+  const photo = heroPhoto(settings.heroKey, settings.heroAlt?.trim() || "Central Florida homes", 1920, 1080);
 
   /*
     Counts per city, from the articles themselves.

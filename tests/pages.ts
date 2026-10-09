@@ -68,7 +68,7 @@ export const PAGES: TestPage[] = [
   { path: "/contact", name: "contact" },
   // The PWA fallback. It is noindex and nobody is sent to it, but it is the one
   // page a phone with no signal renders, so it has to hold up at 360.
-  { path: "/offline", name: "offline" },
+  { path: "/offline", name: "offline", noChrome: true },
   { path: "/legal/privacy", name: "privacy" },
   { path: "/legal/terms", name: "terms" },
   { path: "/legal/accessibility", name: "accessibility" },

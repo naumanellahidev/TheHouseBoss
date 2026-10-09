@@ -130,7 +130,7 @@ export default async function HireContractorPage() {
     cta: mergeSection(DEFAULT_CONTENT.cta, stored.get("cta")),
   };
 
-  const hero = heroPhoto(settings.heroKey, "");
+  const hero = heroPhoto(settings.heroKey, settings.heroAlt?.trim() || "Central Florida homes");
 
   /*
     The answer hub, twice (docs/18 § 5).
@@ -213,7 +213,9 @@ export default async function HireContractorPage() {
         <Hero3D />
 
         {hero ? (
-          <div aria-hidden="true" className="absolute inset-0 -z-20">
+          // Not aria-hidden: the photo is described (migration 028), and a
+          // described image hidden from a screen reader undoes the description.
+          <div className="absolute inset-0 -z-20">
             <PropertyImage
               photo={hero}
               size={1600}

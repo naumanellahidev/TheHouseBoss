@@ -79,6 +79,7 @@ export async function saveSettings(raw: unknown): Promise<SettingsResult> {
       logo_invert_key: v.logoInvertKey ?? null,
       portrait_key: v.portraitKey ?? null,
       hero_key: v.heroKey ?? null,
+      hero_alt: v.heroAlt ?? null,
       license_re_label: v.licenseReLabel ?? null,
       license_re_authority: v.licenseReAuthority ?? null,
       license_contractor_label: v.licenseContractorLabel ?? null,

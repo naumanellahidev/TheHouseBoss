@@ -159,11 +159,22 @@ export const footerNav: { heading: string; items: NavLink[] }[] = [
   {
     heading: "Guides",
     items: [
+      /*
+        Footer labels differ from the header's on purpose (SEO audit,
+        2026-10-09).
+
+        The header and the footer both link Hire Contractor, Answers, Insights,
+        Articles, Reviews and Contact, and with identical words every page
+        carried each of those anchors twice. The footer now uses the longer,
+        more descriptive name for the same page — "Market Updates" says what
+        "Insights" only gestures at — so each link adds context instead of
+        repeating it. Same destinations; nothing about where they go changed.
+      */
       { href: "/guides/va-home-buyer", label: "VA Home-Buyer Guide" },
       { href: "/assumable-mortgage-homes", label: "Assumable Mortgages" },
-      { href: "/hire-contractor", label: "Hire Contractor" },
-      { href: "/answers", label: "Answers" },
-      { href: "/market-updates", label: "Insights" },
+      { href: "/hire-contractor", label: "Contractor Services" },
+      { href: "/answers", label: "Questions Answered" },
+      { href: "/market-updates", label: "Market Updates" },
     ],
   },
   {
@@ -181,9 +192,9 @@ export const footerNav: { heading: string; items: NavLink[] }[] = [
         looking for a community actually is. HR11 makes those URLs permanent, so
         the choice here is only about what the menu offers.
       */
-      { href: "/articles", label: "Articles" },
-      { href: "/reviews", label: "Reviews" },
-      { href: "/contact", label: "Contact" },
+      { href: "/articles", label: "All Articles" },
+      { href: "/reviews", label: "Client Reviews" },
+      { href: "/contact", label: "Get in Touch" },
     ],
   },
 ];

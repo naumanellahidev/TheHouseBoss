@@ -120,6 +120,7 @@ export function SettingsForm({
   const [logoInvertKey, setLogoInvertKey] = React.useState(settings.logoInvertKey);
   const [portraitKey, setPortraitKey] = React.useState(settings.portraitKey);
   const [heroKey, setHeroKey] = React.useState(settings.heroKey);
+  const [heroAlt, setHeroAlt] = React.useState(settings.heroAlt);
 
   const [errors, setErrors] = React.useState<Record<string, string[]>>({});
 
@@ -138,6 +139,7 @@ export function SettingsForm({
       logoInvertKey,
       portraitKey,
       heroKey,
+      heroAlt,
     });
     setSaving(false);
 
@@ -321,19 +323,27 @@ export function SettingsForm({
 
             {/*
               First in the tab, because it is the largest thing a visitor
-              sees. Decorative by design: it sits behind the headline, so it
-              carries no alt text — the words over it are the content, and a
-              description read out before them would only be noise.
+              sees.
+
+              It used to be decorative — no alt field, empty alt on the page —
+              on the reasoning that the headline over it is the content. That
+              was right for a backdrop and wrong for this photograph: it is a
+              specific house, the largest image on the site, and the one image
+              search would index from the home page. An SEO audit the client
+              ran flagged the empty alt as missing. One sentence describing it
+              is a fair price before the headline (migration 028).
             */}
             <ImageField
               label="Home page hero background"
-              description="The photograph behind the headline on the home page. Landscape, and as large as you have — it is resized automatically. Anything busy in the middle-left makes the headline harder to read."
+              description="The photograph behind the headline on the home page. Landscape, and as large as you have — it is resized automatically. Anything busy in the middle-left makes the headline harder to read. Describe what the photo shows in one sentence: a screen reader reads it before the headline, and image search uses it."
               entityType="site"
               entityId={SITE_ENTITY_ID}
               imageKey={heroKey}
-              alt={null}
-              hideAlt
-              onChange={(next) => setHeroKey(next.key)}
+              alt={heroAlt}
+              onChange={(next) => {
+                setHeroKey(next.key);
+                setHeroAlt(next.alt);
+              }}
             />
 
             <ImageField

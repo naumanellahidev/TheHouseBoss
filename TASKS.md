@@ -21,7 +21,7 @@ where it stopped.
 | Branch | `main`, clean, pushed |
 | Live | https://www.thehousebossfl.com — deployed from `main` on every push |
 | Hosting | The existing Vercel project (`altrix/the-house-boss`), **free tier** — recorded decision, upgrade triggers in `docs/12` § 2 |
-| Database | Supabase, migrations applied through **027** |
+| Database | Supabase, migrations applied through **028** |
 | Phase | 7 (QA, compliance, launch) |
 
 Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`, `/sw.js`,
@@ -147,6 +147,27 @@ Each of these is deployed and checked on the live site. Do not redo them.
     container**, by the client. **Never add the gtag.js snippet to the code** —
     GA4 in both places counts every page view twice. The privacy page now
     states that Analytics is in use and sets cookies.
+
+- **SEO audit fixes** (2026-10-09, client's audit tool) — all four homepage
+  findings now clear:
+  - *Duplicate text*: the footer showed the positioning line on every page and
+    the home hero showed it too. Footer now uses `siteConfig.positioningShort`.
+  - *Image without alt*: the site hero photo was deliberately decorative
+    (`alt=""`). Migration **028** adds `site_settings.hero_alt` (and to the
+    public view), Settings → Branding now asks for it, and it is set from the
+    actual photo. `PageHero` no longer forces `alt=""` — it was also discarding
+    the alt text admins wrote for cities.
+  - *Long / repeated anchors*: every card was one big link whose text was the
+    title, excerpt and metadata together (up to 169 chars). Now the
+    **stretched-link pattern** (`lib/utils/card-link.ts`): only the title is the
+    anchor, its `::after` covers the card. Applied to article, property,
+    answer-link, answers-hub, homepage and guides cards. Footer labels now differ
+    from the header's; `/answers` "N questions" links carry the category name.
+    **Any new clickable card should use `cardShell` + `stretchedLink`.**
+  - *X-Powered-By*: `poweredByHeader: false` in `next.config.ts`.
+  - *"Server clock wrong"*: not a fault. Vercel's CDN serves cached ISR pages
+    with the generation-time `Date` header plus an `Age` header, which is what
+    the HTTP spec requires. The audit tool ignores `Age`. Nothing to change.
 
 ## How to work here
 

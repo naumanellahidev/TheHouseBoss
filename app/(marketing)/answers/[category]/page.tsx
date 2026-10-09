@@ -115,7 +115,7 @@ export default async function AnswerCategoryPage({
         title={category.title}
         lead={BLURB[slug]}
         crumbs={crumbs}
-        photo={heroPhoto(settings.heroKey, "", 1920, 1080)}
+        photo={heroPhoto(settings.heroKey, settings.heroAlt?.trim() || "Central Florida homes", 1920, 1080)}
         size="md"
       />
 

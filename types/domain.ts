@@ -347,6 +347,13 @@ export type SiteSettings = {
   announcementHref: string | null;
   ogKey: string | null;
   heroKey: string | null;
+  /**
+   * What the home page hero photograph shows (migration 028).
+   *
+   * Null on a photo nobody has described yet; the home page then falls back to
+   * a generic description rather than an empty alt.
+   */
+  heroAlt: string | null;
   brokerageName: string | null;
   /** Runtime branding overrides (migration 015). NULL means "use site-config". */
   brandName: string | null;

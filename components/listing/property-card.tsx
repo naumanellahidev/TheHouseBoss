@@ -7,6 +7,7 @@ import { IMAGE_SIZES } from "@/lib/image-sizes";
 import { formatBaths, formatNumber, formatPrice } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/date";
 import { cn } from "@/lib/utils";
+import { cardShell, stretchedLink } from "@/lib/utils/card-link";
 import type { ListingCard as ListingCardType } from "@/types/domain";
 
 /**
@@ -49,78 +50,88 @@ export function PropertyCard({
     listing.sqft != null
       ? { icon: Maximize, value: formatNumber(listing.sqft), label: "sq ft" }
       : null,
-  ].filter(Boolean) as { icon: typeof BedDouble; value: string; label: string }[];
+  ].filter(Boolean) as {
+    icon: typeof BedDouble;
+    value: string;
+    label: string;
+  }[];
 
   return (
-    <article className={cn("h-full", className)}>
-      <Link
-        href={`/listing/${listing.slug}`}
-        className={cn(
-          "group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm",
-          "transition-[box-shadow,transform] duration-(--dur-base) ease-(--ease-out)",
-          "hover:-translate-y-0.5 hover:shadow-md",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-        )}
-      >
-        <div className="relative">
-          <PropertyImage
-            photo={listing.cover}
-            size={800}
-            sizes={IMAGE_SIZES.cardGrid3}
-            priority={priority}
-            aspect="4/3"
-            className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:scale-[1.02]"
-          />
+    /*
+      A stretched link (`lib/utils/card-link.ts`). The ADDRESS is the anchor —
+      it is what identifies the property and what somebody searches for — and
+      its ::after makes the whole card clickable. The card used to be one link
+      whose text was the price, address, city and every fact together.
+    */
+    <article
+      className={cn(
+        "group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-sm",
+        "transition-[box-shadow,transform] duration-(--dur-base) ease-(--ease-out)",
+        "hover:-translate-y-0.5 hover:shadow-md",
+        cardShell,
+        className,
+      )}
+    >
+      <div className="relative">
+        <PropertyImage
+          photo={listing.cover}
+          size={800}
+          sizes={IMAGE_SIZES.cardGrid3}
+          priority={priority}
+          aspect="4/3"
+          className="transition-transform duration-(--dur-slow) ease-(--ease-out) group-hover:scale-[1.02]"
+        />
 
-          <span className="absolute top-3 left-3">
-            <Badge tone={badge.tone}>{badge.label}</Badge>
+        <span className="absolute top-3 left-3">
+          <Badge tone={badge.tone}>{badge.label}</Badge>
+        </span>
+
+        {listing.photosPurged ? (
+          <span className="absolute right-3 bottom-3 rounded-sm bg-royal-950/80 px-2 py-1 text-overline font-semibold tracking-[0.12em] text-porcelain-50 uppercase">
+            Photos archived
           </span>
+        ) : null}
+      </div>
 
-          {listing.photosPurged ? (
-            <span className="absolute right-3 bottom-3 rounded-sm bg-royal-950/80 px-2 py-1 text-overline font-semibold tracking-[0.12em] text-porcelain-50 uppercase">
-              Photos archived
+      <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
+        <p className="text-h4 font-semibold text-foreground tabular">
+          {sold && listing.soldPrice != null
+            ? formatPrice(listing.soldPrice)
+            : formatPrice(listing.price)}
+          {sold ? (
+            <span className="ml-2 text-sm font-medium text-foreground-muted">
+              sold{listing.soldAt ? ` ${formatDate(listing.soldAt)}` : ""}
             </span>
           ) : null}
-        </div>
+        </p>
 
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-5">
-          <p className="text-h4 font-semibold text-foreground tabular">
-            {sold && listing.soldPrice != null
-              ? formatPrice(listing.soldPrice)
-              : formatPrice(listing.price)}
-            {sold ? (
-              <span className="ml-2 text-sm font-medium text-foreground-muted">
-                sold{listing.soldAt ? ` ${formatDate(listing.soldAt)}` : ""}
-              </span>
-            ) : null}
-          </p>
-
-          <p className="text-body font-medium text-foreground">
+        <p className="text-body font-medium text-foreground">
+          <Link href={`/listing/${listing.slug}`} className={stretchedLink}>
             {listing.address}
             {listing.unit ? `, ${listing.unit}` : ""}
-          </p>
-          <p className="text-sm text-foreground-muted">
-            {listing.city.name}, FL{listing.zip ? ` ${listing.zip}` : ""}
-          </p>
+          </Link>
+        </p>
+        <p className="text-sm text-foreground-muted">
+          {listing.city.name}, FL{listing.zip ? ` ${listing.zip}` : ""}
+        </p>
 
-          {facts.length > 0 ? (
-            <ul className="mt-auto flex flex-wrap gap-4 border-t border-border pt-3 text-sm text-foreground-muted">
-              {facts.map((fact) => (
-                <li key={fact.label} className="flex items-center gap-1.5">
-                  <fact.icon
-                    className="size-4 text-accent-quiet"
-                    aria-hidden="true"
-                  />
-                  <span className="font-medium text-foreground tabular">
-                    {fact.value}
-                  </span>
-                  <span>{fact.label}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      </Link>
+        {facts.length > 0 ? (
+          <ul className="mt-auto flex flex-wrap gap-4 border-t border-border pt-3 text-sm text-foreground-muted">
+            {facts.map((fact) => (
+              <li key={fact.label} className="flex items-center gap-1.5">
+                <fact.icon
+                  className="size-4 text-accent-quiet"
+                  aria-hidden="true"
+                />
+                <span className="font-medium text-foreground tabular">
+                  {fact.value}
+                </span>
+                <span>{fact.label}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     </article>
   );
 }

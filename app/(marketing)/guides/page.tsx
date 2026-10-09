@@ -8,6 +8,7 @@ import { JsonLd } from "@/components/site/json-ld";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { cn } from "@/lib/utils";
+import { cardShell, stretchedLink } from "@/lib/utils/card-link";
 
 export const metadata: Metadata = buildMetadata({
   title: "Guides for Central Florida Buyers & Sellers",
@@ -81,13 +82,13 @@ export default function GuidesIndexPage() {
           <ul className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {GUIDES.map((guide) => (
               <li key={guide.href}>
-                <Link
-                  href={guide.href}
+                {/* Stretched link: the title is the anchor (`lib/utils/card-link.ts`). */}
+                <div
                   className={cn(
                     "group flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-6 shadow-sm",
                     "transition-[box-shadow,transform] duration-(--dur-base)",
                     "hover:-translate-y-0.5 hover:shadow-md",
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                    cardShell,
                   )}
                 >
                   <span
@@ -97,18 +98,25 @@ export default function GuidesIndexPage() {
                     <guide.icon className="size-5" />
                   </span>
 
-                  <span className="text-h3 text-foreground">{guide.title}</span>
+                  <span className="text-h3 text-foreground">
+                    <Link href={guide.href} className={stretchedLink}>
+                      {guide.title}
+                    </Link>
+                  </span>
                   <span className="text-body leading-relaxed text-foreground-muted">
                     {guide.lead}
                   </span>
                   <span className="mt-auto border-t border-border pt-3 text-sm text-foreground-subtle">
                     {guide.detail}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-quiet">
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-quiet"
+                  >
                     Read it
-                    <ArrowRight className="size-4" aria-hidden="true" />
+                    <ArrowRight className="size-4" />
                   </span>
-                </Link>
+                </div>
               </li>
             ))}
           </ul>

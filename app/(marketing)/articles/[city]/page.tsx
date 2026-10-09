@@ -124,7 +124,7 @@ export default async function CityArticlesPage({
   */
   const photo =
     heroPhoto(cityRecord?.heroKey, cityRecord?.heroAlt ?? city.name, 1920, 1080) ??
-    heroPhoto(settings.heroKey, "", 1920, 1080);
+    heroPhoto(settings.heroKey, settings.heroAlt?.trim() || "Central Florida homes", 1920, 1080);
 
   return (
     <>

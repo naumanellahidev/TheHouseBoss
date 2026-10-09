@@ -3,6 +3,7 @@ import { ArrowRight, MessageCircleQuestion } from "lucide-react";
 
 import { answerHref, type Answer } from "@/lib/content/answers";
 import { cn } from "@/lib/utils";
+import { cardShell, stretchedLink } from "@/lib/utils/card-link";
 
 /**
  * A block of links into the answer hub — docs/18 § 5.
@@ -61,16 +62,22 @@ export function AnswerLinks({
       <ul className="grid gap-3 md:grid-cols-2">
         {answers.map((answer) => (
           <li key={answer.slug}>
-            <Link
-              href={answerHref(answer)}
+            {/*
+              A stretched link (`lib/utils/card-link.ts`): the QUESTION is the
+              anchor, which is the most descriptive link text this page could
+              offer, and the short answer beneath it is plain text. The whole
+              card used to be the link, so its text was the question and the
+              answer run together.
+            */}
+            <div
               className={cn(
                 "group flex h-full items-start gap-3 rounded-2xl border p-4",
                 "transition-[box-shadow,transform] duration-(--dur-base) ease-(--ease-out)",
                 "hover:-translate-y-0.5 hover:shadow-md",
-                "focus-visible:outline-2 focus-visible:outline-offset-2",
+                cardShell,
                 invert
-                  ? "glass-invert border-border-invert focus-visible:outline-ring-invert"
-                  : "border-border bg-surface shadow-xs focus-visible:outline-ring",
+                  ? "glass-invert border-border-invert has-[a:focus-visible]:outline-ring-invert"
+                  : "border-border bg-surface shadow-xs",
               )}
             >
               <MessageCircleQuestion
@@ -87,7 +94,9 @@ export function AnswerLinks({
                     invert ? "text-foreground-invert" : "text-foreground",
                   )}
                 >
-                  {answer.question}
+                  <Link href={answerHref(answer)} className={stretchedLink}>
+                    {answer.question}
+                  </Link>
                 </span>
                 <span
                   className={cn(
@@ -98,7 +107,7 @@ export function AnswerLinks({
                   {answer.body.shortAnswer}
                 </span>
               </span>
-            </Link>
+            </div>
           </li>
         ))}
       </ul>
