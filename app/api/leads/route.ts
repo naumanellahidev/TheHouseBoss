@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 
 import { leadAutoresponder, leadNotification } from "@/lib/email/templates";
 import { sendEmail } from "@/lib/email/send";
@@ -114,8 +114,17 @@ export async function POST(request: NextRequest) {
     createdAt,
   };
 
-  // Fire and forget. The response does not wait on an email provider.
-  void notify(lead);
+  /*
+    The visitor's response does not wait on the notifications.
+
+    `after()`, not `void`. On Vercel a function is frozen the moment its
+    response is sent, so work left running with `void` is cut off mid-way —
+    the push to her phone never left (client, 2026-10-13: the lead reached the
+    bell but never the phone; its subscription had never once been used).
+    `after()` sends the response first and keeps the function alive until
+    this finishes.
+  */
+  after(() => notify(lead));
 
   return NextResponse.json({ ok: true });
 }
@@ -138,6 +147,7 @@ const LEAD_PUSH_TITLE: Record<string, string> = {
 };
 
 async function notify(lead: Lead) {
+  let pushed: Promise<void> = Promise.resolve();
   try {
     const settings = await getAdminSettings().catch(() => null);
 
@@ -166,7 +176,7 @@ async function notify(lead: Lead) {
       on the lock screen until it is dealt with: it has a date attached and
       stops being useful once the date passes.
     */
-    void sendAdminPush({
+    pushed = sendAdminPush({
       title: LEAD_PUSH_TITLE[lead.leadType] ?? "New enquiry",
       body: `${lead.name}${lead.message ? ` — ${lead.message.replace(/\s+/g, " ").trim().slice(0, 100)}` : ""}`,
       url: `/admin/leads?lead=${lead.id}`,
@@ -202,5 +212,10 @@ async function notify(lead: Lead) {
     });
   } catch (error) {
     console.error("[leads] notification failed:", error);
+  } finally {
+    // Started before the emails so it is not queued behind them; awaited here —
+    // even when an email failed — so the function lives until the push has
+    // actually been handed to the push service.
+    await pushed;
   }
 }

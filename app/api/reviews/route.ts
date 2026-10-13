@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 
 import { REVIEW_LIMIT, clientIp, rateLimit } from "@/lib/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -114,15 +114,25 @@ export async function POST(request: NextRequest) {
     the opposite: it is the one where the reply matters most, and leaving it
     unapproved does not make it go away.
   */
-  void sendAdminPush({
-    title: "Review to approve",
-    body: `${input.authorName}${
-      typeof input.rating === "number" ? ` — ${input.rating} out of 5` : ""
-    }: ${input.body.replace(/\s+/g, " ").trim().slice(0, 90)}`,
-    url: "/admin/reviews",
-    tag: "review",
-    priority: typeof input.rating === "number" && input.rating <= 3 ? "urgent" : "normal",
-  });
+  /*
+    `after()`, not `void`. On Vercel a function is frozen the moment its
+    response is sent, so work left running with `void` is cut off mid-way —
+    the push to her phone never left (client, 2026-10-13: the lead reached the
+    bell but never the phone; its subscription had never once been used).
+    `after()` sends the response first and keeps the function alive until
+    this finishes.
+  */
+  after(() =>
+    sendAdminPush({
+      title: "Review to approve",
+      body: `${input.authorName}${
+        typeof input.rating === "number" ? ` — ${input.rating} out of 5` : ""
+      }: ${input.body.replace(/\s+/g, " ").trim().slice(0, 90)}`,
+      url: "/admin/reviews",
+      tag: "review",
+      priority: typeof input.rating === "number" && input.rating <= 3 ? "urgent" : "normal",
+    }),
+  );
 
   return NextResponse.json({ ok: true });
 }
