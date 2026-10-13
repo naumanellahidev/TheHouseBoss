@@ -27,7 +27,7 @@
   worker.
 */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `hb-static-${VERSION}`;
 const PAGE_CACHE = `hb-pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -198,7 +198,13 @@ self.addEventListener("push", (event) => {
   const options = {
     body: payload.body || "Something is waiting in the dashboard.",
     icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    /*
+      The badge is the small icon in the status bar and on the notification
+      header. Android draws it from the ALPHA channel only, in one colour — a
+      full-colour, fully opaque icon came out as a solid square (client,
+      2026-10-13). This is a white silhouette of the logo figure on transparent.
+    */
+    badge: "/badge-96.png",
     /*
       `tag` collapses repeats.
 

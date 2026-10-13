@@ -129,7 +129,8 @@ export async function POST(request: NextRequest) {
         typeof input.rating === "number" ? ` — ${input.rating} out of 5` : ""
       }: ${input.body.replace(/\s+/g, " ").trim().slice(0, 90)}`,
       url: "/admin/reviews",
-      tag: "review",
+      // Unique per review, for the same reason as enquiries: none replaces another.
+      tag: `review-${Date.now()}`,
       priority: typeof input.rating === "number" && input.rating <= 3 ? "urgent" : "normal",
     }),
   );

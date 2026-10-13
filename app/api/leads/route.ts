@@ -180,9 +180,10 @@ async function notify(lead: Lead) {
       title: LEAD_PUSH_TITLE[lead.leadType] ?? "New enquiry",
       body: `${lead.name}${lead.message ? ` — ${lead.message.replace(/\s+/g, " ").trim().slice(0, 100)}` : ""}`,
       url: `/admin/leads?lead=${lead.id}`,
-      // One tag for enquiries, so three in a minute collapse into one line on
-      // the lock screen rather than three she has to dismiss separately.
-      tag: "lead",
+      // One tag PER enquiry. A shared tag made each new enquiry replace the
+      // last on the phone, so two in a minute showed as one and the first was
+      // easy to miss (client, 2026-10-13). Every enquiry is its own notification.
+      tag: `lead-${lead.id}`,
       priority: lead.leadType === "showing_request" ? "urgent" : "normal",
     });
 

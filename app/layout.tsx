@@ -28,7 +28,9 @@ export const metadata: Metadata = {
   verification: { google: siteConfig.googleSiteVerification },
   formatDetection: { telephone: true, address: false, email: false },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    // The logo figure, not the old "THB" monogram (client, 2026-10-13) — the
+    // same image as the installed app and its notifications.
+    icon: [{ url: "/icon-192.png", type: "image/png", sizes: "192x192" }],
     apple: [{ url: "/apple-icon.png" }],
   },
   /*
