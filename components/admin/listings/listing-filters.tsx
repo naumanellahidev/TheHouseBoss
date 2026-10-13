@@ -51,7 +51,7 @@ const SORTS = [
 ];
 
 const selectClass = cn(
-  "h-11 rounded-md border border-border-strong bg-surface px-3 text-body text-foreground",
+  "h-11 w-full min-w-0 rounded-md border border-border-strong bg-surface px-3 text-body text-foreground sm:w-auto",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
 );
 
@@ -92,8 +92,16 @@ export function ListingFilters({ cities }: { cities: City[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-3">
-        <div className="relative min-w-0 flex-1 sm:max-w-xs">
+      {/*
+        A two-column grid on a phone, a wrapping row from sm up.
+
+        It was a wrapping flex row at every width, and the search box was
+        `flex-1` — a zero basis — so on a phone the selects took the line and
+        the box shrank to the width of its icon, with the status select drawn
+        over it. The grid gives the search a full row and pairs the selects.
+      */}
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+        <div className="relative col-span-2 min-w-0 sm:max-w-xs sm:flex-1">
           <Search
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-foreground-subtle"
@@ -165,7 +173,7 @@ export function ListingFilters({ cities }: { cities: City[] }) {
           value={params.get("sort") ?? "updated"}
           onChange={(event) => push({ sort: event.target.value })}
           aria-label="Sort listings"
-          className={cn(selectClass, "sm:ml-auto")}
+          className={cn(selectClass, "col-span-2 sm:ml-auto")}
         >
           {SORTS.map((option) => (
             <option key={option.value} value={option.value}>

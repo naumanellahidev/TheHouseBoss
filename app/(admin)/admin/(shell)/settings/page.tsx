@@ -25,7 +25,15 @@ export const dynamic = "force-dynamic";
  * than its own route because that is where anyone looks for it, and because
  * splitting it out would leave a settings page that cannot change a password.
  */
-export default async function AdminSettingsPage() {
+/** Tabs a link may open directly, e.g. `?tab=notifications` from the first-run popup. */
+const TABS = ["contact", "profiles", "branding", "account", "site", "compliance", "notifications", "maintenance"];
+
+export default async function AdminSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const [settings, identity] = await Promise.all([
     getAdminSettings(),
     getAdminIdentity(),
@@ -57,6 +65,7 @@ export default async function AdminSettingsPage() {
           instead of a switch that quietly does nothing.
         */
         vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
+        initialTab={tab && TABS.includes(tab) ? tab : "contact"}
         settings={settings}
         account={
           /*

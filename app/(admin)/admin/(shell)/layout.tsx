@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ShieldAlert } from "lucide-react";
 
 import { AdminShell } from "@/components/admin/admin-shell";
+import { PushIntro } from "@/components/admin/app-onboarding";
 import { getSiteSettings } from "@/lib/queries/settings";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { StorageMeter } from "@/components/admin/storage-meter";
@@ -87,6 +88,8 @@ export default async function AdminShellLayout({
       permissions={identity?.permissions ?? []}
     >
       {children}
+      {/* Signed in only: turning notifications on registers this device to her account. */}
+      <PushIntro publicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null} />
     </AdminShell>
   );
 }

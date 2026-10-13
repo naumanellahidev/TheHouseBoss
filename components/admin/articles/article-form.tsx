@@ -384,9 +384,18 @@ export function ArticleForm({
       }}
       className="flex flex-col gap-6 pb-32"
     >
+      {/*
+        min-w-0 on both columns. A grid item defaults to min-width: auto, so it
+        grows to fit its widest child — and the editor toolbar is a single row
+        of fifteen buttons. On a phone that made this column 812px wide on a
+        390px screen: the title, the editor and every field were cut off at the
+        right edge, with no way to scroll to them because the page clips
+        horizontal overflow. With min-w-0 the column is the screen width and the
+        toolbar scrolls inside itself, which is what it was built to do.
+      */}
       <div className="grid gap-8 lg:grid-cols-3">
         {/* ── Body ─────────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-5 lg:col-span-2">
+        <div className="flex min-w-0 flex-col gap-5 lg:col-span-2">
           <Field error={errorOf("title")}>
             <FieldLabel required>Title</FieldLabel>
             <Input
@@ -491,7 +500,7 @@ export function ArticleForm({
         </div>
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
-        <aside className="flex flex-col gap-6">
+        <aside className="flex min-w-0 flex-col gap-6">
           <div className="flex flex-col gap-5 admin-card p-5">
             <Field error={errorOf("kind")}>
               <FieldLabel required>Kind</FieldLabel>

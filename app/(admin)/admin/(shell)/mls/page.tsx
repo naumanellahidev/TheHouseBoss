@@ -34,7 +34,7 @@ export default async function MlsPage() {
   const stellar = sources.find((s) => s.slug === "stellar_mls");
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       <AdminPageHeader
         title="MLS"
         description="Listing sources and their synchronisation history."
@@ -172,6 +172,6 @@ export default async function MlsPage() {
         Manual listings are unaffected by any of this and continue to work
         normally.
       </p>
-    </>
+    </div>
   );
 }

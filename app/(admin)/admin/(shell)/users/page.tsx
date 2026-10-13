@@ -32,21 +32,21 @@ export default async function UsersPage() {
 
   if (!identity?.permissions.includes("manage_users")) {
     return (
-      <>
+      <div className="flex flex-col gap-6">
         <AdminPageHeader title="Users" />
         <EmptyState
           icon={ShieldAlert}
           title="You do not have access to user management"
           description="Managing administrators needs the manage_users permission, which only a super admin holds."
         />
-      </>
+      </div>
     );
   }
 
   const [users, matrix] = await Promise.all([getAdminUsers(), getRoleMatrix()]);
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       <AdminPageHeader
         title="Users"
         description="Who can sign in to this dashboard, and what each role allows."
@@ -135,6 +135,6 @@ export default async function UsersPage() {
         </code>
         .
       </p>
-    </>
+    </div>
   );
 }

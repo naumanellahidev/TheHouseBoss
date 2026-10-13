@@ -56,14 +56,14 @@ export default async function AuditLogsPage({
 
   if (!identity?.permissions.includes("view_audit_logs")) {
     return (
-      <>
+      <div className="flex flex-col gap-6">
         <AdminPageHeader title="Audit logs" />
         <EmptyState
           icon={ShieldAlert}
           title="You do not have access to the audit log"
           description="Viewing the audit trail needs the view_audit_logs permission. Ask a super admin if you need it."
         />
-      </>
+      </div>
     );
   }
 
@@ -71,7 +71,7 @@ export default async function AuditLogsPage({
   const { entries, total } = await getAuditLogs({ page, perPage: 50 });
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
       <AdminPageHeader
         title="Audit logs"
         description={`${total.toLocaleString()} recorded ${total === 1 ? "action" : "actions"}. This log cannot be edited or deleted by anyone, including a super admin.`}
@@ -138,6 +138,6 @@ export default async function AuditLogsPage({
           }}
         />
       )}
-    </>
+    </div>
   );
 }

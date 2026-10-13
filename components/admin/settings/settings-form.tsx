@@ -45,8 +45,11 @@ export function SettingsForm({
   settings,
   account,
   vapidPublicKey,
+  initialTab = "contact",
 }: {
   settings: AdminSettings;
+  /** The tab open on arrival — a link can point straight at one. */
+  initialTab?: string;
   /**
    * The signed-in admin, for the Account & Security tab. Null only if the
    * session evaporated between the page rendering and this component — in
@@ -155,7 +158,7 @@ export function SettingsForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      <Tabs defaultValue="contact">
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="profiles">Profiles</TabsTrigger>

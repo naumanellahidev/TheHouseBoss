@@ -169,6 +169,27 @@ Each of these is deployed and checked on the live site. Do not redo them.
     with the generation-time `Date` header plus an `Age` header, which is what
     the HTTP spec requires. The audit tool ignores `Age`. Nothing to change.
 
+- **Admin on a phone** (2026-10-13, client) — every admin screen audited at
+  390 and 360, signed in, plus the drawer, the bell and the editors.
+  - Fixed: article editor column was 812px wide on a 390px phone (grid item
+    `min-w-0`); SEO tab bar ran off-screen (`max-w-full`); listing filters
+    squashed the search box (phone grid); Users / Audit logs / MLS had no space
+    under the heading; at 360 the menu button was cut off (storage chip now
+    hidden below `sm` — the full meter is in the drawer); bell panel touched the
+    screen edge (`collisionPadding`); a tab opened by link is scrolled into view.
+  - **Install popup** — `components/admin/app-onboarding.tsx` `InstallPrompt`,
+    in `app/(admin)/layout.tsx` (so the sign-in page too). Chrome: keeps
+    `beforeinstallprompt` and opens our popup on load, whose button opens
+    Chrome's dialog. iPhone: Share → Add to Home Screen steps. "Not now" holds
+    3 days.
+  - **Notifications intro** — `PushIntro`, in the shell. First open inside the
+    installed app, once per device: iOS 16.4+, Allow, phone settings path, each
+    device separate; button runs the same subscribe flow as Settings
+    (`lib/push/device.ts`). Blocked → link to `/admin/settings?tab=notifications`.
+  - Both skip when `navigator.webdriver` is true, so tests never see them.
+  - The local build failed on this machine with Windows error 0xc0000142
+    (Turbopack could not start a worker, low memory); Vercel built it.
+
 ## How to work here
 
 ```bash

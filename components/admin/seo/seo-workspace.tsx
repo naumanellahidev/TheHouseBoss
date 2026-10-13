@@ -94,7 +94,7 @@ export function SeoWorkspace({
 
   return (
     <div className="flex flex-col gap-5">
-      <nav aria-label="SEO sections" className="scroll-row gap-1 self-start rounded-full border border-border bg-surface p-1 shadow-card">
+      <nav aria-label="SEO sections" className="scroll-row max-w-full gap-1 self-start rounded-full border border-border bg-surface p-1 shadow-card">
         {TABS.map(({ id, label, icon: Icon }) => {
           const count = badges[id] ?? 0;
           const active = tab === id;

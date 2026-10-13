@@ -3,13 +3,15 @@
 import * as React from "react";
 import { BellRing, Send, Smartphone } from "lucide-react";
 
-import {
-  registerPushDevice,
-  removePushDevice,
-  sendTestPush,
-} from "@/app/(admin)/admin/(shell)/push-actions";
+import { sendTestPush } from "@/app/(admin)/admin/(shell)/push-actions";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import {
+  detectPushState,
+  subscribeThisDevice,
+  unsubscribeThisDevice,
+  type PushState,
+} from "@/lib/push/device";
 import { cn } from "@/lib/utils";
 
 /**
@@ -32,162 +34,45 @@ import { cn } from "@/lib/utils";
  * component detects the case and gives the instruction instead of the switch.
  */
 
-type State = "checking" | "unsupported" | "needs-install" | "off" | "on" | "blocked";
-
-/** The VAPID public key, base64url, as the subscribe call wants it. */
-function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
-  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
-  const normalised = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = window.atob(normalised);
-
-  /*
-    Backed by a plain ArrayBuffer, explicitly.
-
-    `new Uint8Array(length)` is typed over ArrayBufferLike, which includes
-    SharedArrayBuffer — and `applicationServerKey` will not accept that. Giving
-    it a buffer of its own is both what the API wants and what it was always
-    going to be at runtime.
-  */
-  const out = new Uint8Array(new ArrayBuffer(raw.length));
-  for (let i = 0; i < raw.length; i += 1) out[i] = raw.charCodeAt(i);
-  return out;
-}
-
-/** The two keys a subscription carries, as base64url strings. */
-function keysOf(subscription: PushSubscription): { p256dh: string; auth: string } | null {
-  const p256dh = subscription.getKey("p256dh");
-  const auth = subscription.getKey("auth");
-  if (!p256dh || !auth) return null;
-
-  const encode = (buffer: ArrayBuffer) =>
-    window
-      .btoa(String.fromCharCode(...new Uint8Array(buffer)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
-  return { p256dh: encode(p256dh), auth: encode(auth) };
-}
-
 export function PushSettings({ publicKey }: { publicKey: string | null }) {
   const toast = useToast();
-  const [state, setState] = React.useState<State>("checking");
+  const [state, setState] = React.useState<PushState>("checking");
   const [busy, setBusy] = React.useState<"toggle" | "test" | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
-
-    const decide = async () => {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        /*
-          On an iPhone this is the Safari-tab case, not an old browser: the
-          APIs exist only inside an installed app. `standalone` is the flag
-          that tells the two apart, and it is the difference between "your
-          browser cannot do this" and "add it to your home screen first".
-        */
-        const iOS = /iP(hone|ad|od)/.test(navigator.userAgent);
-        const standalone =
-          window.matchMedia("(display-mode: standalone)").matches ||
-          (window.navigator as { standalone?: boolean }).standalone === true;
-
-        if (!cancelled) setState(iOS && !standalone ? "needs-install" : "unsupported");
-        return;
-      }
-
-      if (Notification.permission === "denied") {
-        if (!cancelled) setState("blocked");
-        return;
-      }
-
-      const registration = await navigator.serviceWorker.ready.catch(() => null);
-      const existing = await registration?.pushManager.getSubscription().catch(() => null);
-      if (!cancelled) setState(existing ? "on" : "off");
-    };
-
-    void decide();
+    void detectPushState().then((next) => {
+      if (!cancelled) setState(next);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
 
+  // The subscribe flow lives in lib/push/device.ts, shared with the first-run
+  // popup in the installed app. It must still be started by this press.
   async function turnOn() {
-    if (!publicKey) {
-      toast.error("Push is not configured on the server yet.");
-      return;
-    }
-
     setBusy("toggle");
-    try {
-      /*
-        The permission prompt must come from the press.
-
-        Browsers refuse `Notification.requestPermission()` outside a user
-        gesture, and Safari is the strictest about it — asking during the effect
-        above would be silently denied and the switch would appear broken.
-      */
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        setState(permission === "denied" ? "blocked" : "off");
-        toast.error("Notifications were not allowed for this device.");
-        return;
-      }
-
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({
-        // Required and must be true: a push that does not show a notification
-        // is not permitted for a web app, and Chrome refuses the subscription.
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      });
-
-      const keys = keysOf(subscription);
-      if (!keys) {
-        toast.error("This browser did not return the keys we need.");
-        return;
-      }
-
-      const result = await registerPushDevice({
-        endpoint: subscription.endpoint,
-        ...keys,
-        userAgent: navigator.userAgent,
-      });
-
-      if (!result.ok) {
-        // Leave nothing behind: a subscription the server does not know about
-        // is a device that thinks it is enabled and will never be sent to.
-        await subscription.unsubscribe().catch(() => undefined);
-        toast.error(result.error);
-        return;
-      }
-
+    const result = await subscribeThisDevice(publicKey);
+    setBusy(null);
+    if (result.ok) {
       setState("on");
       toast.success(result.message);
-    } catch (error) {
-      console.error("[push] subscribe failed:", error);
-      toast.error("This device could not be registered for notifications.");
-    } finally {
-      setBusy(null);
+    } else {
+      if (result.state) setState(result.state);
+      toast.error(result.error);
     }
   }
 
   async function turnOff() {
     setBusy("toggle");
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-
-      if (subscription) {
-        await removePushDevice(subscription.endpoint);
-        await subscription.unsubscribe().catch(() => undefined);
-      }
-
+    const result = await unsubscribeThisDevice();
+    setBusy(null);
+    if (result.ok) {
       setState("off");
-      toast.success("This device will no longer get notifications.");
-    } catch (error) {
-      console.error("[push] unsubscribe failed:", error);
-      toast.error("This device could not be removed.");
-    } finally {
-      setBusy(null);
+      toast.success(result.message);
+    } else {
+      toast.error(result.error);
     }
   }
 

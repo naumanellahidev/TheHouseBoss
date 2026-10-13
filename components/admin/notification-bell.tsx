@@ -133,6 +133,9 @@ export function NotificationBell({
         <Menu.Content
           align="end"
           sideOffset={10}
+          // Keeps the panel off the screen edge on a phone, where the bell is not
+          // far enough right for an end-aligned panel to fit.
+          collisionPadding={16}
           className={cn(menuPanel, "flex w-[min(22rem,calc(100vw-2rem))] flex-col p-0")}
         >
           <div className="flex items-baseline justify-between gap-3 border-b border-border px-4 py-3">

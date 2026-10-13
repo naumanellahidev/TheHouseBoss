@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { InstallPrompt } from "@/components/admin/app-onboarding";
 import { ToastProvider } from "@/components/ui/toast";
 
 /**
@@ -25,5 +26,15 @@ export default function AdminGroupLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <ToastProvider>{children}</ToastProvider>;
+  return (
+    <ToastProvider>
+      {children}
+      {/*
+        Here and not in the shell: the first screen somebody opening the
+        dashboard in Chrome sees may well be the sign-in page, and that is when
+        to offer the app (client, 2026-10-13).
+      */}
+      <InstallPrompt />
+    </ToastProvider>
+  );
 }

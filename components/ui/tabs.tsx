@@ -44,10 +44,37 @@ export function TabsList({
 
 export function TabsTrigger({
   className,
+  ref,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+  const own = React.useRef<HTMLButtonElement | null>(null);
+
+  /*
+    A tab that is selected on arrival is scrolled into the tray.
+
+    The tray scrolls sideways on a phone, so a link that opens a later tab —
+    Settings → Notifications from the app's first-run popup — showed the first
+    three tabs and none of them selected. Only the tray scrolls: scrollIntoView
+    would move the page as well.
+  */
+  React.useEffect(() => {
+    const el = own.current;
+    const tray = el?.parentElement;
+    if (!el || !tray || el.dataset.state !== "active") return;
+    const box = el.getBoundingClientRect();
+    const view = tray.getBoundingClientRect();
+    if (box.right > view.right || box.left < view.left) {
+      tray.scrollLeft += box.left - view.left - (view.width - box.width) / 2;
+    }
+  }, []);
+
   return (
     <TabsPrimitive.Trigger
+      ref={(node) => {
+        own.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      }}
       className={cn(
         "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold",
         "text-foreground-muted transition-colors duration-(--dur-fast)",

@@ -375,13 +375,19 @@ function GroupMenu({
  * carries the state alone. The link's accessible name contains that visible
  * text (WCAG 2.5.3).
  */
+/*
+  Hidden below sm (480). On a phone the bar holds the logo, this chip, the
+  bell, the avatar and the menu button, and at 360 that is 3px more than the
+  screen — the menu button, the one way into every other screen, was the part
+  cut off. The full meter is in the menu drawer on a phone, so nothing is lost.
+*/
 function StorageChip({ percent, bar }: { percent: number; bar: string }) {
   return (
     <Link
       href="/admin/media"
       className={cn(
         floating,
-        "inline-flex h-11 items-center gap-2 px-3.5 text-foreground",
+        "hidden h-11 items-center gap-2 px-3.5 text-foreground sm:inline-flex",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
       )}
     >
