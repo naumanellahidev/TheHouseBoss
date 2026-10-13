@@ -190,6 +190,19 @@ Each of these is deployed and checked on the live site. Do not redo them.
   - The local build failed on this machine with Windows error 0xc0000142
     (Turbopack could not start a worker, low memory); Vercel built it.
 
+- **Push actually delivered** (2026-10-13) — lead and review routes used
+  `void` to send after responding; Vercel froze the function, so no push ever
+  left (the phone's subscription had `last_used_at` null). Now `after()`.
+  Verified live: a test review set `last_used_at`. Each notification has its own
+  tag, so none replaces another. **Never use `void` for work after a response
+  on Vercel — use `after()` from `next/server`.**
+- **App icon = the logo figure** — cut out of the uploaded logo (transparent):
+  `icon-192/512`, `icon-maskable` (white, safe zone), `app/apple-icon.png`
+  (white; iOS has no transparency), favicon. `badge-96.png` is a white
+  silhouette — Android draws the badge from alpha only, which is why the old
+  opaque icon showed as a square. `sw.js` VERSION v2. The "THB" `app/icon.svg`
+  is gone.
+
 ## How to work here
 
 ```bash
