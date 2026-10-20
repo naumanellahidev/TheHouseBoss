@@ -12,6 +12,7 @@ import {
   type AccountResult,
 } from "@/app/(admin)/admin/(shell)/settings/account-actions";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { FingerprintPanel } from "@/components/admin/settings/fingerprint-panel";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel, Input } from "@/components/ui/field";
 import { useToast } from "@/components/ui/toast";
@@ -275,6 +276,9 @@ export function AccountPanel({
           </Button>
         </div>
       </section>
+
+      {/* ── Fingerprint sign-in ────────────────────────────────────────── */}
+      <FingerprintPanel />
 
       {/* ── Sessions ───────────────────────────────────────────────────── */}
       <section className="flex flex-col gap-4 border-t border-border pt-8">

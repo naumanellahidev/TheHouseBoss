@@ -52,6 +52,14 @@ export type AuditAction =
   */
   | "push_device_registered"
   | "push_device_removed"
+  /*
+    Fingerprint sign-in (WebAuthn passkeys). Adding one is a security event in
+    the same family as a session or a push device; signing in with one is a
+    login and is recorded as its own action so the method is visible in the log.
+  */
+  | "passkey_added"
+  | "passkey_removed"
+  | "passkey_login"
   | "property_created"
   | "property_updated"
   | "property_deleted"

@@ -23,6 +23,7 @@ import type { Permission } from "@/lib/auth/permissions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { Logo } from "@/components/site/logo";
 import { NotificationBell } from "@/components/admin/notification-bell";
+import { AppLock } from "@/components/admin/app-lock";
 import type { AdminNotification } from "@/lib/queries/notifications";
 import { cn } from "@/lib/utils";
 import type { SiteSettings } from "@/types/domain";
@@ -139,12 +140,63 @@ export function AdminShell({
   const current = nav.find((item) => isActiveAdminRoute(pathname, item.href));
   const counts = { leads: newLeads, reviews: pendingReviews };
 
+  // Offline indicator: a quiet bar when the connection drops, so a stale figure
+  // reads as "last seen" rather than "wrong".
+  const [online, setOnline] = React.useState(true);
+  React.useEffect(() => {
+    const sync = () => setOnline(navigator.onLine);
+    const timer = window.setTimeout(sync, 0);
+    window.addEventListener("online", sync);
+    window.addEventListener("offline", sync);
+
+    // Save the main dashboard pages for offline use, at most twice an hour, and
+    // only when online. The worker fetches and caches them in the background.
+    let warmTimer: number | undefined;
+    if ("serviceWorker" in navigator && navigator.onLine) {
+      let last = 0;
+      try {
+        last = Number(sessionStorage.getItem("thb-warm") ?? 0);
+      } catch {
+        /* private window */
+      }
+      if (Date.now() - last > 30 * 60 * 1000) {
+        warmTimer = window.setTimeout(() => {
+          try {
+            sessionStorage.setItem("thb-warm", String(Date.now()));
+          } catch {
+            /* private window */
+          }
+          const paths = [
+            "/admin",
+            "/admin/leads",
+            "/admin/reviews",
+            "/admin/listings",
+            "/admin/articles",
+            "/admin/settings",
+          ];
+          navigator.serviceWorker.ready
+            .then((reg) => reg.active?.postMessage({ type: "warm", paths }))
+            .catch(() => {});
+        }, 3000);
+      }
+    }
+    return () => {
+      window.clearTimeout(timer);
+      if (warmTimer) window.clearTimeout(warmTimer);
+      window.removeEventListener("online", sync);
+      window.removeEventListener("offline", sync);
+    };
+  }, []);
+
   // Content sits between Enquiries and Reviews in the bar.
   const beforeContent = main.filter((item) => ["/admin", "/admin/listings", "/admin/leads"].includes(item.href));
   const afterContent = main.filter((item) => !beforeContent.includes(item));
 
   return (
     <div className="admin-canvas flex min-h-dvh flex-col">
+      {/* Covers the dashboard until the fingerprint is read, in the installed
+          app on a device that has one. Renders nothing otherwise. */}
+      <AppLock />
       {/* ── The bar ────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 px-3 pt-3 md:px-5 lg:px-6">
         <div className="mx-auto flex max-w-(--container-wide) items-center gap-2 lg:gap-3">
@@ -243,6 +295,17 @@ export function AdminShell({
         </div>
       </header>
 
+      {!online ? (
+        <div
+          role="status"
+          className="mx-auto w-full max-w-(--container-wide) px-4 pt-3 md:px-6 lg:px-8"
+        >
+          <p className="rounded-md bg-primary px-4 py-2 text-center text-xs text-primary-fg">
+            You&apos;re offline — showing what was last saved on this device.
+            Changes need a connection.
+          </p>
+        </div>
+      ) : null}
       <main
         id="main"
         className="mx-auto w-full max-w-(--container-wide) min-w-0 flex-1 px-4 pt-6 pb-12 md:px-6 lg:px-8 lg:pt-8"
@@ -429,6 +492,15 @@ function Account({ email, name }: { email: string; name: string | null }) {
     setSigningOut(true);
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
+    // Nothing of the signed-in dashboard stays on the device: the offline cache
+    // is cleared and the app lock is reset, so the next person to pick up the
+    // phone gets the sign-in screen, not a cached screen.
+    try {
+      navigator.serviceWorker?.controller?.postMessage("clear-admin");
+      sessionStorage.removeItem("thb-unlocked");
+    } catch {
+      /* no worker, or storage blocked */
+    }
     // refresh() after replace(): the session cookie just changed, so every
     // server component rendered under the old session has to be discarded.
     router.replace("/admin/login");

@@ -20,6 +20,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_passkeys: {
+        Row: {
+          id: string;
+          user_id: string;
+          public_key: string;
+          counter: number;
+          transports: string[];
+          device: string | null;
+          created_at: string;
+          last_used_at: string | null;
+        };
+        Insert: {
+          id: string;
+          user_id: string;
+          public_key: string;
+          counter?: number;
+          transports?: string[];
+          device?: string | null;
+          created_at?: string;
+          last_used_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          public_key?: string;
+          counter?: number;
+          transports?: string[];
+          device?: string | null;
+          created_at?: string;
+          last_used_at?: string | null;
+        };
+        Relationships: [];
+      };
       articles: {
         Row: {
           id: string;
@@ -127,6 +160,30 @@ export type Database = {
           metadata?: Json;
           ip_address?: unknown | null;
           user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      auth_challenges: {
+        Row: {
+          id: string;
+          challenge: string;
+          user_id: string | null;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          challenge: string;
+          user_id?: string | null;
+          expires_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          challenge?: string;
+          user_id?: string | null;
+          expires_at?: string;
           created_at?: string;
         };
         Relationships: [];

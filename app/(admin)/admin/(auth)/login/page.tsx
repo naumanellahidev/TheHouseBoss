@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { FingerprintSignIn } from "@/components/admin/fingerprint-sign-in";
 import { LoginForm } from "@/components/admin/login-form";
 import { UsernameLoginForm } from "@/components/admin/username-login-form";
 import { Logo } from "@/components/site/logo";
@@ -91,6 +92,13 @@ export default async function LoginPage({
         </div>
 
         <UsernameLoginForm next={next} error={params.error} />
+
+        {/*
+          Fingerprint sign-in, for a device that has added one under Settings.
+          The component renders nothing when the browser has no WebAuthn, so the
+          password form stands alone there.
+        */}
+        <FingerprintSignIn next={next} />
 
         {/*
           Magic link is kept as a second route in, not replaced.
