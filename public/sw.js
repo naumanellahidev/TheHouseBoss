@@ -3,20 +3,30 @@
 
   ── What it is for ─────────────────────────────────────────────────────────
 
-  Two things, and deliberately not a third. It makes the site installable, and
-  it makes an offline tap produce a page that explains itself instead of the
-  browser's dinosaur. It is NOT an offline copy of the dashboard, and it is not
-  a performance layer — Vercel's CDN already is one.
+  It makes the site installable, it makes an offline tap produce a page that
+  explains itself instead of the browser's dinosaur, and — from v3, at the
+  owner's request (docs/06 § "Offline dashboard") — it keeps the last-seen
+  dashboard screens readable with no connection.
 
-  ── What it must never do ──────────────────────────────────────────────────
+  ── The admin cache, and the rule that makes it safe ───────────────────────
 
-  Cache anything behind a session. A service worker is shared by every tab on
-  the origin and outlives the page that installed it, so a cached admin screen
-  is a page that can be served after sign-out, to whoever is holding the phone.
-  Every request to /admin and /api goes straight to the network, always.
+  v2 cached nothing behind a session, because a cached admin screen is one that
+  could be served after sign-out to whoever is holding the phone. v3 does cache
+  admin PAGES, in their own cache, under two rules that keep that from being
+  true:
 
-  The same rule covers Supabase: those are cross-origin and carry an auth
-  header, and they are skipped before anything else is considered.
+    1. Signing out clears it. The dashboard posts `clear-admin` as part of sign
+       out (admin-shell.tsx), and this worker deletes the admin cache. The
+       installed app also locks behind a fingerprint, so a snatched unlocked
+       phone is the only exposure, and that is the trade the owner asked for.
+    2. Only GET navigations are cached, never `/api`, never `/auth`, never an
+       RSC/server-action payload. A cached admin page is a rendered snapshot,
+       not a live session: every online navigation still hits the network and
+       the server re-checks the session, so a signed-out person online is
+       bounced to the login screen exactly as before.
+
+  Supabase is cross-origin and carries an auth header; it is skipped before
+  anything else is considered.
 
   ── Versioning ─────────────────────────────────────────────────────────────
 
@@ -27,9 +37,10 @@
   worker.
 */
 
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `hb-static-${VERSION}`;
 const PAGE_CACHE = `hb-pages-${VERSION}`;
+const ADMIN_CACHE = `hb-admin-${VERSION}`;
 const OFFLINE_URL = "/offline";
 
 /** Precached so the offline page is available the first time it is needed. */
@@ -62,16 +73,23 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-/** True for anything that must never be served from a cache. */
+/**
+ * Never served from a cache, and never written to one: the API, the auth
+ * endpoints, and Next's server-action / RSC payloads — all request-specific and
+ * several carrying session state. The admin PAGES are deliberately NOT here;
+ * they are cached in their own bucket (see the header) and handled below.
+ */
 function isPrivate(url) {
   return (
-    url.pathname.startsWith("/admin") ||
     url.pathname.startsWith("/api") ||
     url.pathname.startsWith("/auth") ||
-    // Next's server actions and RSC payloads: both are request-specific and
-    // several of them carry session state.
     url.searchParams.has("_rsc")
   );
+}
+
+/** A dashboard page — its own cache, cleared on sign-out. */
+function isAdminPage(url) {
+  return url.pathname === "/admin" || url.pathname.startsWith("/admin/");
 }
 
 /** Build output and the files in /public: immutable, safe to serve from cache. */
@@ -122,18 +140,20 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     /*
       Network first, with the last good copy as the fallback and the offline
-      page behind that.
+      page behind that. Admin pages use their own cache so sign-out can wipe
+      exactly them; public pages use the shared page cache.
 
-      Never cache-first: a public page that changed — a new listing, a published
-      article — would otherwise be served stale from a phone that is online,
-      which is worse than a slightly slower load.
+      Never cache-first: a page that changed — a new listing, a published
+      article, a fresh dashboard figure — would otherwise be served stale from a
+      phone that is online, which is worse than a slightly slower load.
     */
+    const cacheName = isAdminPage(url) ? ADMIN_CACHE : PAGE_CACHE;
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response.ok) {
             const copy = response.clone();
-            caches.open(PAGE_CACHE).then((cache) => cache.put(request, copy));
+            caches.open(cacheName).then((cache) => cache.put(request, copy));
           }
           return response;
         })
@@ -154,6 +174,38 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
+/** Save the main dashboard pages (and their build assets) so they open offline. */
+async function warm(paths) {
+  const [pageCache, staticCache] = await Promise.all([
+    caches.open(ADMIN_CACHE),
+    caches.open(STATIC_CACHE),
+  ]);
+  const assets = new Set();
+  for (const path of paths) {
+    try {
+      const response = await fetch(path, { credentials: "same-origin" });
+      // A redirect means signed out — do not cache the login page as a dashboard.
+      if (!response.ok || response.redirected) continue;
+      const html = await response.clone().text();
+      for (const match of html.matchAll(/\/_next\/static\/[^"'\s\\<>]+/g)) {
+        assets.add(match[0]);
+      }
+      await pageCache.put(new Request(path), response);
+    } catch {
+      /* offline or signed out — try again next time */
+    }
+  }
+  for (const asset of assets) {
+    if (await staticCache.match(asset)) continue;
+    try {
+      const response = await fetch(asset);
+      if (response.ok) await staticCache.put(asset, response);
+    } catch {
+      /* skip */
+    }
+  }
+}
+
 /*
   A page can ask the worker to step aside.
 
@@ -163,6 +215,15 @@ self.addEventListener("fetch", (event) => {
 */
 self.addEventListener("message", (event) => {
   if (event.data === "skip-waiting") self.skipWaiting();
+  // Sign-out: wipe the dashboard snapshots so nothing signed-in is left on the
+  // device. Named cache, so public pages and static assets are untouched.
+  if (event.data === "clear-admin") {
+    event.waitUntil(caches.delete(ADMIN_CACHE));
+  }
+  // The app asks for the main dashboard pages to be saved for offline use.
+  if (event.data && event.data.type === "warm") {
+    event.waitUntil(warm(event.data.paths || []));
+  }
 });
 
 /* ── Push ──────────────────────────────────────────────────────────────────

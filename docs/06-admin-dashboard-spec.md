@@ -480,3 +480,26 @@ save.
   script from `13-qa-checklists.md`.
 - No `SUPABASE_SERVICE_ROLE_KEY` reachable from any client bundle
   (`grep -r "SERVICE_ROLE" .next/static` returns nothing).
+
+
+## Offline dashboard (v3, 2026-10-20 — owner request)
+
+The owner asked for the installed app to keep working with no connection, like a
+native app. v2 deliberately cached nothing behind a session (a cached admin
+screen can be served after sign-out). v3 keeps that concern and answers it
+rather than dropping it:
+
+- Dashboard **pages** are cached network-first in their own bucket
+  (`hb-admin-*`). Offline, the last-seen screen opens with its last data and an
+  "offline" bar; online, every navigation still hits the network and the server
+  re-checks the session, so a signed-out person online still lands on login.
+- **Signing out wipes that bucket** (`admin-shell.tsx` posts `clear-admin`), and
+  the installed app also locks behind a fingerprint. The only residual exposure
+  is a snatched *unlocked* phone — the trade the owner accepted.
+- `/api`, `/auth` and RSC/server-action payloads are still never cached. A
+  cached page is a snapshot, not a live session.
+- The worker warms the main pages (`/admin`, leads, reviews, listings, articles,
+  settings) in the background, at most twice an hour, only when online.
+
+This supersedes the v2 "never cache /admin" line in `public/sw.js`, which is
+now the header of that file.
