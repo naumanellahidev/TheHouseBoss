@@ -17,11 +17,11 @@ where it stopped.
 
 | | |
 |---|---|
-| Last work commit | `c05c008` p7(seo): fix the four findings from the client's SEO audit |
+| Last work commit | `bbd9c53` p7(pwa): offline dashboard — cached admin pages, cleared on sign-out |
 | Branch | `main`, clean, pushed |
 | Live | https://www.thehousebossfl.com — deployed from `main` on every push |
 | Hosting | The existing Vercel project (`altrix/the-house-boss`), **free tier** — recorded decision, upgrade triggers in `docs/12` § 2 |
-| Database | Supabase, migrations applied through **028** |
+| Database | Supabase, migrations applied through **029** |
 | Phase | 7 (QA, compliance, launch) |
 
 Last verified live (2026-10-04): `/`, `/articles`, `/admin/login`, `/sw.js`,
@@ -55,6 +55,38 @@ Nothing queued. Take the next request from the client.
 ## Done — and verified live
 
 Each of these is deployed and checked on the live site. Do not redo them.
+
+- **Fingerprint sign-in + app lock + offline dashboard** (2026-10-20, owner
+  request) — WebAuthn passkeys on top of Supabase Auth, plus an offline
+  dashboard. Verified live: `/sw.js` is `v3`; `POST /api/auth/passkey/
+  login-options` returns options with `rpId: thehousebossfl.com` (the service
+  client read `admin_passkeys`, so migration **029** is applied live);
+  `GET /api/auth/passkey/list` is 401 signed out.
+  - **Migration 029** (`admin_passkeys`, `auth_challenges`, RLS on,
+    service-role-only writes) applied to prod with `supabase db push --db-url`
+    (the pooler; `SUPABASE_DB_PASSWORD` in `.env.local`). Docker is not
+    available on this machine, so `db reset` / `gen types --local` /
+    `test:rls` could not run — **types/database.ts was hand-edited** to match
+    029; regenerate with `supabase gen types` when a Docker box is next used,
+    and run `test:rls` then.
+  - Passkey machinery: `lib/auth/passkeys.ts` (WebAuthn verify, one-time
+    5-min challenges behind an httpOnly cookie, counter checked),
+    `lib/auth/passkey-session.ts` (mints the Supabase session via service-role
+    `generateLink` → server `verifyOtp`), `app/api/auth/passkey/[action]`.
+    `@simplewebauthn/server` + `/browser` added.
+  - UI: "Sign in with fingerprint" on the login screen; add/remove under
+    Settings → Account (`fingerprint-panel.tsx`); `app-lock.tsx` in the shell
+    (installed-app only, tap to unlock, 5-min relock, escape hatch). Any
+    passkey failure falls back to the password form — never a lock-out.
+  - **Offline dashboard** (`sw.js` v3, docs/06 "Offline dashboard"): admin
+    PAGES cached network-first in `hb-admin-*`, wiped on sign-out (shell posts
+    `clear-admin`); `/api`, `/auth`, RSC never cached; warms the main pages
+    twice an hour. Overrides the v2 "never cache /admin" rule, safely.
+  - **Not** runtime-tested end-to-end (needs a real authenticator on a phone)
+    and the local `npm run build` still hits the documented 0xc0000142 — types,
+    lint, check:tokens and check:contrast all pass; Vercel built and deployed.
+  - The "Chrome top bar / localhost" bug from the portfolio app does NOT exist
+    here — that was nginx-specific; House Boss on Vercel redirects correctly.
 
 - **Answer hub** — 62 question pages under `/answers` in nine categories,
   QAPage + BreadcrumbList, linked from the nav, the footer, the city hubs and
